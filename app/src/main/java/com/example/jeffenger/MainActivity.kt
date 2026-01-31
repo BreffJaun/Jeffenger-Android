@@ -1,28 +1,53 @@
 package com.example.jeffenger
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.jeffenger.ui.theme.JeffengerTheme
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.datastore.preferences.core.Preferences
+import com.example.jeffenger.ui.theme.AppTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.jeffenger.navigation.AppStart
+import com.example.jeffenger.ui.viewmodels.SettingsViewModel
+import de.syntax_institut.jetpack.a04_05_online_shopper.utilities.BackgroundWrapper
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "dataStore")
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
-            JeffengerTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+            val viewModel: SettingsViewModel = viewModel()
+            val darkModePref by viewModel.darkModeEnabled.collectAsState()
+//            val isDarkTheme = when (darkModePref) {
+//                true -> true
+//                false -> false
+//                null -> isSystemInDarkTheme()
+//            }
+            val isDarkTheme = true
+            AppTheme(darkTheme = isDarkTheme) {
+                BackgroundWrapper {
+                    AppStart(
+                        isDarkMode = isDarkTheme,
+                        onToggleTheme = {
+                            viewModel.setDarkMode(
+                                when (darkModePref) {
+                                    null -> true
+                                    true -> false
+                                    false -> null
+                                }
+                            )
+                        }
                     )
                 }
             }
@@ -30,18 +55,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    JeffengerTheme {
-        Greeting("Android")
+    AppTheme {
+//        AppStart()
     }
 }

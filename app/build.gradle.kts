@@ -1,8 +1,27 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    // Navigation
+    alias(libs.plugins.jetbrains.kotlin.serialization)
+
+    // Room
+    alias(libs.plugins.kotlin.ksp)
+
 }
+
+// API KEY SETTINGS
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+// API KEYS
+val catApiKey = localProperties.getProperty("CAT_API_KEY") ?: ""
 
 android {
     namespace = "com.example.jeffenger"
@@ -21,7 +40,19 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "CAT_API_KEY",
+                "\"$catApiKey\""
+            )
+        }
         release {
+//            buildConfigField(
+//                "String",
+//                "CAT_API_KEY",
+//                "\"$catApiKey\""
+//            )
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -38,6 +69,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -57,4 +89,48 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
+
+    // Material Icons
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation("androidx.compose.material:material:1.9.5")
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // JSON Serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    // Filterchips
+    implementation(libs.androidx.compose.material3)
+
+    // FlowRow
+    implementation("androidx.compose.foundation:foundation:1.6.0+")
+
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    // Moshi & Retrofit
+    implementation(libs.moshi)
+    implementation(libs.retrofit)
+    implementation(libs.converterMoshi)
+    implementation(libs.logging.interceptor)
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.0")
+    ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.0")
+
+    // Coil
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
+    // Koin
+    implementation(project.dependencies.platform(libs.koin.bom))
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
 }
