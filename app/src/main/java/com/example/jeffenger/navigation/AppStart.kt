@@ -25,6 +25,7 @@ import com.example.jeffenger.navigation.helper.CalendarRoute
 import com.example.jeffenger.navigation.helper.ChatsRoute
 import com.example.jeffenger.navigation.helper.SettingsRoute
 import com.example.jeffenger.navigation.screens.BottomBar
+import com.example.jeffenger.navigation.screens.IosStyleBottomBar
 import com.example.jeffenger.ui.screens.CalendarScreen
 import com.example.jeffenger.ui.screens.ChatsScreen
 import com.example.jeffenger.ui.screens.SettingsScreen
@@ -71,18 +72,32 @@ fun AppStart(
                 )
             },
             bottomBar = {
-                BottomBar(
+//                BottomBar(
+//                    currentRoute = currentRoute,
+//                    onTabSelected = { tab ->
+//                        navController.navigate(tab.route)
+//                    }
+//                )
+                IosStyleBottomBar(
                     currentRoute = currentRoute,
                     onTabSelected = { tab ->
-                        navController.navigate(tab.route)
-                    }
+                        navController.navigate(tab.route) {
+                            popUpTo(ChatsRoute) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    isDarkMode = isDarkMode
                 )
             },
-            floatingActionButton = {}
+//            floatingActionButton = {}
         ) { p ->
             NavHost(
                 navController = navController,
-                startDestination = selectedTab.route,
+//                startDestination = selectedTab.route,
+                startDestination = ChatsRoute,
                 modifier = Modifier.padding(p)
             ) {
                 composable<ChatsRoute> {
