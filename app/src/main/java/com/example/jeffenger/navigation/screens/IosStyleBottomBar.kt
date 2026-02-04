@@ -79,7 +79,7 @@ fun IosStyleBottomBar(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(68.dp) // 🔑 fix Bar-hight like iOS
+                        .height(68.dp) // fix Bar-hight like iOS
                 ) {
 
                     // iOS Active Pill

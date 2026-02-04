@@ -32,9 +32,9 @@ fun BottomTabItem(
         val scheme = MaterialTheme.colorScheme
         val color by animateColorAsState(
             if (selected)
-                MaterialTheme.colorScheme.primary
+                scheme.primary
             else
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                scheme.onSurface.copy(alpha = 0.6f),
             label = "tabColor"
         )
 

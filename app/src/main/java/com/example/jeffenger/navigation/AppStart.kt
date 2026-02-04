@@ -22,11 +22,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.jeffenger.navigation.components.TabItem
 import com.example.jeffenger.navigation.helper.CalendarRoute
+import com.example.jeffenger.navigation.helper.ChatRoute
 import com.example.jeffenger.navigation.helper.ChatsRoute
 import com.example.jeffenger.navigation.helper.SettingsRoute
-import com.example.jeffenger.navigation.screens.BottomBar
 import com.example.jeffenger.navigation.screens.IosStyleBottomBar
 import com.example.jeffenger.ui.screens.CalendarScreen
+import com.example.jeffenger.ui.screens.ChatScreen
 import com.example.jeffenger.ui.screens.ChatsScreen
 import com.example.jeffenger.ui.screens.SettingsScreen
 import com.example.jeffenger.ui.theme.AppTheme
@@ -101,18 +102,20 @@ fun AppStart(
                 modifier = Modifier.padding(p)
             ) {
                 composable<ChatsRoute> {
-                    ChatsScreen(
-                        onTabSelected = { tab ->
-                            navController.navigate(tab.route)
-                        }
-                    )
+                    ChatsScreen { chat ->
+                        navController.navigate(
+                            ChatRoute(
+                                id = chat.id,
+                            )
+                        )
+                    }
                 }
 
-//                composable<ChatRoute> {
-//                    ChatScreen(
-//                        onBack = { navController.popBackStack() }
-//                    )
-//                }
+                composable<ChatRoute> {
+                    ChatScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
 
                 composable<CalendarRoute> {
                     CalendarScreen(

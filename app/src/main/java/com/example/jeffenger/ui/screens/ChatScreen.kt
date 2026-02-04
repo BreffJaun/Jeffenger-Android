@@ -7,32 +7,32 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.jeffenger.data.remote.model.Chat
-import com.example.jeffenger.navigation.components.TabItem
 import com.example.jeffenger.ui.theme.AppTheme
+import com.example.jeffenger.ui.viewmodels.ChatViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 
 @Composable
-fun ChatsScreen(
-    modifier: Modifier = Modifier,
-//    viewModel: ChatsViewModel = viewModel(),
-    onNavigateToDetail: (Chat) -> Unit,
+fun ChatScreen(
+    onBack: () -> Unit,
+    viewModel: ChatViewModel = viewModel(),
 ) {
-    LogComposable("ChatsScreen") {
+    LogComposable("ChatScreen") {
         val scheme = MaterialTheme.colorScheme
+        val chat = viewModel.chat.collectAsState()
+        val messages = viewModel.messages.collectAsState()
 
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             Text(
-                "CHATS SCREEN",
+                "CHAT SCREEN",
                 color = scheme.onSurface
             )
         }
@@ -50,8 +50,8 @@ fun ChatsScreen(
     uiMode = Configuration.UI_MODE_NIGHT_NO
 )
 @Composable
-private fun ChatsScreenPreview() {
+private fun ChatScreenPreview() {
     AppTheme {
-//        ChatsScreen()
+        ChatScreen()
     }
 }

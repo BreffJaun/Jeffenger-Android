@@ -6,7 +6,9 @@ import kotlinx.serialization.Serializable
 object ChatsRoute
 
 @Serializable
-object ChatRoute
+data class ChatRoute(
+    val id: String,
+)
 
 @Serializable
 object CalendarRoute
