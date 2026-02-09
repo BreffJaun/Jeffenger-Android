@@ -52,6 +52,6 @@ fun ChatScreen(
 @Composable
 private fun ChatScreenPreview() {
     AppTheme {
-        ChatScreen()
+//        ChatScreen()
     }
 }
