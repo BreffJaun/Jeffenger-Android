@@ -1,40 +1,43 @@
 package com.example.jeffenger.ui.screens
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import com.example.jeffenger.data.remote.model.Chat
-import com.example.jeffenger.navigation.components.TabItem
+import com.example.jeffenger.ui.components.ChatListItem
 import com.example.jeffenger.ui.theme.AppTheme
+import com.example.jeffenger.ui.viewmodels.ChatsViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 
 @Composable
 fun ChatsScreen(
-    modifier: Modifier = Modifier,
-//    viewModel: ChatsViewModel = viewModel(),
-    onNavigateToDetail: (Chat) -> Unit,
+    viewModel: ChatsViewModel = koinViewModel (),
+    onNavigateToDetail: (String) -> Unit
 ) {
     LogComposable("ChatsScreen") {
         val scheme = MaterialTheme.colorScheme
+        val items = viewModel.chatListItems.collectAsState(emptyList())
 
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                "CHATS SCREEN",
-                color = scheme.onSurface
-            )
+            items(
+                items = items.value,
+                key = { it.chatId }
+            ) { item ->
+                ChatListItem(
+                    item = item,
+                    onClick = { onNavigateToDetail(item.chatId) }
+                )
+            }
         }
     }
 }

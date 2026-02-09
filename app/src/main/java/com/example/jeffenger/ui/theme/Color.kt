@@ -20,6 +20,7 @@ val Gray600 = Color(0xFF6C757D)
 val Gray700 = Color(0xFF495057)
 val Gray800 = Color(0xFF343A40)
 val Gray900 = Color(0xFF212529)
+val Gray950 = Color(0xFF181A1D)
 
 // Backgrounds
 val BodyColor = Color(0xFF222529)

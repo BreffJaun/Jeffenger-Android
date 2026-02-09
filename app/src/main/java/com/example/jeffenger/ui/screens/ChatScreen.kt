@@ -11,20 +11,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.viewmodels.ChatViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ChatScreen(
     onBack: () -> Unit,
-    viewModel: ChatViewModel = viewModel(),
+    modifier: Modifier = Modifier,
+    viewModel: ChatViewModel = koinViewModel (),
 ) {
     LogComposable("ChatScreen") {
         val scheme = MaterialTheme.colorScheme
-        val chat = viewModel.chat.collectAsState()
-        val messages = viewModel.messages.collectAsState()
+        val chat = viewModel.chat.collectAsState(null)
+        val messages = viewModel.messages.collectAsState(emptyList())
 
         Column(
             verticalArrangement = Arrangement.Center,
@@ -55,3 +56,4 @@ private fun ChatScreenPreview() {
 //        ChatScreen()
     }
 }
+

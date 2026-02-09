@@ -73,12 +73,6 @@ fun AppStart(
                 )
             },
             bottomBar = {
-//                BottomBar(
-//                    currentRoute = currentRoute,
-//                    onTabSelected = { tab ->
-//                        navController.navigate(tab.route)
-//                    }
-//                )
                 IosStyleBottomBar(
                     currentRoute = currentRoute,
                     onTabSelected = { tab ->
@@ -102,11 +96,16 @@ fun AppStart(
                 modifier = Modifier.padding(p)
             ) {
                 composable<ChatsRoute> {
-                    ChatsScreen { chat ->
+//                    ChatsScreen { chat ->
+//                        navController.navigate(
+//                            ChatRoute(
+//                                id = chat.id,
+//                            )
+//                        )
+//                    }
+                    ChatsScreen { chatId ->
                         navController.navigate(
-                            ChatRoute(
-                                id = chat.id,
-                            )
+                            ChatRoute(id = chatId)
                         )
                     }
                 }

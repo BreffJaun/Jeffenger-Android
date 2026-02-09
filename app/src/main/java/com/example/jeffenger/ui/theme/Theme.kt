@@ -18,14 +18,17 @@ private val DarkColorScheme = darkColorScheme(
     secondary = TealLight,
     onSecondary = Color.Black,
 
+    tertiaryContainer = Gray950,
+    onTertiaryContainer = Gray200,
+
     background = BodyColor,
     onBackground = Gray100,
 
-    surface = Gray800,
+    surface = Gray900,
     onSurface = Gray100,
 
     surfaceVariant = Gray700,
-    onSurfaceVariant = Gray300,
+    onSurfaceVariant = Gray200,
 
     outline = Gray600,
     error = Red
@@ -37,6 +40,9 @@ private val LightColorScheme = lightColorScheme(
 
     secondary = TealLight,
     onSecondary = Color.Black,
+
+    tertiaryContainer = Gray200,
+    onTertiaryContainer = Gray950,
 
     background = Gray100,
     onBackground = Gray900,

@@ -1,6 +1,7 @@
 package com.example.jeffenger.ui.theme
 
 
+import android.R.attr.fontFamily
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -56,23 +57,39 @@ val Typography = Typography(
         fontWeight = FontWeight.Medium,
         fontSize = 22.sp
     ),
+    // Chat list – Name
     titleMedium = TextStyle(
         fontFamily = Archivo,
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.sp,
+        lineHeight = 22.sp
     ),
+
+//    titleMedium = TextStyle(
+//        fontFamily = Archivo,
+//        fontWeight = FontWeight.Medium,
+//        fontSize = 16.sp
+//    ),
     titleSmall = TextStyle(
         fontFamily = Archivo,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp
     ),
 
+    // Chat list – Message preview
     bodyLarge = TextStyle(
         fontFamily = Archivo,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp
+        fontSize = 18.sp,
+        lineHeight = 22.sp,
+        letterSpacing = 0.25.sp
     ),
+//    bodyLarge = TextStyle(
+//        fontFamily = Archivo,
+//        fontWeight = FontWeight.Normal,
+//        fontSize = 16.sp,
+//        lineHeight = 24.sp
+//    ),
     bodyMedium = TextStyle(
         fontFamily = Archivo,
         fontWeight = FontWeight.Normal,
@@ -91,11 +108,17 @@ val Typography = Typography(
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp
     ),
+    // Timestamp
     labelMedium = TextStyle(
         fontFamily = Archivo,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp
     ),
+//    labelMedium = TextStyle(
+//        fontFamily = Archivo,
+//        fontWeight = FontWeight.Medium,
+//        fontSize = 12.sp
+//    ),
     labelSmall = TextStyle(
         fontFamily = Archivo,
         fontWeight = FontWeight.Medium,

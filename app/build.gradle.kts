@@ -82,6 +82,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -95,8 +96,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // Material Icons
-    implementation(libs.androidx.compose.material.icons.extended)
-    implementation("androidx.compose.material:material:1.9.5")
     implementation("androidx.compose.material:material-icons-extended")
 
     // JSON Serialization
@@ -106,7 +105,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     // FlowRow
-    implementation("androidx.compose.foundation:foundation:1.6.0+")
+//    implementation("androidx.compose.foundation:foundation:1.6.0+")
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
@@ -133,4 +132,13 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
+
+    // BOM -> Bill of Materials
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.foundation)
 }

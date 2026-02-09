@@ -5,16 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.toRoute
 import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.Message
+import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.navigation.helper.ChatRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class ChatViewModel(
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    repository: ChatRepositoryInterface
 ) : ViewModel() {
 
-    private val route = savedStateHandle.toRoute<ChatRoute>()
-    val chatId = route.id
-
-    val chat = MutableStateFlow<Chat?>(null)
-    val messages = MutableStateFlow<List<Message>>(emptyList())
+    val chatId = savedStateHandle.toRoute<ChatRoute>().id
+    val chat = repository.observeChat(chatId)
+    val messages = repository.observeMessages(chatId)
 }

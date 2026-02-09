@@ -120,15 +120,15 @@ fun TopBar(
                 text = buildAnnotatedString {
                     withStyle(
                         style = SpanStyle(
-                            color = scheme.primary, // Teal
+                            color = scheme.secondary, // Teal
                             fontWeight = FontWeight.Bold
                         )
                     ) {
-                        append("Jeff")
+                        append("jeff")
                     }
                     withStyle(
                         style = SpanStyle(
-                            color = scheme.onBackground,
+                            color = scheme.secondary,
                             fontWeight = FontWeight.Bold
                         )
                     ) {
