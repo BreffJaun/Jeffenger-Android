@@ -4,18 +4,25 @@ import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.Message
 import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.utils.enums.MessageStatus
+import com.example.jeffenger.utils.helper.normalizeCompanyId
 
 object MockData {
 
+    val jeffCompany = "Jeffenger"
+    val acmeCompany = "Acme"
+
     private fun nowMinus(seconds: Int): Long =
         System.currentTimeMillis() - seconds * 1000L
+
 
     // USERS
     val jeff = User(
         id = "user_jeff",
         username = "jeff",
         displayName = "Jeff",
-        email = "jeff@jeffinger.app",
+        email = "jeff@jeffenger.app",
+        company = jeffCompany,
+        companyId = normalizeCompanyId(jeffCompany),
         createdAt = nowMinus(60 * 60),
         lastActiveAt = nowMinus(10),
         isOnline = true
@@ -23,9 +30,11 @@ object MockData {
 
     val alice = User(
         id = "user_alice",
-        username = "alice",
-        displayName = "Alice",
+        username = "alice meyer",
+        displayName = "Alice Meyer",
         email = "alice@acme.com",
+        company = acmeCompany,
+        companyId = normalizeCompanyId(acmeCompany),
         createdAt = nowMinus(60 * 60 * 24),
         lastActiveAt = nowMinus(120),
         isOnline = false
@@ -33,15 +42,29 @@ object MockData {
 
     val bob = User(
         id = "user_bob",
-        username = "bob",
-        displayName = "Bob",
+        username = "bob keller",
+        displayName = "Bob Keller",
         email = "bob@acme.com",
+        company = acmeCompany,
+        companyId = normalizeCompanyId(acmeCompany),
         createdAt = nowMinus(60 * 60 * 24),
         lastActiveAt = nowMinus(300),
         isOnline = false
     )
 
-    val users = listOf(jeff, alice, bob)
+    val john = User(
+        id = "user_john",
+        username = "John Doe",
+        displayName = "John Doe",
+        email = "john@acme.com",
+        company = acmeCompany,
+        companyId = normalizeCompanyId(acmeCompany),
+        createdAt = nowMinus(60 * 60 * 24),
+        lastActiveAt = nowMinus(180),
+        isOnline = false
+    )
+
+    val users = listOf(jeff, alice, bob, john)
 
     // MESSAGES
     val messages = listOf(
@@ -109,6 +132,34 @@ object MockData {
             text = "Top, dann bis später!",
             createdAt = nowMinus(820),
             status = MessageStatus.SENT
+        ),
+
+        // Chat 4 – Company internal (Alice, Bob, John)
+        Message(
+            id = "m8",
+            chatId = "chat_4",
+            senderId = alice.id,
+            text = "Habt ihr das neue Briefing gesehen?",
+            createdAt = nowMinus(1200),
+            status = MessageStatus.READ,
+            readBy = listOf(alice.id, bob.id, john.id)
+        ),
+        Message(
+            id = "m9",
+            chatId = "chat_4",
+            senderId = bob.id,
+            text = "Ja, schaue ich mir gleich an.",
+            createdAt = nowMinus(1100),
+            status = MessageStatus.READ,
+            readBy = listOf(alice.id, bob.id, john.id)
+        ),
+        Message(
+            id = "m10",
+            chatId = "chat_4",
+            senderId = john.id,
+            text = "Ich finde es gut 👍",
+            createdAt = nowMinus(1000),
+            status = MessageStatus.SENT
         )
     )
 
@@ -153,6 +204,21 @@ object MockData {
                 jeff.id to 0,
                 alice.id to 0,
                 bob.id to 0
+            )
+        ),
+        Chat(
+            id = "chat_4",
+            participantIds = listOf(alice.id, bob.id, john.id),
+            isGroupChat = true,
+            title = "Acme Intern",
+            lastMessageId = "m10",
+            lastMessageText = "Ich finde es gut 👍",
+            lastMessageTimestamp = nowMinus(1000),
+            createdAt = nowMinus(14400),
+            unreadCount = mapOf(
+                alice.id to 0,
+                bob.id to 0,
+                john.id to 1
             )
         )
     )

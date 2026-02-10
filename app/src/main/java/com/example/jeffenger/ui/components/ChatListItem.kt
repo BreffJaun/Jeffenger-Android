@@ -20,12 +20,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.local.MockData.users
 import com.example.jeffenger.data.remote.model.Chat
-import com.example.jeffenger.data.remote.model.ChatListItemUiModel
+import com.example.jeffenger.data.remote.model.ui_model.ChatListItemUiModel
 import com.example.jeffenger.ui.theme.AppTheme
+import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.utils.Extensions.relativeTimeString
 import com.example.jeffenger.utils.debugging.LogComposable
 
@@ -47,8 +49,7 @@ fun ChatListItem(
 
             // Avatar
             AvatarCircle(
-                imageUrl = item.avatarUrl,
-                fallbackText = item.displayName
+                avatar = item.avatar
             )
 
             Spacer(Modifier.width(12.dp))
@@ -67,46 +68,12 @@ fun ChatListItem(
 
                 Text(
                     text = item.lastMessageText ?: "",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = UrbanistText.BodyRegular,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-//            Column(
-//                modifier = Modifier.weight(1f),
-//                verticalArrangement = Arrangement.spacedBy(4.dp)
-//            ) {
-//                Text(
-//                    text = item.displayName,
-//                    style = MaterialTheme.typography.bodyLarge,
-//                    color = MaterialTheme.colorScheme.onSurface,
-//                    maxLines = 1
-//                )
-//
-//                Text(
-//                    text = item.lastMessageText ?: "",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    maxLines = 1
-//                )
-//            }
-//            Column(
-//                modifier = Modifier.weight(1f)
-//            ) {
-//                Text(
-//                    text = item.displayName,
-//                    style = MaterialTheme.typography.bodyLarge,
-//                    color = MaterialTheme.colorScheme.onSurface,
-//                    maxLines = 1
-//                )
-//
-//                Text(
-//                    text = item.lastMessageText ?: "",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    maxLines = 1
-//                )
-//            }
 
             // TIME + UNREAD MESSAGS
             Column(
@@ -116,20 +83,12 @@ fun ChatListItem(
             ) {
                 Text(
                     text = item.lastMessageTimestamp.relativeTimeString(),
-                    style = MaterialTheme.typography.labelMedium,
+                    style = UrbanistText.Label,
                     color = if (item.unreadCount > 0)
                         MaterialTheme.colorScheme.primary
                     else
                         MaterialTheme.colorScheme.onSurface
                 )
-//                Text(
-//                    text = item.lastMessageTimestamp.relativeTimeString(),
-//                    style = MaterialTheme.typography.bodySmall,
-//                    color = if (item.unreadCount > 0)
-//                        MaterialTheme.colorScheme.primary
-//                    else
-//                        MaterialTheme.colorScheme.onSurface
-//                )
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -144,7 +103,7 @@ fun ChatListItem(
                         Text(
                             text = item.unreadCount.toString(),
                             color = MaterialTheme.colorScheme.onPrimary,
-                            style = MaterialTheme.typography.labelSmall
+                            style = UrbanistText.Label
                         )
                     }
                 }
