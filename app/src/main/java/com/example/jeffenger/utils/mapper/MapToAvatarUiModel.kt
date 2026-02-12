@@ -1,13 +1,12 @@
-package com.example.jeffenger.utils.helper
+package com.example.jeffenger.utils.mapper
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Groups
-import androidx.compose.material.icons.rounded.MoreHoriz
 import com.example.jeffenger.R
 import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.data.remote.model.ui_model.AvatarUiModel
-import com.example.jeffenger.utils.Extensions.initials
+import com.example.jeffenger.utils.extensions.initials
 import com.example.jeffenger.utils.enums.AvatarType
 import kotlin.collections.map
 

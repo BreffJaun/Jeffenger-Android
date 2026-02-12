@@ -1,6 +1,5 @@
 package com.example.jeffenger.ui.components
 
-import android.R.attr.scheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,8 +17,6 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.jeffenger.data.remote.model.ui_model.AvatarUiModel
 import com.example.jeffenger.ui.theme.AvatarInitialsTextStyle
-import com.example.jeffenger.utils.Extensions.initials
-import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.enums.AvatarType
 
 @Composable

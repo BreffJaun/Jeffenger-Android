@@ -1,4 +1,4 @@
-package com.example.jeffenger.utils.Extensions
+package com.example.jeffenger.utils.extensions
 
 fun String.initials(maxLetters: Int = 2): String {
     val parts = trim()

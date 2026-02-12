@@ -1,4 +1,4 @@
-package com.example.jeffenger.utils.Extensions
+package com.example.jeffenger.utils.extensions
 
 import java.text.SimpleDateFormat
 import java.util.Date

@@ -1,7 +1,5 @@
 package com.example.jeffenger.data.remote.model
 
-import com.example.jeffenger.utils.helper.normalizeCompanyId
-
 data class User(
     val id: String = "",                 // Firebase UID
     val username: String = "",

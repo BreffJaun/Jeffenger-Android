@@ -23,12 +23,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.jeffenger.data.local.MockData.users
-import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.ui_model.ChatListItemUiModel
 import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.theme.UrbanistText
-import com.example.jeffenger.utils.Extensions.relativeTimeString
+import com.example.jeffenger.utils.extensions.relativeTimeString
 import com.example.jeffenger.utils.debugging.LogComposable
 
 @Composable

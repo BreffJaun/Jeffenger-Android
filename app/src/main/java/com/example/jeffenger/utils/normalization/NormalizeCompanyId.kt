@@ -1,4 +1,4 @@
-package com.example.jeffenger.utils.helper
+package com.example.jeffenger.utils.normalization
 
 fun normalizeCompanyId(rawCompany: String): String =
     rawCompany

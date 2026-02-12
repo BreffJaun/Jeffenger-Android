@@ -4,7 +4,7 @@ import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.Message
 import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.utils.enums.MessageStatus
-import com.example.jeffenger.utils.helper.normalizeCompanyId
+import com.example.jeffenger.utils.normalization.normalizeCompanyId
 
 object MockData {
 
