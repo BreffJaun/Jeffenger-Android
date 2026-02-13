@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <!-- Normales App Theme -->
     <style name="Theme.Jeffenger" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Splash Theme -->
+    <style name="Theme.Jeffenger.Splash" parent="Theme.SplashScreen">
+
+        <!-- Background -->
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+
+        <!-- Icon -->
+        <item name="windowSplashScreenAnimatedIcon">
+            @drawable/transparent_icon
+        </item>
+
+        <!-- After Splash normal Theme -->
+        <item name="postSplashScreenTheme">@style/Theme.Jeffenger</item>
+
+    </style>
+
 </resources>

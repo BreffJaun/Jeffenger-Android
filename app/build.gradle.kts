@@ -154,4 +154,7 @@ dependencies {
 
     // Firebase
     implementation(libs.firebase.auth)
+
+    // Android Splashscreen
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }
