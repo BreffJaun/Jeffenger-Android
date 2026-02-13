@@ -86,7 +86,7 @@ fun AvatarCircle(
 //
 //color = scheme.onSurface,
 //
-//// 🔴 Figma-konform
+//// Figma-konform
 //style = TextStyle(
 //fontFamily = Archivo,
 //fontWeight = FontWeight.Normal, // Regular

@@ -3,6 +3,7 @@ package com.example.jeffenger.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jeffenger.data.local.MockData
+import com.example.jeffenger.data.local.MockData.chats
 import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.ui_model.ChatListItemUiModel
 import com.example.jeffenger.data.repository.AuthRepositoryFirebase
@@ -27,8 +28,11 @@ class ChatsViewModel(
     private val currentUserId = "user_jeff"
 //    private val currentUserId = authRepository.authState.value?.uid
 
+    private val userChatsFlow = repository.observeChatsForUser(currentUserId)
+
     val startChatUiState: StateFlow<StartChatUiState> =
-        repository.observeChats()
+//        repository.observeChats()
+        userChatsFlow
             .map { chats ->
                 buildStartChatUiState(chats)
             }
@@ -38,12 +42,27 @@ class ChatsViewModel(
                 StartChatUiState()
             )
 
-    val chatListItems: Flow<List<ChatListItemUiModel>> =
-        repository.observeChats().map { chats ->
-            chats.map { chat ->
-                mapChatToUiModel(chat)
+//    val chatListItems: Flow<List<ChatListItemUiModel>> =
+////        repository.observeChats()
+//        userChatsFlow
+//            .map { chats ->
+//            chats.map { chat ->
+//                mapChatToUiModel(chat)
+//            }
+//        }
+
+    val chatListItems: StateFlow<List<ChatListItemUiModel>> =
+        userChatsFlow
+            .map { chats ->
+                chats.map { chat ->
+                    mapChatToUiModel(chat)
+                }
             }
-        }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
 
     private fun mapChatToUiModel(chat: Chat): ChatListItemUiModel {
 

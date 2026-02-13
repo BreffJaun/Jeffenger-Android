@@ -16,6 +16,13 @@ class ChatRepositoryMock : ChatRepositoryInterface {
     private val messages = MutableStateFlow(MockData.messages)
     private val users = MutableStateFlow(MockData.users)
 
+    override fun observeChatsForUser(userId: String): Flow<List<Chat>> =
+        chats.map { list ->
+            list.filter { chat ->
+                chat.participantIds.contains(userId)
+            }
+        }
+
     override fun observeChats(): Flow<List<Chat>> = chats
 
     override fun observeChat(chatId: String): Flow<Chat?> =

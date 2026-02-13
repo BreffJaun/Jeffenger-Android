@@ -1,42 +1,95 @@
 package com.example.jeffenger.ui.screens
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.ui.components.ChatListItem
+import com.example.jeffenger.ui.components.StartChatSection
 import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.viewmodels.ChatsViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 
 @Composable
 fun ChatsScreen(
-    viewModel: ChatsViewModel = koinViewModel (),
+    viewModel: ChatsViewModel = koinViewModel(),
     onNavigateToDetail: (String) -> Unit
 ) {
     LogComposable("ChatsScreen") {
         val scheme = MaterialTheme.colorScheme
-        val items = viewModel.chatListItems.collectAsState(emptyList())
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(
-                items = items.value,
-                key = { it.chatId }
-            ) { item ->
-                ChatListItem(
-                    item = item,
-                    onClick = { onNavigateToDetail(item.chatId) }
+        val startState by viewModel.startChatUiState.collectAsState()
+        val chatItems by viewModel.chatListItems.collectAsState()
+
+        if (chatItems.isEmpty()) {
+
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+            ) {
+                StartChatSection(
+                    state = startState,
+                    onDirectJeffClick = { },
+                    onCompanyClick = { },
+                    onCompanyWithJeffClick = { }
                 )
+            }
+
+        } else {
+
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                LazyColumn(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(
+                        chatItems,
+                        key = { it.chatId }
+                    ) { item ->
+                        ChatListItem(
+                            item = item,
+                            onClick = { onNavigateToDetail(item.chatId) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    StartChatSection(
+                        state = startState,
+                        onDirectJeffClick = { },
+                        onCompanyClick = { },
+                        onCompanyWithJeffClick = { }
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
             }
         }
     }

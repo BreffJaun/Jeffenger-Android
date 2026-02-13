@@ -164,7 +164,7 @@ object MockData {
     )
 
     // CHATS
-    val chats = listOf(
+    val chats = listOf<Chat>(
         Chat(
             id = "chat_1",
             participantIds = listOf(jeff.id, alice.id),
