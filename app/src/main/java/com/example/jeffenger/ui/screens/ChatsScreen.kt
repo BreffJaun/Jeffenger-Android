@@ -2,7 +2,9 @@ package com.example.jeffenger.ui.screens
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +16,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.ui.components.ChatListItem
+import com.example.jeffenger.ui.components.ChatSearchBar
 import com.example.jeffenger.ui.components.StartChatSection
 import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.viewmodels.ChatsViewModel
@@ -37,6 +43,8 @@ fun ChatsScreen(
         val startState by viewModel.startChatUiState.collectAsState()
         val chatItems by viewModel.chatListItems.collectAsState()
 
+        var searchQuery by remember { mutableStateOf("") }
+
         if (chatItems.isEmpty()) {
 
             Column(
@@ -44,7 +52,7 @@ fun ChatsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 25.dp),
             ) {
                 StartChatSection(
                     state = startState,
@@ -57,8 +65,18 @@ fun ChatsScreen(
         } else {
 
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 25.dp)
             ) {
+
+                ChatSearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    modifier = Modifier
+                        .padding(bottom = 40.dp)
+                )
+
                 LazyColumn(
                     modifier = Modifier.weight(1f)
                 ) {

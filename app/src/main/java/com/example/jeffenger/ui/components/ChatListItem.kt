@@ -41,7 +41,7 @@ fun ChatListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(16.dp),
+                .padding(bottom = 15.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
 

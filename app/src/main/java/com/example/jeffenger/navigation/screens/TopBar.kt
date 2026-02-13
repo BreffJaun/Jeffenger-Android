@@ -1,29 +1,40 @@
 package de.syntax_institut.projektwoche1.ui.component
 
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.MoreHoriz
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.example.jeffenger.R
 import com.example.jeffenger.navigation.helper.CalendarRoute
 import com.example.jeffenger.navigation.helper.ChatRoute
 import com.example.jeffenger.navigation.helper.ChatsRoute
@@ -77,108 +88,84 @@ fun TopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp)
-                .padding(top = 32.dp)
+                .padding(top = 60.dp)
+                .padding(horizontal = 25.dp)
+                .padding(bottom = 10.dp)
         ) {
 
             // LEFT SIDE
-            Box(
-                modifier = Modifier.width(48.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = !isChatsRoute,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    GlassIconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowBackIosNew,
-                            tint = scheme.onSurface,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
+            Image(
+                painter = painterResource(R.drawable.jeffenger_font),
+                contentDescription = "Jeffenger Logo",
+                contentScale = ContentScale.FillHeight,
+                modifier = Modifier.height(20.dp)
+            )
 
-                androidx.compose.animation.AnimatedVisibility(
+            // CENTER
+            // ...
+
+
+            // RIGHT SIDE
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AnimatedVisibility(
                     visible = isChatsRoute,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
-                    GlassIconButton(onClick = { /* open overflow menu */ }) {
-                        Icon(
-                            imageVector = Icons.Rounded.MoreHoriz,
-                            tint = scheme.onSurface,
-                            contentDescription = "More options"
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                        GlassIconButton(onClick = { /* Calendar */ }) {
+                            Icon(
+                                imageVector = Icons.Outlined.CalendarToday,
+                                tint = scheme.outlineVariant,
+                                contentDescription = "Calendar"
+                            )
+                        }
+
+                        GlassIconButton(onClick = { /* Add Chat */ }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Add,
+                                tint = scheme.outlineVariant,
+                                contentDescription = "New Chat"
+                            )
+                        }
+
+                        GlassIconButton(onClick = { /* More */ }) {
+                            Icon(
+                                imageVector = Icons.Outlined.MoreVert,
+                                tint = scheme.outlineVariant,
+                                contentDescription = "More"
+                            )
+                        }
                     }
                 }
-            }
 
-            // CENTER
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(
-                        style = SpanStyle(
-                            color = scheme.secondary, // Teal
-                            fontWeight = FontWeight.Bold
-                        )
-                    ) {
-                        append("jeff")
-                    }
-                    withStyle(
-                        style = SpanStyle(
-                            color = scheme.secondary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    ) {
-                        append("enger")
-                    }
-                },
-                style = MaterialTheme.typography.titleLarge
-            )
-
-            // RIGHT SIDE
-            Box(
-                modifier = Modifier.width(48.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                androidx.compose.animation.AnimatedVisibility(
+                AnimatedVisibility(
                     visible = isChatRoute || isCalendarRoute,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
-                    when {
-                        isChatRoute -> {
-                            GlassIconButton(
-                                onClick = {
-                                    // new chat later
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Add,
-                                    tint = scheme.onSurface,
-                                    contentDescription = "New chat"
-                                )
-                            }
-                        }
-
-                        isCalendarRoute -> {
-                            GlassIconButton(
-                                onClick = {
-                                    // new appointment later
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Add,
-                                    tint = scheme.onSurface,
-                                    contentDescription = "New appointment"
-                                )
-                            }
-                        }
+                    GlassIconButton(onClick = { /* Add */ }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Add,
+                            tint = scheme.onSurface,
+                            contentDescription = "Add"
+                        )
                     }
                 }
+
+                AnimatedVisibility(
+                    visible = isSettingsRoute,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Box(modifier = Modifier.width(1.dp))
+                }
             }
+
         }
     }
 }

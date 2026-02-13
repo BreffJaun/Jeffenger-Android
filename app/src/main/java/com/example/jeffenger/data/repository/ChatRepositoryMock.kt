@@ -1,7 +1,6 @@
 package com.example.jeffenger.data.repository
 
 import com.example.jeffenger.data.local.MockData
-import com.example.jeffenger.data.local.MockData.users
 import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.Message
 import com.example.jeffenger.data.remote.model.User
