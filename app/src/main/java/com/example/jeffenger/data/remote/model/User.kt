@@ -1,6 +1,9 @@
 package com.example.jeffenger.data.remote.model
 
+import com.google.firebase.firestore.DocumentId
+
 data class User(
+    @DocumentId
     val id: String = "",                 // Firebase UID
     val username: String = "",
     val displayName: String = "",

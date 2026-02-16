@@ -69,7 +69,7 @@ import com.example.jeffenger.utils.debugging.LogComposable
 @Composable
 fun TopBar(
     currentRoute: String?,
-    isDarkMode: Boolean,
+//    isDarkMode: Boolean,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {

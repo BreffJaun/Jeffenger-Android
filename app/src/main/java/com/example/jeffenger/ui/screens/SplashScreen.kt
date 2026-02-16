@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.R
+import com.example.jeffenger.utils.debugging.LogComposable
 import de.syntax_institut.jetpack.a04_05_online_shopper.utilities.BackgroundWrapper
 import kotlinx.coroutines.delay
 
@@ -15,45 +16,48 @@ import kotlinx.coroutines.delay
 fun SplashScreen(
     onFinished: () -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        delay(3000)
-        onFinished()
-    }
+    LogComposable("SplashScreen") {
 
-    BackgroundWrapper {
+        LaunchedEffect(Unit) {
+            delay(3000)
+            onFinished()
+        }
 
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        BackgroundWrapper {
 
-            // CENTER CONTENT
-            Column(
-                modifier = Modifier.align(Alignment.Center),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier.fillMaxSize()
             ) {
 
-                Image(
-                    painter = painterResource(R.drawable.jeffenger_splash_icon),
-                    contentDescription = "Jeffenger Icon",
-                    modifier = Modifier.size(120.dp)
-                )
+                // CENTER CONTENT
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    Image(
+                        painter = painterResource(R.drawable.jeffenger_splash_icon),
+                        contentDescription = "Jeffenger Icon",
+                        modifier = Modifier.size(120.dp)
+                    )
 
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Image(
+                        painter = painterResource(R.drawable.jeffenger_lettering),
+                        contentDescription = "Jeffenger Lettering"
+                    )
+                }
+
+                // BOTTOM CONTENT
                 Image(
-                    painter = painterResource(R.drawable.jeffenger_lettering),
-                    contentDescription = "Jeffenger Lettering"
+                    painter = painterResource(R.drawable.app_by),
+                    contentDescription = "App by",
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 48.dp)
                 )
             }
-
-            // BOTTOM CONTENT
-            Image(
-                painter = painterResource(R.drawable.app_by),
-                contentDescription = "App by",
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 48.dp)
-            )
         }
     }
 }

@@ -40,10 +40,10 @@ import de.syntax_institut.projektwoche1.ui.component.TopBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppStart(
-    isDarkMode: Boolean,
-    onToggleTheme: () -> Unit,
+//    isDarkMode: Boolean,
+//    onToggleTheme: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SettingsViewModel = viewModel()
+    settingsViewModel: SettingsViewModel = viewModel()
 ) {
     LogComposable("AppStart") {
         val scheme = MaterialTheme.colorScheme
@@ -68,7 +68,7 @@ fun AppStart(
             topBar = {
                 TopBar(
                     currentRoute = currentRoute,
-                    isDarkMode = isDarkMode,
+//                    isDarkMode = isDarkMode,
                     onBackClick = { navController.popBackStack() }
                 )
             },
@@ -84,7 +84,7 @@ fun AppStart(
                             restoreState = true
                         }
                     },
-                    isDarkMode = isDarkMode
+//                    isDarkMode = isDarkMode
                 )
             },
 //            floatingActionButton = {}

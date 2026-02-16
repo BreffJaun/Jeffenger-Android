@@ -1,28 +1,135 @@
 package com.example.jeffenger.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
-import com.example.jeffenger.data.repository.AuthRepositoryFirebase
+import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import android.util.Patterns
+import androidx.lifecycle.viewModelScope
+import com.example.jeffenger.data.repository.AuthPreferencesRepository
+import com.example.jeffenger.utils.enums.AuthMode
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val authRepository: AuthRepositoryFirebase
-): ViewModel() {
+    private val authRepository: AuthRepositoryInterface,
+    private val authPreferencesRepository: AuthPreferencesRepository
+) : ViewModel() {
+    private val _authMode = MutableStateFlow(AuthMode.REGISTER)
+    val authMode = _authMode.asStateFlow()
+
     private val _email = MutableStateFlow("")
     val email = _email.asStateFlow()
 
     private val _password = MutableStateFlow("")
     val password = _password.asStateFlow()
 
+    private val _displayName = MutableStateFlow("")
+    val displayName = _displayName.asStateFlow()
+
+    private val _company = MutableStateFlow("")
+    val company = _company.asStateFlow()
+
+    val isEmailValid = email.map { input ->
+        Patterns.EMAIL_ADDRESS.matcher(input).matches()
+    }
+
+//    private val passwordRegex =
+//        Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{6,}$")
+
+    val hasMinLength = password.map { it.length >= 6 }
+    val hasUppercase = password.map { it.any { char -> char.isUpperCase() } }
+    val hasLowercase = password.map { it.any { char -> char.isLowerCase() } }
+    val hasDigit = password.map { it.any { char -> char.isDigit() } }
+    val hasSpecialChar = password.map {
+        it.any { char -> !char.isLetterOrDigit() }
+    }
+
+    val isPasswordValid = combine(
+        hasMinLength,
+        hasUppercase,
+        hasLowercase,
+        hasDigit,
+        hasSpecialChar
+    ) { length, upper, lower, digit, special ->
+        length && upper && lower && digit && special
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        false
+    )
+
+//    ^                         Start
+//    (?=.*[a-z])               mind. 1 Kleinbuchstabe
+//    (?=.*[A-Z])               mind. 1 Großbuchstabe
+//    (?=.*\d)                  mind. 1 Zahl
+//    (?=.*[@$!%*#?&])          mind. 1 Sonderzeichen
+//    [A-Za-z\d@$!%*#?&]{6,}    mindestens 6 erlaubte Zeichen
+//    $                         Ende
+
+//    val isPasswordValid = password.map { input ->
+//        passwordRegex.matches(input)
+//    }
+
+
+    val isDisplayNameValid = displayName.map { it.isNotBlank() }
+    val isCompanyValid = company.map { it.isNotBlank() }
+
+    val isFormValid = combine(
+        isEmailValid,
+        isPasswordValid,
+        isDisplayNameValid,
+        isCompanyValid,
+        authMode
+    ) { email, password, name, company, mode ->
+        when (mode) {
+            AuthMode.REGISTER -> email && password && name && company
+            AuthMode.LOGIN -> email && password
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false
+    )
+
     val authState = authRepository.authState
     val errorMessage = authRepository.errorMessage
+    val loadingState = authRepository.loadingState
+
+    private var lastAuthAction: (() -> Unit)? = null
+
+    init {
+        viewModelScope.launch {
+            authPreferencesRepository.hasRegistered.collect { registered ->
+                if (registered) {
+                    _authMode.value = AuthMode.LOGIN
+                }
+            }
+        }
+    }
 
     fun loginWithEmailAndPassword() {
+        lastAuthAction = { loginWithEmailAndPassword() }
+
         authRepository.loginWithEmailAndPassword(email.value, password.value)
     }
 
     fun registerWithEmailAndPassword() {
-        authRepository.registerWithEmailAndPassword(email.value, password.value)
+        lastAuthAction = { registerWithEmailAndPassword() }
+
+        authRepository.registerWithEmailAndPassword(
+            email.value,
+            password.value,
+            displayName.value,
+            company.value
+        )
+
+        viewModelScope.launch {
+            authPreferencesRepository.setHasRegistered(true)
+        }
     }
 
     fun onEmailChange(newEmail: String) {
@@ -31,5 +138,28 @@ class AuthViewModel(
 
     fun onPasswordChange(newPassword: String) {
         _password.value = newPassword
+    }
+
+    fun onDisplayNameChange(newDisplayName: String) {
+        _displayName.value = newDisplayName
+    }
+
+    fun onCompanyChange(newCompany: String) {
+        _company.value = newCompany
+    }
+
+    fun retryLastAction() {
+        lastAuthAction?.invoke()
+    }
+
+    fun setAuthMode(mode: AuthMode) {
+        _authMode.value = mode
+    }
+
+    fun submit() {
+        when (_authMode.value) {
+            AuthMode.REGISTER -> registerWithEmailAndPassword()
+            AuthMode.LOGIN -> loginWithEmailAndPassword()
+        }
     }
 }

@@ -42,11 +42,9 @@ import com.example.jeffenger.utils.debugging.LogComposable
 fun IosStyleBottomBar(
     currentRoute: String?,
     onTabSelected: (TabItem) -> Unit,
-    isDarkMode: Boolean
+//    isDarkMode: Boolean
 ) {
     LogComposable("IosStyleBottomBar") {
-
-
         val tabs = TabItem.values()
 
         fun isSelected(tab: TabItem): Boolean =
@@ -92,7 +90,9 @@ fun IosStyleBottomBar(
                             .clip(RoundedCornerShape(999.dp))
                             .background(
                                 MaterialTheme.colorScheme.onSurface
-                                    .copy(alpha = if (isDarkMode) 0.18f else 0.12f)
+//                                    .copy(alpha = if (isDarkMode) 0.18f else 0.12f)
+                                    .copy(alpha = 0.18f )
+
                             )
 //                        .background(
 //                            MaterialTheme.colorScheme.primary

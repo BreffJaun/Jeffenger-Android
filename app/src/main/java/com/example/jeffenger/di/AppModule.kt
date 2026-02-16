@@ -1,23 +1,40 @@
 package com.example.jeffenger.di
 
+import android.content.Context
+import com.example.jeffenger.data.repository.AuthPreferencesRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.example.jeffenger.data.repository.AuthRepositoryFirebase
 import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.data.repository.ChatRepositoryMock
+import com.example.jeffenger.data.repository.UserRepositoryFirebase
 import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
+import com.example.jeffenger.dataStore
+import com.example.jeffenger.ui.viewmodels.AuthViewModel
 import com.example.jeffenger.ui.viewmodels.ChatViewModel
 import com.example.jeffenger.ui.viewmodels.ChatsViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val appModule = module {
 
     single {
+        AuthPreferencesRepository(get<Context>().dataStore)
+    }
+
+    single {
         FirebaseAuth.getInstance()
     }
 
+    single {
+        FirebaseFirestore.getInstance()
+    }
+
     single<AuthRepositoryInterface> {
-        AuthRepositoryFirebase(get())
+        AuthRepositoryFirebase(
+            get(),
+            get()
+        )
     }
 
     // MOCKDATA
@@ -30,9 +47,14 @@ val appModule = module {
 //        ChatRepositoryFirebase(get())
 //    }
 
-    // Chat LIST
-    viewModelOf(::ChatsViewModel)
+    single {
+        UserRepositoryFirebase(
+            get(),
+            get()
+        )
+    }
 
-    // Chat DETAIL
-    viewModelOf(::ChatViewModel)
+    viewModelOf(::ChatsViewModel)   // Chat LIST
+    viewModelOf(::ChatViewModel)    // Chat DETAIL
+    viewModelOf(::AuthViewModel)
 }

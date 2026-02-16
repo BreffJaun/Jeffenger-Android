@@ -22,7 +22,13 @@ import com.example.jeffenger.navigation.AppStart
 import com.example.jeffenger.ui.viewmodels.SettingsViewModel
 import de.syntax_institut.jetpack.a04_05_online_shopper.utilities.BackgroundWrapper
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.example.jeffenger.navigation.screens.AuthScreen
+import com.example.jeffenger.ui.screens.ErrorScreen
+import com.example.jeffenger.ui.screens.LoadingScreen
 import com.example.jeffenger.ui.screens.SplashScreen
+import com.example.jeffenger.ui.viewmodels.AuthViewModel
+import com.example.jeffenger.utils.state.LoadingState
+import org.koin.androidx.compose.koinViewModel
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "dataStore")
 
@@ -33,36 +39,50 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
+            val authViewModel: AuthViewModel = koinViewModel()
+            val authState by authViewModel.authState.collectAsState()
+            val loadingState by authViewModel.loadingState.collectAsState()
+
             var showSplash by remember { mutableStateOf(true) }
-            val viewModel: SettingsViewModel = viewModel()
-            val darkModePref by viewModel.darkModeEnabled.collectAsState()
-//            val isDarkTheme = when (darkModePref) {
-//                true -> true
-//                false -> false
-//                null -> isSystemInDarkTheme()
-//            }
-            val isDarkTheme = true
-            AppTheme(darkTheme = isDarkTheme) {
-                if (showSplash) {
 
-                    SplashScreen(
-                        onFinished = { showSplash = false }
-                    )
+            AppTheme {
+                when (loadingState) {
+                    is LoadingState.Loading -> {
+                        LoadingScreen(
+                            message = (loadingState as LoadingState.Loading).message
+                        )
+                    }
 
-                } else {
-                    BackgroundWrapper {
-                        AppStart(
-                            isDarkMode = isDarkTheme,
-                            onToggleTheme = {
-                                viewModel.setDarkMode(
-                                    when (darkModePref) {
-                                        null -> true
-                                        true -> false
-                                        false -> null
-                                    }
-                                )
+                    is LoadingState.Error -> {
+                        ErrorScreen(
+                            message = (loadingState as LoadingState.Error).message,
+                            onRetry = {
+                                authViewModel.retryLastAction()
                             }
                         )
+                    }
+
+                    else -> {
+                        if (authState != null) {
+
+                            if (showSplash) {
+
+                                SplashScreen(
+                                    onFinished = { showSplash = false }
+                                )
+
+                            } else {
+
+                                BackgroundWrapper {
+                                    AppStart()
+                                }
+                            }
+
+                        } else {
+                            BackgroundWrapper {
+                                AuthScreen()
+                            }
+                        }
                     }
                 }
             }

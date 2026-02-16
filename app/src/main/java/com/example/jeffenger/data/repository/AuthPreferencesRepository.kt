@@ -1,0 +1,24 @@
+package com.example.jeffenger.data.repository
+
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import com.example.jeffenger.data.local.database.AuthPreferences
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+class AuthPreferencesRepository(
+    private val dataStore: DataStore<Preferences>
+) {
+
+    val hasRegistered: Flow<Boolean> =
+        dataStore.data.map { prefs ->
+            prefs[AuthPreferences.HAS_REGISTERED] ?: false
+        }
+
+    suspend fun setHasRegistered(value: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[AuthPreferences.HAS_REGISTERED] = value
+        }
+    }
+}

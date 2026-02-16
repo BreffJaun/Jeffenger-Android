@@ -157,4 +157,6 @@ dependencies {
 
     // Android Splashscreen
     implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation(libs.googleid)
+    implementation(libs.firebase.firestore)
 }
