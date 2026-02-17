@@ -1,9 +1,11 @@
 package com.example.jeffenger.data.repository
 
 import com.example.jeffenger.data.remote.model.User
+import com.example.jeffenger.data.repository.interfaces.UserRepositoryInterface
 import com.example.jeffenger.utils.enums.CollectionNames
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -12,48 +14,59 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 
+
 class UserRepositoryFirebase(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore
-) {
+) : UserRepositoryInterface {
 
     private val _appUser = MutableStateFlow<User?>(null)
-    val appUser: StateFlow<User?> = _appUser.asStateFlow()
+    override val appUser: StateFlow<User?> = _appUser.asStateFlow()
+
+    private var listenerRegistration: ListenerRegistration? = null
 
     init {
-        getAppUserAsSnapshotListener()
+        observeUserChanges()
     }
 
-    fun getAppUserAsSnapshotListener() {
-        val userID = auth.currentUser?.uid
-        userID?.let { id ->
-            db.collection(CollectionNames.USERS.path)
-                .document(id)
-                .addSnapshotListener { snapshot, error ->
-                    _appUser.value = snapshot?.toObject<User>()
-                }
-        }
-    }
+    private fun observeUserChanges() {
+        auth.addAuthStateListener { firebaseAuth ->
+            // alten Firestore-Listener entfernen
+            listenerRegistration?.remove()
+            listenerRegistration = null
 
-    fun getAppUserAsFlow(): Flow<User?> = callbackFlow {
-        val userID = auth.currentUser?.uid
-        if (userID == null) {
-            trySend(null)
-            close()
-            return@callbackFlow
-        }
-        val docRef = db.collection(CollectionNames.USERS.path)
-            .document(userID)
-
-        val listener = docRef.addSnapshotListener { snapshot, error ->
-            if(error != null) {
-                close(error)
-                return@addSnapshotListener
+            val uid = firebaseAuth.currentUser?.uid
+            if (uid == null) {
+                _appUser.value = null
+                return@addAuthStateListener
             }
-            val appUser = snapshot?.toObject<User>()
-            trySend(appUser)
-        }
 
-        awaitClose { listener.remove() }
+            attachListenerForUser(uid)
+        }
     }
+
+    private fun attachListenerForUser(uid: String) {
+        val localRef = db.collection(CollectionNames.USERS.path).document(uid)
+        val globalRef = db.collection(CollectionNames.GLOBAL_USERS.path).document(uid)
+
+        // 1) Erst prüfen, ob er in users existiert, sonst globalUsers
+        localRef.get().addOnSuccessListener { snapshot ->
+            val refToUse = if (snapshot.exists()) localRef else globalRef
+
+            // 2) Dann auf das richtige Dokument live hören
+            listenerRegistration = refToUse.addSnapshotListener { snap, error ->
+                if (error != null) {
+                    _appUser.value = null
+                    return@addSnapshotListener
+                }
+                _appUser.value = snap?.toObject<User>()
+            }
+        }.addOnFailureListener {
+            // falls get() fehlschlägt (Netz/Permission)
+            _appUser.value = null
+        }
+    }
+
+//    override fun observeAppUser(): Flow<User?> = appUser
 }
+

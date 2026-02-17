@@ -1,8 +1,10 @@
 package com.example.jeffenger.data.remote.model
 
 import com.example.jeffenger.utils.enums.MessageStatus
+import com.google.firebase.firestore.DocumentId
 
 data class Message(
+    @DocumentId
     val id: String = "",
     val chatId: String = "",
 

@@ -56,27 +56,36 @@ class AuthRepositoryFirebase(
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
                 val userId = result.user!!.uid
+                val companyId = normalizeCompanyId(company)
 
                 val newUser = User(
                     id = userId,
                     displayName = displayName,
                     email = email,
                     company = company,
-                    companyId = normalizeCompanyId(company),
+                    companyId = companyId,
                     createdAt = System.currentTimeMillis(),
                     lastActiveAt = System.currentTimeMillis()
                 )
 
-                db.collection(CollectionNames.USERS.path)
+                // 1) Top-level user index
+                val topLevelWrite = db.collection(CollectionNames.USERS.path)
                     .document(userId)
                     .set(newUser)
+
+                // 2) Nested company user
+                val nestedWrite = db.collection(CollectionNames.COMPANIES.path)
+                    .document(companyId)
+                    .collection(CollectionNames.USERS.path)
+                    .document(userId)
+                    .set(newUser)
+
+                com.google.android.gms.tasks.Tasks.whenAllComplete(topLevelWrite, nestedWrite)
                     .addOnSuccessListener {
                         _loadingState.value = LoadingState.Success()
                     }
                     .addOnFailureListener {
-                        _loadingState.value = LoadingState.Error(
-                            it.message ?: "Fehler beim Speichern"
-                        )
+                        _loadingState.value = LoadingState.Error(it.message ?: "Fehler beim Speichern")
                     }
             }
             .addOnFailureListener {

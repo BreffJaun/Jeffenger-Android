@@ -21,11 +21,12 @@ data class User(
 
     // Settings
     val darkModeEnabled: Boolean? = null,
-    val notificationsEnabled: Boolean = true,
+    val notificationsEnabled: Boolean = false,
 
     // Meta / Future-proof
     val deviceTokens: List<String> = emptyList(),
-    val blockedUserIds: List<String> = emptyList()
+    val blockedUserIds: List<String> = emptyList(),
+    val isGlobal: Boolean = false
 )
 
 //val user = User(

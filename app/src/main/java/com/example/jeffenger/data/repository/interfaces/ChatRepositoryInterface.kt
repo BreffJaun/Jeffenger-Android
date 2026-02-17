@@ -7,11 +7,17 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChatRepositoryInterface {
 
-    fun observeChatsForUser(userId: String): Flow<List<Chat>>
-    fun observeChats(): Flow<List<Chat>>
-    fun observeChat(chatId: String): Flow<Chat?>
-    fun observeMessages(chatId: String): Flow<List<Message>>
+    fun observeChatsForUser(companyId: String, userId: String): Flow<List<Chat>>
+//    fun observeChats(): Flow<List<Chat>>
+    fun observeChat(companyId: String, chatId: String): Flow<Chat?>
+    fun observeMessages(companyId: String, chatId: String): Flow<List<Message>>
 
-    fun observeUsers(userIds: List<String>): Flow<List<User>>
-    suspend fun sendMessage(message: Message)
+    fun observeUsers(companyId: String, userIds: List<String>): Flow<List<User>>
+    suspend fun sendMessage(companyId: String, chatId: String, message: Message)
 }
+
+
+
+
+
+

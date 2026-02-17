@@ -1,9 +1,16 @@
 package com.example.jeffenger.utils.normalization
 
-fun normalizeCompanyId(rawCompany: String): String =
-    rawCompany
+import java.text.Normalizer
+
+fun normalizeCompanyId(rawCompany: String): String {
+    // Ö -> OE | Ü -> UE | Ä -> AE
+    val normalized = Normalizer.normalize(rawCompany, Normalizer.Form.NFD)
+        .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
+
+    return normalized
         .trim()
         .lowercase()
         .replace(Regex("[^a-z0-9]+"), "-")
         .replace(Regex("-+"), "-")
         .trim('-')
+}

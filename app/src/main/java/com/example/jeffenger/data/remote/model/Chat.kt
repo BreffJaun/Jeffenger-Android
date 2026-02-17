@@ -1,6 +1,9 @@
 package com.example.jeffenger.data.remote.model
 
+import com.google.firebase.firestore.DocumentId
+
 data class Chat(
+    @DocumentId
     val id: String = "",
 
     val participantIds: List<String> = emptyList(),

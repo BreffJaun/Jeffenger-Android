@@ -2,17 +2,8 @@ package com.example.jeffenger.navigation.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.rounded.BubbleChart
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.CalendarToday
-import androidx.compose.material.icons.rounded.Chat
-import androidx.compose.material.icons.rounded.ChatBubble
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.QrCode
-import androidx.compose.material.icons.rounded.QrCodeScanner
-import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.jeffenger.navigation.helper.CalendarRoute
 import com.example.jeffenger.navigation.helper.ChatsRoute
@@ -41,7 +32,7 @@ enum class TabItem(
     val icon: ImageVector,
 
     ) {
-    CHATS(ChatsRoute, "Chats", Icons.Outlined.Chat),
+    CHATS(ChatsRoute, "Chats", Icons.AutoMirrored.Outlined.Chat),
     CALENDAR(CalendarRoute, "Calendar", Icons.Outlined.CalendarToday),
     SETTINGS(SettingsRoute, "Settings", Icons.Outlined.Settings)
 }
