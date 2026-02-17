@@ -93,7 +93,6 @@ class AuthRepositoryFirebase(
     private fun addAuthListener() {
         auth.addAuthStateListener {
             _authState.value = it.currentUser
-            _loadingState.value = LoadingState.Success()
         }
     }
 }

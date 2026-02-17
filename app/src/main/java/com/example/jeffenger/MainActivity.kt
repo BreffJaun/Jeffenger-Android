@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.datastore.core.DataStore
@@ -43,44 +44,43 @@ class MainActivity : ComponentActivity() {
             val authState by authViewModel.authState.collectAsState()
             val loadingState by authViewModel.loadingState.collectAsState()
 
-            var showSplash by remember { mutableStateOf(true) }
+            var showSplash by rememberSaveable { mutableStateOf(true) }
 
             AppTheme {
-                when (loadingState) {
-                    is LoadingState.Loading -> {
-                        LoadingScreen(
-                            message = (loadingState as LoadingState.Loading).message
-                        )
-                    }
+                if (showSplash) {
 
-                    is LoadingState.Error -> {
-                        ErrorScreen(
-                            message = (loadingState as LoadingState.Error).message,
-                            onRetry = {
-                                authViewModel.retryLastAction()
-                            }
-                        )
-                    }
+                    SplashScreen(
+                        onFinished = { showSplash = false }
+                    )
 
-                    else -> {
-                        if (authState != null) {
+                } else {
 
-                            if (showSplash) {
+                    when (loadingState) {
 
-                                SplashScreen(
-                                    onFinished = { showSplash = false }
-                                )
+                        is LoadingState.Loading -> {
+                            LoadingScreen(
+                                message = (loadingState as LoadingState.Loading).message
+                            )
+                        }
 
-                            } else {
+                        is LoadingState.Error -> {
+                            ErrorScreen(
+                                message = (loadingState as LoadingState.Error).message,
+                                onRetry = {
+                                    authViewModel.retryLastAction()
+                                }
+                            )
+                        }
 
+                        else -> {
+                            if (authState != null) {
                                 BackgroundWrapper {
                                     AppStart()
                                 }
-                            }
-
-                        } else {
-                            BackgroundWrapper {
-                                AuthScreen()
+                            } else {
+                                BackgroundWrapper {
+                                    AuthScreen()
+                                }
                             }
                         }
                     }

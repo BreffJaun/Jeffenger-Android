@@ -200,8 +200,8 @@ fun AuthScreen(
                 ) {
                     Text(
                         when (authMode) {
-                            AuthMode.REGISTER -> "Noch kein Account? Registrieren"
-                            AuthMode.LOGIN -> "Schon registriert? Anmelden"
+                            AuthMode.REGISTER -> "Schon registriert? Anmelden"
+                            AuthMode.LOGIN -> "Noch kein Account? Registrieren"
                         },
                         style = UrbanistText.Label,
                     )

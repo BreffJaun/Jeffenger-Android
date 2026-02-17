@@ -162,7 +162,7 @@ fun TopBar(
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
-                    Box(modifier = Modifier.width(1.dp))
+                    Box(modifier = Modifier.width(1.dp).height(48.dp))
                 }
             }
 

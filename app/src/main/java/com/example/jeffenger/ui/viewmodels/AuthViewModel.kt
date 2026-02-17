@@ -1,5 +1,6 @@
 package com.example.jeffenger.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -102,6 +103,7 @@ class AuthViewModel(
     private var lastAuthAction: (() -> Unit)? = null
 
     init {
+        // SAFE IF IT WAS REGISTERED MINIMUM 1X TIME
         viewModelScope.launch {
             authPreferencesRepository.hasRegistered.collect { registered ->
                 if (registered) {
@@ -115,6 +117,7 @@ class AuthViewModel(
         lastAuthAction = { loginWithEmailAndPassword() }
 
         authRepository.loginWithEmailAndPassword(email.value, password.value)
+        clearForm()
     }
 
     fun registerWithEmailAndPassword() {
@@ -127,9 +130,17 @@ class AuthViewModel(
             company.value
         )
 
+        // SAFE IF IT WAS REGISTERED MINIMUM 1X TIME
         viewModelScope.launch {
             authPreferencesRepository.setHasRegistered(true)
         }
+        clearForm()
+    }
+
+    fun logout() {
+        Log.d("AuthViewModel", "Logout called")
+        authRepository.logout()
+        clearForm()
     }
 
     fun onEmailChange(newEmail: String) {
@@ -146,6 +157,13 @@ class AuthViewModel(
 
     fun onCompanyChange(newCompany: String) {
         _company.value = newCompany
+    }
+
+    fun clearForm() {
+        _email.value = ""
+        _password.value = ""
+        _displayName.value = ""
+        _company.value = ""
     }
 
     fun retryLastAction() {
