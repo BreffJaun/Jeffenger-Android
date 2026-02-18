@@ -9,4 +9,6 @@ interface UserRepositoryInterface {
     val appUser: StateFlow<User?>
 
 //    fun observeAppUser(): Flow<User?>
+
+    fun observeGlobalUsers(): Flow<List<User>>
 }

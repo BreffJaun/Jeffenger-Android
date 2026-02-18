@@ -14,6 +14,13 @@ interface ChatRepositoryInterface {
 
     fun observeUsers(companyId: String, userIds: List<String>): Flow<List<User>>
     suspend fun sendMessage(companyId: String, chatId: String, message: Message)
+
+    suspend fun createChat(
+        companyId: String,
+        participantIds: List<String>,
+        isGroupChat: Boolean,
+        title: String? = null
+    ): String
 }
 
 

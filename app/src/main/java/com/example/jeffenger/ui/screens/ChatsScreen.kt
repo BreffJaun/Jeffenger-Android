@@ -2,9 +2,7 @@ package com.example.jeffenger.ui.screens
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
-import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.ui.components.ChatListItem
 import com.example.jeffenger.ui.components.ChatSearchBar
 import com.example.jeffenger.ui.components.StartChatSection
@@ -45,6 +43,12 @@ fun ChatsScreen(
 
         var searchQuery by remember { mutableStateOf("") }
 
+        LaunchedEffect(Unit) {
+            viewModel.navigateToChat.collect { chatId ->
+                onNavigateToDetail(chatId)
+            }
+        }
+
         if (chatItems.isEmpty()) {
 
             Column(
@@ -54,11 +58,17 @@ fun ChatsScreen(
                     .fillMaxSize()
                     .padding(horizontal = 25.dp),
             ) {
+//                StartChatSection(
+//                    state = startState,
+//                    onDirectJeffClick = { },
+//                    onCompanyClick = { },
+//                    onCompanyWithJeffClick = { }
+//                )
                 StartChatSection(
                     state = startState,
-                    onDirectJeffClick = { },
-                    onCompanyClick = { },
-                    onCompanyWithJeffClick = { }
+                    onDirectJeffClick = { viewModel.startDirectJeffChat() },
+                    onCompanyClick = { viewModel.startCompanyChat() },
+                    onCompanyWithJeffClick = { viewModel.startCompanyWithJeffChat() }
                 )
             }
 
@@ -101,10 +111,17 @@ fun ChatsScreen(
                 ) {
                     StartChatSection(
                         state = startState,
-                        onDirectJeffClick = { },
-                        onCompanyClick = { },
-                        onCompanyWithJeffClick = { }
+                        onDirectJeffClick = { viewModel.startDirectJeffChat() },
+                        onCompanyClick = { viewModel.startCompanyChat() },
+                        onCompanyWithJeffClick = { viewModel.startCompanyWithJeffChat() }
                     )
+
+//                    StartChatSection(
+//                        state = startState,
+//                        onDirectJeffClick = { },
+//                        onCompanyClick = { },
+//                        onCompanyWithJeffClick = { }
+//                    )
 
                     Spacer(modifier = Modifier.height(32.dp))
                 }

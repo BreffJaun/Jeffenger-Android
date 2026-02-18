@@ -56,6 +56,32 @@ class ChatRepositoryMock : ChatRepositoryInterface {
     ) {
         messages.value = messages.value + message
     }
+
+    override suspend fun createChat(
+        companyId: String,
+        participantIds: List<String>,
+        isGroupChat: Boolean,
+        title: String?
+    ): String {
+        val id = "mock_${System.currentTimeMillis()}"
+
+        val now = System.currentTimeMillis()
+
+        val newChat = Chat(
+            id = id,
+            participantIds = participantIds.distinct(),
+            isGroupChat = isGroupChat,
+            title = title,
+            createdAt = now,
+            lastMessageTimestamp = now,
+            lastMessageText = null,
+            lastMessageId = null,
+            unreadCount = emptyMap()
+        )
+
+        chats.value = chats.value + newChat
+        return id
+    }
 }
 
 //class ChatRepositoryMock : ChatRepositoryInterface {

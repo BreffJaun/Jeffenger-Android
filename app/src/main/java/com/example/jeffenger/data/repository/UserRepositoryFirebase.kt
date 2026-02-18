@@ -68,5 +68,21 @@ class UserRepositoryFirebase(
     }
 
 //    override fun observeAppUser(): Flow<User?> = appUser
+
+    override fun observeGlobalUsers(): Flow<List<User>> = callbackFlow {
+        val listener = db.collection(CollectionNames.GLOBAL_USERS.path)
+            .whereEqualTo("isGlobal", true)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val users = snapshot?.toObjects(User::class.java) ?: emptyList()
+                trySend(users)
+            }
+
+        awaitClose { listener.remove() }
+    }
 }
 

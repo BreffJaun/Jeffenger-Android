@@ -12,8 +12,6 @@ import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlin.collections.emptyList
 
@@ -111,7 +109,8 @@ class ChatRepositoryFirebase(
             return@callbackFlow
         }
 
-        val results = mutableListOf<User>()
+        val companyUsers = mutableMapOf<String, User>()
+        val globalUsers = mutableMapOf<String, User>()
         val listeners = mutableListOf<com.google.firebase.firestore.ListenerRegistration>()
 
         // COMPANY USERS
@@ -136,16 +135,17 @@ class ChatRepositoryFirebase(
                     ?.mapNotNull { it.toObject(User::class.java) }
                     ?: emptyList()
 
-                results.removeAll { u -> u.id in chunk }
-                results.addAll(users)
+                users.forEach { companyUsers[it.id] = it }
 
-                trySend(results.distinctBy { it.id })
+                // Company überschreibt Global
+                val merged = (globalUsers + companyUsers).values.toList()
+                trySend(merged)
             }
 
             listeners += listener
         }
 
-        //  GLOBAL USERS (Jeff)
+        // GLOBAL USERS
         val globalUsersRef = db.collection(CollectionNames.GLOBAL_USERS.path)
 
         userIds.chunked(10).forEach { chunk ->
@@ -165,10 +165,10 @@ class ChatRepositoryFirebase(
                     ?.mapNotNull { it.toObject(User::class.java) }
                     ?: emptyList()
 
-                results.removeAll { u -> u.id in chunk }
-                results.addAll(users)
+                users.forEach { globalUsers[it.id] = it }
 
-                trySend(results.distinctBy { it.id })
+                val merged = (globalUsers + companyUsers).values.toList()
+                trySend(merged)
             }
 
             listeners += listener
@@ -176,6 +176,83 @@ class ChatRepositoryFirebase(
 
         awaitClose { listeners.forEach { it.remove() } }
     }
+
+//    override fun observeUsers(
+//        companyId: String,
+//        userIds: List<String>
+//    ): Flow<List<User>> = callbackFlow {
+//
+//        if (userIds.isEmpty()) {
+//            trySend(emptyList())
+//            close()
+//            return@callbackFlow
+//        }
+//
+//        val results = mutableListOf<User>()
+//        val listeners = mutableListOf<com.google.firebase.firestore.ListenerRegistration>()
+//
+//        // COMPANY USERS
+//        val companyUsersRef = db.collection(CollectionNames.COMPANIES.path)
+//            .document(companyId)
+//            .collection(CollectionNames.USERS.path)
+//
+//        userIds.chunked(10).forEach { chunk ->
+//
+//            val query = companyUsersRef.whereIn(
+//                FieldPath.documentId(),
+//                chunk
+//            )
+//
+//            val listener = query.addSnapshotListener { snapshot, error ->
+//                if (error != null) {
+//                    close(error)
+//                    return@addSnapshotListener
+//                }
+//
+//                val users = snapshot?.documents
+//                    ?.mapNotNull { it.toObject(User::class.java) }
+//                    ?: emptyList()
+//
+//                results.removeAll { u -> u.id in chunk }
+//                results.addAll(users)
+//
+//                trySend(results.distinctBy { it.id })
+//            }
+//
+//            listeners += listener
+//        }
+//
+//        //  GLOBAL USERS (Jeff)
+//        val globalUsersRef = db.collection(CollectionNames.GLOBAL_USERS.path)
+//
+//        userIds.chunked(10).forEach { chunk ->
+//
+//            val query = globalUsersRef.whereIn(
+//                FieldPath.documentId(),
+//                chunk
+//            )
+//
+//            val listener = query.addSnapshotListener { snapshot, error ->
+//                if (error != null) {
+//                    close(error)
+//                    return@addSnapshotListener
+//                }
+//
+//                val users = snapshot?.documents
+//                    ?.mapNotNull { it.toObject(User::class.java) }
+//                    ?: emptyList()
+//
+//                results.removeAll { u -> u.id in chunk }
+//                results.addAll(users)
+//
+//                trySend(results.distinctBy { it.id })
+//            }
+//
+//            listeners += listener
+//        }
+//
+//        awaitClose { listeners.forEach { it.remove() } }
+//    }
 
 
     override suspend fun sendMessage(
@@ -213,4 +290,36 @@ class ChatRepositoryFirebase(
             )
         ).await()
     }
+
+
+    override suspend fun createChat(
+        companyId: String,
+        participantIds: List<String>,
+        isGroupChat: Boolean,
+        title: String?
+    ): String {
+
+        val chatRef = db.collection(CollectionNames.COMPANIES.path)
+            .document(companyId)
+            .collection(CollectionNames.CHATS.path)
+            .document()
+
+        val now = System.currentTimeMillis()
+
+        val chatToSave = Chat(
+            id = chatRef.id,
+            participantIds = participantIds.distinct(),
+            isGroupChat = isGroupChat,
+            title = title,
+            createdAt = now,
+            lastMessageTimestamp = now,
+            lastMessageText = null,
+            lastMessageId = null,
+            unreadCount = emptyMap()
+        )
+
+        chatRef.set(chatToSave).await()
+        return chatRef.id
+    }
+
 }
