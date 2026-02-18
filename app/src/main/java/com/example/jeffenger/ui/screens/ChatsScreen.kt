@@ -1,6 +1,7 @@
 package com.example.jeffenger.ui.screens
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -43,6 +44,9 @@ fun ChatsScreen(
 
         var searchQuery by remember { mutableStateOf("") }
 
+        Log.d("DEBUG", "chatItems size = ${chatItems.size}")
+        Log.d("DEBUG", "StartState = $startState")
+
         LaunchedEffect(Unit) {
             viewModel.navigateToChat.collect { chatId ->
                 onNavigateToDetail(chatId)
@@ -58,12 +62,7 @@ fun ChatsScreen(
                     .fillMaxSize()
                     .padding(horizontal = 25.dp),
             ) {
-//                StartChatSection(
-//                    state = startState,
-//                    onDirectJeffClick = { },
-//                    onCompanyClick = { },
-//                    onCompanyWithJeffClick = { }
-//                )
+
                 StartChatSection(
                     state = startState,
                     onDirectJeffClick = { viewModel.startDirectJeffChat() },

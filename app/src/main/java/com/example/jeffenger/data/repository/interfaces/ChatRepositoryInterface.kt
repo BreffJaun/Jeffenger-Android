@@ -21,6 +21,16 @@ interface ChatRepositoryInterface {
         isGroupChat: Boolean,
         title: String? = null
     ): String
+
+    suspend fun findDirectChat(
+        companyId: String,
+        participantIds: List<String>
+    ): Chat?
+
+    suspend fun findOrCreateDirectChat(
+        companyId: String,
+        participantIds: List<String>
+    ): String
 }
 
 

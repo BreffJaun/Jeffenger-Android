@@ -177,83 +177,6 @@ class ChatRepositoryFirebase(
         awaitClose { listeners.forEach { it.remove() } }
     }
 
-//    override fun observeUsers(
-//        companyId: String,
-//        userIds: List<String>
-//    ): Flow<List<User>> = callbackFlow {
-//
-//        if (userIds.isEmpty()) {
-//            trySend(emptyList())
-//            close()
-//            return@callbackFlow
-//        }
-//
-//        val results = mutableListOf<User>()
-//        val listeners = mutableListOf<com.google.firebase.firestore.ListenerRegistration>()
-//
-//        // COMPANY USERS
-//        val companyUsersRef = db.collection(CollectionNames.COMPANIES.path)
-//            .document(companyId)
-//            .collection(CollectionNames.USERS.path)
-//
-//        userIds.chunked(10).forEach { chunk ->
-//
-//            val query = companyUsersRef.whereIn(
-//                FieldPath.documentId(),
-//                chunk
-//            )
-//
-//            val listener = query.addSnapshotListener { snapshot, error ->
-//                if (error != null) {
-//                    close(error)
-//                    return@addSnapshotListener
-//                }
-//
-//                val users = snapshot?.documents
-//                    ?.mapNotNull { it.toObject(User::class.java) }
-//                    ?: emptyList()
-//
-//                results.removeAll { u -> u.id in chunk }
-//                results.addAll(users)
-//
-//                trySend(results.distinctBy { it.id })
-//            }
-//
-//            listeners += listener
-//        }
-//
-//        //  GLOBAL USERS (Jeff)
-//        val globalUsersRef = db.collection(CollectionNames.GLOBAL_USERS.path)
-//
-//        userIds.chunked(10).forEach { chunk ->
-//
-//            val query = globalUsersRef.whereIn(
-//                FieldPath.documentId(),
-//                chunk
-//            )
-//
-//            val listener = query.addSnapshotListener { snapshot, error ->
-//                if (error != null) {
-//                    close(error)
-//                    return@addSnapshotListener
-//                }
-//
-//                val users = snapshot?.documents
-//                    ?.mapNotNull { it.toObject(User::class.java) }
-//                    ?: emptyList()
-//
-//                results.removeAll { u -> u.id in chunk }
-//                results.addAll(users)
-//
-//                trySend(results.distinctBy { it.id })
-//            }
-//
-//            listeners += listener
-//        }
-//
-//        awaitClose { listeners.forEach { it.remove() } }
-//    }
-
 
     override suspend fun sendMessage(
         companyId: String,
@@ -320,6 +243,60 @@ class ChatRepositoryFirebase(
 
         chatRef.set(chatToSave).await()
         return chatRef.id
+    }
+
+    override suspend fun findDirectChat(
+        companyId: String,
+        participantIds: List<String>
+    ): Chat? {
+
+        val sorted = participantIds.sorted()
+
+        val snapshot = db.collection(CollectionNames.COMPANIES.path)
+            .document(companyId)
+            .collection(CollectionNames.CHATS.path)
+            .whereEqualTo("isGroupChat", false)
+            .get()
+            .await()
+
+        return snapshot.documents
+            .mapNotNull { it.toObject(Chat::class.java) }
+            .firstOrNull { chat ->
+                chat.participantIds.sorted() == sorted
+            }
+    }
+
+    override suspend fun findOrCreateDirectChat(
+        companyId: String,
+        participantIds: List<String>
+    ): String {
+
+        val distinctParticipants = participantIds.distinct()
+        val sorted = distinctParticipants.sorted()
+
+        val snapshot = db.collection(CollectionNames.COMPANIES.path)
+            .document(companyId)
+            .collection(CollectionNames.CHATS.path)
+            .whereEqualTo("isGroupChat", false)
+            .get()
+            .await()
+
+        val existing = snapshot.documents
+            .mapNotNull { it.toObject(Chat::class.java) }
+            .firstOrNull { chat ->
+                chat.participantIds.sorted() == sorted
+            }
+
+        return if (existing != null) {
+            existing.id
+        } else {
+            createChat(
+                companyId = companyId,
+                participantIds = distinctParticipants,
+                isGroupChat = false,
+                title = null
+            )
+        }
     }
 
 }
