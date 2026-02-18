@@ -177,6 +177,30 @@ class ChatRepositoryFirebase(
         awaitClose { listeners.forEach { it.remove() } }
     }
 
+    override fun observeCompanyMembers(
+        companyId: String
+    ): Flow<List<User>> = callbackFlow {
+
+        val ref = db.collection(CollectionNames.COMPANIES.path)
+            .document(companyId)
+            .collection(CollectionNames.USERS.path)
+
+        val listener = ref.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+
+            val users = snapshot?.documents
+                ?.mapNotNull { it.toObject(User::class.java) }
+                ?: emptyList()
+
+            trySend(users)
+        }
+
+        awaitClose { listener.remove() }
+    }
+
 
     override suspend fun sendMessage(
         companyId: String,
@@ -229,16 +253,24 @@ class ChatRepositoryFirebase(
 
         val now = System.currentTimeMillis()
 
+        val distinctParticipants = participantIds.distinct()
+
+        val directKey =
+            if (!isGroupChat) {
+                distinctParticipants.sorted().joinToString("_")
+            } else null
+
         val chatToSave = Chat(
             id = chatRef.id,
-            participantIds = participantIds.distinct(),
+            participantIds = distinctParticipants,
             isGroupChat = isGroupChat,
             title = title,
             createdAt = now,
             lastMessageTimestamp = now,
             lastMessageText = null,
             lastMessageId = null,
-            unreadCount = emptyMap()
+            unreadCount = emptyMap(),
+            directChatKey = directKey
         )
 
         chatRef.set(chatToSave).await()
@@ -250,20 +282,23 @@ class ChatRepositoryFirebase(
         participantIds: List<String>
     ): Chat? {
 
-        val sorted = participantIds.sorted()
+        val key = participantIds
+            .distinct()
+            .sorted()
+            .joinToString("_")
 
         val snapshot = db.collection(CollectionNames.COMPANIES.path)
             .document(companyId)
             .collection(CollectionNames.CHATS.path)
             .whereEqualTo("isGroupChat", false)
+            .whereEqualTo("directChatKey", key)
+            .limit(1)
             .get()
             .await()
 
         return snapshot.documents
-            .mapNotNull { it.toObject(Chat::class.java) }
-            .firstOrNull { chat ->
-                chat.participantIds.sorted() == sorted
-            }
+            .firstOrNull()
+            ?.toObject(Chat::class.java)
     }
 
     override suspend fun findOrCreateDirectChat(
@@ -272,20 +307,22 @@ class ChatRepositoryFirebase(
     ): String {
 
         val distinctParticipants = participantIds.distinct()
-        val sorted = distinctParticipants.sorted()
+        val key = distinctParticipants
+            .sorted()
+            .joinToString("_")
 
         val snapshot = db.collection(CollectionNames.COMPANIES.path)
             .document(companyId)
             .collection(CollectionNames.CHATS.path)
             .whereEqualTo("isGroupChat", false)
+            .whereEqualTo("directChatKey", key)
+            .limit(1)
             .get()
             .await()
 
         val existing = snapshot.documents
-            .mapNotNull { it.toObject(Chat::class.java) }
-            .firstOrNull { chat ->
-                chat.participantIds.sorted() == sorted
-            }
+            .firstOrNull()
+            ?.toObject(Chat::class.java)
 
         return if (existing != null) {
             existing.id
@@ -298,5 +335,4 @@ class ChatRepositoryFirebase(
             )
         }
     }
-
 }

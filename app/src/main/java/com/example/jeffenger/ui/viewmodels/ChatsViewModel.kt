@@ -13,6 +13,7 @@ import com.example.jeffenger.utils.mapper.mapToAvatarUiModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -161,6 +162,53 @@ class ChatsViewModel(
         )
     }
 
+    // COMPANY MEMBERS -> without current user
+    // SELECTION STATE
+    private val _selectedParticipantIds =
+        MutableStateFlow<Set<String>>(emptySet())
+
+    val selectedParticipantIds: StateFlow<Set<String>> =
+        _selectedParticipantIds
+
+    val companyMembersUiState: StateFlow<List<User>> =
+        companyIdState
+            .flatMapLatest { companyId ->
+                if (companyId == null) {
+                    flowOf(emptyList())
+                } else {
+                    chatRepository.observeCompanyMembers(companyId)
+                }
+            }
+            .combine(currentUserIdState) { users, currentUserId ->
+                users.filter { it.id != currentUserId }
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+
+    val companyMembersWithJeffUiState: StateFlow<List<User>> =
+        combine(
+            companyMembersUiState,
+            jeffUserIdState
+        ) { members, jeffId ->
+
+            if (jeffId == null) {
+                members
+            } else {
+                members + User(
+                    id = jeffId,
+                    displayName = "Jeff",
+                    isGlobal = true
+                )
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList()
+        )
+
     // ACTIONS
     fun startDirectJeffChat() {
         viewModelScope.launch {
@@ -213,6 +261,52 @@ class ChatsViewModel(
             _navigateToChat.emit(chatId)
         }
     }
+
+    fun toggleParticipantSelection(userId: String) {
+        val current = _selectedParticipantIds.value.toMutableSet()
+
+        if (current.contains(userId)) {
+            current.remove(userId)
+        } else {
+            current.add(userId)
+        }
+
+        _selectedParticipantIds.value = current
+    }
+
+    fun resetSelection() {
+        _selectedParticipantIds.value = emptySet()
+    }
+
+    fun prepareCompanyWithJeffSelection() {
+        val jeffId = jeffUserIdState.value ?: return
+        _selectedParticipantIds.value = setOf(jeffId)
+    }
+
+    fun createGroupChatFromSelection() {
+        viewModelScope.launch {
+
+            val currentUserId = currentUserIdState.value ?: return@launch
+            val companyId = companyIdState.value ?: return@launch
+
+            val participants =
+                (_selectedParticipantIds.value + currentUserId)
+                    .distinct()
+
+            if (participants.size < 2) return@launch
+
+            val chatId = chatRepository.createChat(
+                companyId = companyId,
+                participantIds = participants.toList(),
+                isGroupChat = true,
+                title = null
+            )
+
+            resetSelection()
+            _navigateToChat.emit(chatId)
+        }
+    }
+
 }
 
 

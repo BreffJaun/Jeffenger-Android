@@ -49,6 +49,11 @@ class ChatRepositoryMock : ChatRepositoryInterface {
             list.filter { it.id in userIds }
         }
 
+    override fun observeCompanyMembers(companyId: String): Flow<List<User>> =
+        users.map { list ->
+            list.filter { it.companyId == companyId }
+        }
+
     override suspend fun sendMessage(
         companyId: String,
         chatId: String,
@@ -81,6 +86,56 @@ class ChatRepositoryMock : ChatRepositoryInterface {
 
         chats.value = chats.value + newChat
         return id
+    }
+
+    override suspend fun findDirectChat(
+        companyId: String,
+        participantIds: List<String>
+    ): Chat? {
+
+        val key = participantIds
+            .distinct()
+            .sorted()
+            .joinToString("_")
+
+        return chats.value.firstOrNull { chat ->
+            !chat.isGroupChat &&
+                    chat.directChatKey == key
+        }
+    }
+
+    override suspend fun findOrCreateDirectChat(
+        companyId: String,
+        participantIds: List<String>
+    ): String {
+
+        val distinctParticipants = participantIds.distinct()
+
+        val existing = findDirectChat(companyId, distinctParticipants)
+
+        return if (existing != null) {
+            existing.id
+        } else {
+
+            val newId = "mock_${System.currentTimeMillis()}"
+
+            val newChat = Chat(
+                id = newId,
+                participantIds = distinctParticipants,
+                isGroupChat = false,
+                title = null,
+                createdAt = System.currentTimeMillis(),
+                lastMessageTimestamp = System.currentTimeMillis(),
+                lastMessageText = null,
+                lastMessageId = null,
+                unreadCount = emptyMap(),
+                directChatKey = distinctParticipants.sorted().joinToString("_")
+            )
+
+            chats.value = chats.value + newChat
+
+            newId
+        }
     }
 }
 

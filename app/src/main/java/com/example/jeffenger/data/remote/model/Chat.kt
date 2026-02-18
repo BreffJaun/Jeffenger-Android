@@ -22,5 +22,7 @@ data class Chat(
     val unreadCount: Map<String, Int> = emptyMap(),
 
     // Meta
-    val mutedUserIds: List<String> = emptyList()
+    val mutedUserIds: List<String> = emptyList(),
+
+    val directChatKey: String? = null
 )

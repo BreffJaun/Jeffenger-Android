@@ -13,6 +13,9 @@ interface ChatRepositoryInterface {
     fun observeMessages(companyId: String, chatId: String): Flow<List<Message>>
 
     fun observeUsers(companyId: String, userIds: List<String>): Flow<List<User>>
+
+    fun observeCompanyMembers(companyId: String): Flow<List<User>>
+
     suspend fun sendMessage(companyId: String, chatId: String, message: Message)
 
     suspend fun createChat(
