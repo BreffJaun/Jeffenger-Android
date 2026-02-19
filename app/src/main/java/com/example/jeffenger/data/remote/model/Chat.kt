@@ -7,7 +7,7 @@ data class Chat(
     val id: String = "",
 
     val participantIds: List<String> = emptyList(),
-    val isGroupChat: Boolean = false,
+    val groupChat: Boolean = false,
 
     val title: String? = null,            // Groupname
     val imageUrl: String? = null,         // Groupimage

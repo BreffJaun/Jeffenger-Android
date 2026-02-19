@@ -1,5 +1,6 @@
 package com.example.jeffenger.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jeffenger.data.remote.model.Chat
@@ -41,8 +42,18 @@ class ChatsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val jeffUserIdState = userRepository.observeGlobalUsers()
-        .map { users -> users.firstOrNull { it.isGlobal }?.id }
+        .map { users -> users.firstOrNull { it.global }?.id }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    // NEW CHAT
+    private val _isGroupMode = MutableStateFlow(false)
+    val isGroupMode: StateFlow<Boolean> = _isGroupMode
+
+    private val _groupTitle = MutableStateFlow("")
+    val groupTitle: StateFlow<String> = _groupTitle
+
+    private val _groupImageUrl = MutableStateFlow<String?>(null)
+    val groupImageUrl: StateFlow<String?> = _groupImageUrl
 
     // NAVIGATION
     private val _navigateToChat = MutableSharedFlow<String>()
@@ -108,7 +119,7 @@ class ChatsViewModel(
     ): ChatListItemUiModel {
 
         val displayName =
-            if (chat.isGroupChat) {
+            if (chat.groupChat) {
                 chat.title ?: "Gruppe"
             } else {
                 users.firstOrNull {
@@ -134,14 +145,14 @@ class ChatsViewModel(
     ): StartChatUiState {
 
         val hasCompanyChat = chats.any { chat ->
-            chat.isGroupChat &&
+            chat.groupChat &&
                     (jeffId == null || !chat.participantIds.contains(jeffId))
         }
 
         val hasDirectJeffChat =
             if (jeffId != null) {
                 chats.any { chat ->
-                    !chat.isGroupChat &&
+                    !chat.groupChat &&
                             chat.participantIds.size == 2 &&
                             chat.participantIds.contains(jeffId)
                 }
@@ -150,16 +161,35 @@ class ChatsViewModel(
         val hasCompanyWithJeffChat =
             if (jeffId != null) {
                 chats.any { chat ->
-                    chat.isGroupChat &&
+                    chat.groupChat &&
                             chat.participantIds.contains(jeffId)
                 }
             } else false
+
+//        Log.d("DEBUG_STATE", "Chats: ${chats.map { it.participantIds }}")
+//        Log.d("DEBUG_STATE", "JeffId: $jeffId")
+//        Log.d("DEBUG_STATE", "hasCompanyChat: $hasCompanyChat")
+//        Log.d("DEBUG_STATE", "hasCompanyWithJeffChat: $hasCompanyWithJeffChat")
+//        Log.d("DEBUG_STATE", "hasDirectJeffChat: $hasDirectJeffChat")
+
 
         return StartChatUiState(
             showDirectJeff = !hasDirectJeffChat,
             showCompany = !hasCompanyChat,
             showCompanyWithJeff = !hasCompanyWithJeffChat
         )
+    }
+
+    fun setGroupMode(enabled: Boolean) {
+        _isGroupMode.value = enabled
+    }
+
+    fun setGroupTitle(title: String) {
+        _groupTitle.value = title
+    }
+
+    fun setGroupImage(url: String?) {
+        _groupImageUrl.value = url
     }
 
     // COMPANY MEMBERS -> without current user
@@ -200,9 +230,23 @@ class ChatsViewModel(
                 members + User(
                     id = jeffId,
                     displayName = "Jeff",
-                    isGlobal = true
+                    global = true
                 )
             }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList()
+        )
+
+    val generalMembersUiState: StateFlow<List<User>> =
+        combine(companyMembersUiState, jeffUserIdState) { members, jeffId ->
+            if (jeffId == null) members
+            else members + User(
+                id = jeffId,
+                displayName = "Jeff",
+                global = true
+            )
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
@@ -226,41 +270,17 @@ class ChatsViewModel(
         }
     }
 
-
-    fun startCompanyChat() {
-        viewModelScope.launch {
-
-            val currentUserId = currentUserIdState.value ?: return@launch
-            val companyId = companyIdState.value ?: return@launch
-
-            val chatId = chatRepository.createChat(
-                companyId = companyId,
-                participantIds = listOf(currentUserId),
-                isGroupChat = true,
-                title = "Company"
-            )
-
-            _navigateToChat.emit(chatId)
-        }
-    }
-
-    fun startCompanyWithJeffChat() {
-        viewModelScope.launch {
-
-            val currentUserId = currentUserIdState.value ?: return@launch
-            val companyId = companyIdState.value ?: return@launch
-            val jeffId = jeffUserIdState.value ?: return@launch
-
-            val chatId = chatRepository.createChat(
-                companyId = companyId,
-                participantIds = listOf(currentUserId, jeffId),
-                isGroupChat = true,
-                title = "Company + Jeff"
-            )
-
-            _navigateToChat.emit(chatId)
-        }
-    }
+//    fun toggleParticipantSelection(userId: String) {
+//        val current = _selectedParticipantIds.value.toMutableSet()
+//
+//        if (current.contains(userId)) {
+//            current.remove(userId)
+//        } else {
+//            current.add(userId)
+//        }
+//
+//        _selectedParticipantIds.value = current
+//    }
 
     fun toggleParticipantSelection(userId: String) {
         val current = _selectedParticipantIds.value.toMutableSet()
@@ -272,6 +292,50 @@ class ChatsViewModel(
         }
 
         _selectedParticipantIds.value = current
+
+        // Automatd Grouplogic
+        if (current.size >= 2) {
+            _isGroupMode.value = true
+        } else if (current.size == 1) {
+            // 1 Person -> frei wählbar
+            // nichts erzwingen
+        } else {
+            _isGroupMode.value = false
+        }
+    }
+
+    fun createChatFromSelection() {
+        viewModelScope.launch {
+
+            val currentUserId = currentUserIdState.value ?: return@launch
+            val companyId = companyIdState.value ?: return@launch
+
+            val selected = _selectedParticipantIds.value
+            if (selected.isEmpty()) return@launch
+
+            val participants = (selected + currentUserId).distinct()
+            val isGroup = _isGroupMode.value || selected.size >= 2
+
+            val finalTitle =
+                if (isGroup) {
+                    _groupTitle.value.takeIf { it.isNotBlank() }
+                        ?: "${userRepository.appUser.value?.company ?: "Gruppe"} Gruppe"
+                } else null
+
+            val chatId = chatRepository.createChat(
+                companyId = companyId,
+                participantIds = participants.toList(),
+                isGroupChat = isGroup,
+                title = finalTitle
+            )
+
+            resetSelection()
+            _isGroupMode.value = false
+            _groupTitle.value = ""
+            _groupImageUrl.value = null
+
+            _navigateToChat.emit(chatId)
+        }
     }
 
     fun resetSelection() {
@@ -280,6 +344,7 @@ class ChatsViewModel(
 
     fun prepareCompanyWithJeffSelection() {
         val jeffId = jeffUserIdState.value ?: return
+        resetSelection()
         _selectedParticipantIds.value = setOf(jeffId)
     }
 
@@ -306,10 +371,42 @@ class ChatsViewModel(
             _navigateToChat.emit(chatId)
         }
     }
-
 }
 
 
 
+//    fun startCompanyChat() {
+//        viewModelScope.launch {
+//
+//            val currentUserId = currentUserIdState.value ?: return@launch
+//            val companyId = companyIdState.value ?: return@launch
+//
+//            val chatId = chatRepository.createChat(
+//                companyId = companyId,
+//                participantIds = listOf(currentUserId),
+//                isGroupChat = true,
+//                title = "Company"
+//            )
+//
+//            _navigateToChat.emit(chatId)
+//        }
+//    }
 
+//    fun startCompanyWithJeffChat() {
+//        viewModelScope.launch {
+//
+//            val currentUserId = currentUserIdState.value ?: return@launch
+//            val companyId = companyIdState.value ?: return@launch
+//            val jeffId = jeffUserIdState.value ?: return@launch
+//
+//            val chatId = chatRepository.createChat(
+//                companyId = companyId,
+//                participantIds = listOf(currentUserId, jeffId),
+//                isGroupChat = true,
+//                title = "Company + Jeff"
+//            )
+//
+//            _navigateToChat.emit(chatId)
+//        }
+//    }
 

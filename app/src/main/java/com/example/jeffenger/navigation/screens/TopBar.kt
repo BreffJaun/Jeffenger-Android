@@ -69,8 +69,8 @@ import com.example.jeffenger.utils.debugging.LogComposable
 @Composable
 fun TopBar(
     currentRoute: String?,
-//    isDarkMode: Boolean,
     onBackClick: () -> Unit,
+    onAddChatClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LogComposable("TopBar") {
@@ -94,12 +94,22 @@ fun TopBar(
         ) {
 
             // LEFT SIDE
-            Image(
-                painter = painterResource(R.drawable.jeffenger_font),
-                contentDescription = "Jeffenger Logo",
-                contentScale = ContentScale.FillHeight,
-                modifier = Modifier.height(20.dp)
-            )
+            if (isChatRoute || isCalendarRoute) {
+                GlassIconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.Rounded.ArrowBackIosNew,
+                        tint = scheme.onSurface,
+                        contentDescription = "Back"
+                    )
+                }
+            } else {
+                Image(
+                    painter = painterResource(R.drawable.jeffenger_font),
+                    contentDescription = "Jeffenger Logo",
+                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier.height(20.dp)
+                )
+            }
 
             // CENTER
             // ...
@@ -125,7 +135,7 @@ fun TopBar(
                             )
                         }
 
-                        GlassIconButton(onClick = { /* Add Chat */ }) {
+                        GlassIconButton(onClick = onAddChatClick) {
                             Icon(
                                 imageVector = Icons.Outlined.Add,
                                 tint = scheme.outlineVariant,

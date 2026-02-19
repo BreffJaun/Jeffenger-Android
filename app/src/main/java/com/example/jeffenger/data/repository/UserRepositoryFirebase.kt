@@ -71,7 +71,7 @@ class UserRepositoryFirebase(
 
     override fun observeGlobalUsers(): Flow<List<User>> = callbackFlow {
         val listener = db.collection(CollectionNames.GLOBAL_USERS.path)
-            .whereEqualTo("isGlobal", true)
+            .whereEqualTo("global", true)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)

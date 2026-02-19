@@ -263,7 +263,7 @@ class ChatRepositoryFirebase(
         val chatToSave = Chat(
             id = chatRef.id,
             participantIds = distinctParticipants,
-            isGroupChat = isGroupChat,
+            groupChat = isGroupChat,
             title = title,
             createdAt = now,
             lastMessageTimestamp = now,

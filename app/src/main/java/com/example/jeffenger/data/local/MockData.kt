@@ -25,7 +25,7 @@ object MockData {
         companyId = normalizeCompanyId(jeffCompany),
         createdAt = nowMinus(60 * 60),
         lastActiveAt = nowMinus(10),
-        isOnline = true
+        online = true
     )
 
     val alice = User(
@@ -37,7 +37,7 @@ object MockData {
         companyId = normalizeCompanyId(acmeCompany),
         createdAt = nowMinus(60 * 60 * 24),
         lastActiveAt = nowMinus(120),
-        isOnline = false
+        online = false
     )
 
     val bob = User(
@@ -49,7 +49,7 @@ object MockData {
         companyId = normalizeCompanyId(acmeCompany),
         createdAt = nowMinus(60 * 60 * 24),
         lastActiveAt = nowMinus(300),
-        isOnline = false
+        online = false
     )
 
     val john = User(
@@ -61,7 +61,7 @@ object MockData {
         companyId = normalizeCompanyId(acmeCompany),
         createdAt = nowMinus(60 * 60 * 24),
         lastActiveAt = nowMinus(180),
-        isOnline = false
+        online = false
     )
 
     val users = listOf(jeff, alice, bob, john)
@@ -168,7 +168,7 @@ object MockData {
         Chat(
             id = "chat_1",
             participantIds = listOf(jeff.id, alice.id),
-            isGroupChat = false,
+            groupChat = false,
             lastMessageId = "m2",
             lastMessageText = "Hey Alice, was gibt’s?",
             lastMessageTimestamp = nowMinus(240),
@@ -181,7 +181,7 @@ object MockData {
         Chat(
             id = "chat_2",
             participantIds = listOf(jeff.id, bob.id),
-            isGroupChat = false,
+            groupChat = false,
             lastMessageId = "m4",
             lastMessageText = "Klar 👍",
             lastMessageTimestamp = nowMinus(560),
@@ -194,7 +194,7 @@ object MockData {
         Chat(
             id = "chat_3",
             participantIds = listOf(jeff.id, alice.id, bob.id),
-            isGroupChat = true,
+            groupChat = true,
             title = "Acme Team",
             lastMessageId = "m7",
             lastMessageText = "Top, dann bis später!",
@@ -209,7 +209,7 @@ object MockData {
         Chat(
             id = "chat_4",
             participantIds = listOf(alice.id, bob.id, john.id),
-            isGroupChat = true,
+            groupChat = true,
             title = "Acme Intern",
             lastMessageId = "m10",
             lastMessageText = "Ich finde es gut 👍",

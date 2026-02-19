@@ -75,7 +75,7 @@ class ChatRepositoryMock : ChatRepositoryInterface {
         val newChat = Chat(
             id = id,
             participantIds = participantIds.distinct(),
-            isGroupChat = isGroupChat,
+            groupChat = isGroupChat,
             title = title,
             createdAt = now,
             lastMessageTimestamp = now,
@@ -99,7 +99,7 @@ class ChatRepositoryMock : ChatRepositoryInterface {
             .joinToString("_")
 
         return chats.value.firstOrNull { chat ->
-            !chat.isGroupChat &&
+            !chat.groupChat &&
                     chat.directChatKey == key
         }
     }
@@ -122,7 +122,7 @@ class ChatRepositoryMock : ChatRepositoryInterface {
             val newChat = Chat(
                 id = newId,
                 participantIds = distinctParticipants,
-                isGroupChat = false,
+                groupChat = false,
                 title = null,
                 createdAt = System.currentTimeMillis(),
                 lastMessageTimestamp = System.currentTimeMillis(),

@@ -31,7 +31,7 @@ fun mapToAvatarUiModel(
         participantUsers.any { it.id == currentUserId }
 
     // 2. Single Chat → Initials of the other person
-    if (!chat.isGroupChat) {
+    if (!chat.groupChat) {
         val otherUser = participantUsers
             .firstOrNull { it.id != currentUserId }
         return AvatarUiModel(

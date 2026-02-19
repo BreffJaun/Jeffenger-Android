@@ -17,7 +17,7 @@ data class User(
     val createdAt: Long = 0L,
     val lastActiveAt: Long = 0L,
 
-    val isOnline: Boolean = false,
+    val online: Boolean = false,
 
     // Settings
     val darkModeEnabled: Boolean? = null,
@@ -26,15 +26,6 @@ data class User(
     // Meta / Future-proof
     val deviceTokens: List<String> = emptyList(),
     val blockedUserIds: List<String> = emptyList(),
-    val isGlobal: Boolean = false
+    val global: Boolean = false
 )
 
-//val user = User(
-//    id = uid,
-//    username = username,
-//    displayName = displayName,
-//    email = email,
-//    company = companyInput,
-//    companyId = normalizeCompanyId(companyInput),
-//    createdAt = System.currentTimeMillis()
-//)

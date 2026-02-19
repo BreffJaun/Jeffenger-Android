@@ -16,7 +16,7 @@ object ChatClassifier {
         val participantIds = chat.participantIds
 
         val isDirectJeff =
-            !chat.isGroupChat &&
+            !chat.groupChat &&
                     participantIds.contains(currentUserId) &&
                     participantIds.contains(jeffId) &&
                     participantIds.size == 2

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,6 +36,8 @@ import com.example.jeffenger.ui.viewmodels.SettingsViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.debugging.LogStateMap
 import de.syntax_institut.projektwoche1.ui.component.TopBar
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,6 +59,9 @@ fun AppStart(
         // UI STATE
         val selectedTab by rememberSaveable { mutableStateOf(TabItem.CHATS) }
 
+        // SHARED STATE
+        val openNewChatSheet = remember { MutableSharedFlow<Unit>() }
+
         LogStateMap(
             "AppStart",
             "selectedTab" to selectedTab
@@ -68,8 +74,15 @@ fun AppStart(
             topBar = {
                 TopBar(
                     currentRoute = currentRoute,
-//                    isDarkMode = isDarkMode,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onAddChatClick = {
+                        if (currentRoute?.startsWith(ChatsRoute::class.qualifiedName ?: "") == true) {
+                            // Trigger event
+                            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                                openNewChatSheet.emit(Unit)
+                            }
+                        }
+                    }
                 )
             },
             bottomBar = {
@@ -103,11 +116,22 @@ fun AppStart(
 //                            )
 //                        )
 //                    }
-                    ChatsScreen { chatId ->
-                        navController.navigate(
-                            ChatRoute(id = chatId)
-                        )
-                    }
+
+//                    ChatsScreen { chatId ->
+//                        navController.navigate(
+//                            ChatRoute(id = chatId)
+//                        )
+//                    }
+
+                    ChatsScreen(
+                        openNewChatSheetFlow = openNewChatSheet,
+                        onNavigateToDetail = { chatId ->
+                            navController.navigate(
+                                ChatRoute(id = chatId)
+                            )
+                        }
+                    )
+
                 }
 
                 composable<ChatRoute> {

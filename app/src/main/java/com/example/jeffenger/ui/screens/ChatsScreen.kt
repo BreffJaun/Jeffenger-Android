@@ -4,14 +4,22 @@ import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -23,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.jeffenger.ui.BottomSheets.NewChatBottomSheet
 import org.koin.androidx.compose.koinViewModel
 import com.example.jeffenger.ui.components.ChatListItem
 import com.example.jeffenger.ui.components.ChatSearchBar
@@ -30,9 +39,13 @@ import com.example.jeffenger.ui.components.StartChatSection
 import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.viewmodels.ChatsViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
+import com.example.jeffenger.utils.enums.NewChatSheetMode
+import kotlinx.coroutines.flow.SharedFlow
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
+    openNewChatSheetFlow: SharedFlow<Unit>,
     viewModel: ChatsViewModel = koinViewModel(),
     onNavigateToDetail: (String) -> Unit
 ) {
@@ -42,6 +55,9 @@ fun ChatsScreen(
         val startState by viewModel.startChatUiState.collectAsState()
         val chatItems by viewModel.chatListItems.collectAsState()
 
+        var sheetMode by remember { mutableStateOf<NewChatSheetMode?>(null) }
+        val modalSheetState = rememberModalBottomSheetState()
+
         var searchQuery by remember { mutableStateOf("") }
 
         Log.d("DEBUG", "chatItems size = ${chatItems.size}")
@@ -50,6 +66,13 @@ fun ChatsScreen(
         LaunchedEffect(Unit) {
             viewModel.navigateToChat.collect { chatId ->
                 onNavigateToDetail(chatId)
+            }
+        }
+
+        LaunchedEffect(openNewChatSheetFlow) {
+            openNewChatSheetFlow.collect {
+                viewModel.resetSelection()
+                sheetMode = NewChatSheetMode.GENERAL
             }
         }
 
@@ -66,8 +89,16 @@ fun ChatsScreen(
                 StartChatSection(
                     state = startState,
                     onDirectJeffClick = { viewModel.startDirectJeffChat() },
-                    onCompanyClick = { viewModel.startCompanyChat() },
-                    onCompanyWithJeffClick = { viewModel.startCompanyWithJeffChat() }
+
+                    onCompanyClick = {
+                        viewModel.resetSelection()
+                        sheetMode = NewChatSheetMode.COMPANY
+                    },
+
+                    onCompanyWithJeffClick = {
+                        viewModel.prepareCompanyWithJeffSelection()
+                        sheetMode = NewChatSheetMode.COMPANY_WITH_JEFF
+                    }
                 )
             }
 
@@ -111,8 +142,16 @@ fun ChatsScreen(
                     StartChatSection(
                         state = startState,
                         onDirectJeffClick = { viewModel.startDirectJeffChat() },
-                        onCompanyClick = { viewModel.startCompanyChat() },
-                        onCompanyWithJeffClick = { viewModel.startCompanyWithJeffChat() }
+
+                        onCompanyClick = {
+                            viewModel.resetSelection()
+                            sheetMode = NewChatSheetMode.COMPANY
+                        },
+
+                        onCompanyWithJeffClick = {
+                            viewModel.prepareCompanyWithJeffSelection()
+                            sheetMode = NewChatSheetMode.COMPANY_WITH_JEFF
+                        }
                     )
 
 //                    StartChatSection(
@@ -125,6 +164,17 @@ fun ChatsScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
+        }
+
+        if (sheetMode != null) {
+            NewChatBottomSheet(
+                mode = sheetMode!!,
+                viewModel = viewModel,
+                onClose = {
+                    viewModel.resetSelection()
+                    sheetMode = null
+                }
+            )
         }
     }
 }
