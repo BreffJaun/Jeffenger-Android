@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.PersonOutline
 import com.example.jeffenger.R
@@ -31,8 +32,8 @@ fun StartChatSection(
 
         val showAnyButton =
             state.showDirectJeff ||
-            state.showCompany ||
-            state.showCompanyWithJeff
+                    state.showCompany ||
+                    state.showCompanyWithJeff
 
         if (!showAnyButton) return@LogComposable
 
@@ -52,13 +53,11 @@ fun StartChatSection(
             )
 
             if (state.showDirectJeff) {
-                if (state.showDirectJeff) {
-                    ChatStartButton(
-                        text = "Jeff",
-                        iconVector = Icons.Rounded.PersonOutline,
-                        onClick = onDirectJeffClick
-                    )
-                }
+                ChatStartButton(
+                    text = "Jeff",
+                    iconVector = Icons.Rounded.PersonOutline,
+                    onClick = onDirectJeffClick
+                )
             }
 
             if (state.showCompany) {
@@ -71,14 +70,12 @@ fun StartChatSection(
             }
 
             if (state.showCompanyWithJeff) {
-                if (state.showCompanyWithJeff) {
-                    ChatStartButton(
-                        text = "Company & Jeff",
-                        iconVector = Icons.Rounded.Groups,
-                        onClick = onCompanyWithJeffClick,
-                        outlined = true
-                    )
-                }
+                ChatStartButton(
+                    text = "Company & Jeff",
+                    iconVector = Icons.Outlined.Groups,
+                    onClick = onCompanyWithJeffClick,
+                    outlined = true
+                )
             }
         }
     }

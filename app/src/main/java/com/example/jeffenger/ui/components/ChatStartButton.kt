@@ -21,7 +21,8 @@ fun ChatStartButton(
     iconPainter: Painter? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    outlined: Boolean = false
+    outlined: Boolean = false,
+    enabled: Boolean = true
 ) {
     LogComposable("ChatStartButton") {
         val scheme = MaterialTheme.colorScheme
@@ -34,6 +35,7 @@ fun ChatStartButton(
             OutlinedButton(
                 onClick = onClick,
                 modifier = buttonModifier,
+                enabled = enabled,
                 border = BorderStroke(2.dp, scheme.primary),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = scheme.primary
@@ -49,7 +51,8 @@ fun ChatStartButton(
         } else {
             Button(
                 onClick = onClick,
-                modifier = buttonModifier
+                modifier = buttonModifier,
+                enabled = enabled,
             ) {
                 ButtonContent(
                     text = text,

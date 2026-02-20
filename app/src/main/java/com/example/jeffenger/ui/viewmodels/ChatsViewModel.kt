@@ -1,5 +1,6 @@
 package com.example.jeffenger.ui.viewmodels
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -54,6 +55,13 @@ class ChatsViewModel(
 
     private val _groupImageUrl = MutableStateFlow<String?>(null)
     val groupImageUrl: StateFlow<String?> = _groupImageUrl
+
+    private val _groupImageUri = MutableStateFlow<Uri?>(null)
+    val groupImageUri: StateFlow<Uri?> = _groupImageUri
+
+    fun setGroupImageUri(uri: Uri?) {
+        _groupImageUri.value = uri
+    }
 
     // NAVIGATION
     private val _navigateToChat = MutableSharedFlow<String>()

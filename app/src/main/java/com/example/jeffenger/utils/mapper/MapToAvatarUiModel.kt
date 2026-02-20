@@ -1,6 +1,7 @@
 package com.example.jeffenger.utils.mapper
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.rounded.Groups
 import com.example.jeffenger.R
 import com.example.jeffenger.data.remote.model.Chat
@@ -56,7 +57,21 @@ fun mapToAvatarUiModel(
     } else {
         AvatarUiModel(
             type = AvatarType.GROUP_ICON,
-            iconVector = Icons.Rounded.Groups
+            iconVector = Icons.Outlined.Groups
+        )
+    }
+}
+
+fun mapUserToAvatarUiModel(user: User): AvatarUiModel {
+    return if (!user.avatarUrl.isNullOrBlank()) {
+        AvatarUiModel(
+            type = AvatarType.IMAGE,
+            imageUrl = user.avatarUrl
+        )
+    } else {
+        AvatarUiModel(
+            type = AvatarType.INITIALS,
+            initials = user.displayName.initials()
         )
     }
 }
