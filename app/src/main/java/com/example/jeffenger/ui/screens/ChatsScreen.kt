@@ -144,7 +144,8 @@ fun ChatsScreen(
                         onDirectJeffClick = { viewModel.startDirectJeffChat() },
 
                         onCompanyClick = {
-                            viewModel.resetSelection()
+//                            viewModel.resetSelection()
+                            viewModel.prepareCompanySelection()
                             sheetMode = NewChatSheetMode.COMPANY
                         },
 

@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -35,6 +36,7 @@ import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.viewmodels.SettingsViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.debugging.LogStateMap
+import com.example.jeffenger.utils.model.ChatTopBarUiState
 import de.syntax_institut.projektwoche1.ui.component.TopBar
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
@@ -43,8 +45,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppStart(
-//    isDarkMode: Boolean,
-//    onToggleTheme: () -> Unit,
     modifier: Modifier = Modifier,
     settingsViewModel: SettingsViewModel = viewModel()
 ) {
@@ -61,6 +61,8 @@ fun AppStart(
 
         // SHARED STATE
         val openNewChatSheet = remember { MutableSharedFlow<Unit>() }
+
+        var chatTopBarState by remember { mutableStateOf<ChatTopBarUiState?>(null) }
 
         LogStateMap(
             "AppStart",
@@ -82,25 +84,48 @@ fun AppStart(
                                 openNewChatSheet.emit(Unit)
                             }
                         }
+                    },
+                    chatTopBarState = chatTopBarState,
+                    onChatHeaderClick = {
+                        // später: Chat-Info Screen / Participants / Settings
+                        // vorerst: no-op oder Log
+                    },
+                    onChatCalendarClick = {
+                        // später: Kalender/Termine im Chat
                     }
                 )
             },
             bottomBar = {
-                IosStyleBottomBar(
-                    currentRoute = currentRoute,
-                    onTabSelected = { tab ->
-                        navController.navigate(tab.route) {
-                            popUpTo(ChatsRoute) {
-                                saveState = true
+                val isChatRoute =
+                    currentRoute?.startsWith(ChatRoute::class.qualifiedName ?: "") == true
+
+                if (!isChatRoute) {
+                    IosStyleBottomBar(
+                        currentRoute = currentRoute,
+                        onTabSelected = { tab ->
+                            navController.navigate(tab.route) {
+                                popUpTo(ChatsRoute) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
-                    },
-//                    isDarkMode = isDarkMode
-                )
-            },
-//            floatingActionButton = {}
+                    )
+                }
+            }
+//            bottomBar = {
+//                IosStyleBottomBar(
+//                    currentRoute = currentRoute,
+//                    onTabSelected = { tab ->
+//                        navController.navigate(tab.route) {
+//                            popUpTo(ChatsRoute) {
+//                                saveState = true
+//                            }
+//                            launchSingleTop = true
+//                            restoreState = true
+//                        }
+//                    },
+//                )
+//            }
         ) { p ->
             NavHost(
                 navController = navController,
@@ -136,7 +161,10 @@ fun AppStart(
 
                 composable<ChatRoute> {
                     ChatScreen(
-                        onBack = { navController.popBackStack() }
+                        onBack = { navController.popBackStack() },
+                        onTopBarStateChange = { state ->
+                            chatTopBarState = state
+                        }
                     )
                 }
 

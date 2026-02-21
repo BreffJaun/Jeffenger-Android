@@ -39,12 +39,17 @@ fun AppTextField(
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .height(44.dp)
+                .height(42.dp)
+//                .background(
+//                    color = scheme.tertiaryContainer,
+//                    shape = RoundedCornerShape(10.dp)
+//                )
+//                .padding(horizontal = 12.dp),
                 .background(
-                    color = scheme.tertiaryContainer,
-                    shape = RoundedCornerShape(10.dp)
+                    color = scheme.onSurface,
+                    shape = RoundedCornerShape(100.dp)
                 )
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 15.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -66,19 +71,34 @@ fun AppTextField(
                     onValueChange = onValueChange,
                     singleLine = singleLine,
                     enabled = enabled,
-                    textStyle = UrbanistText.Placeholder.copy(
-                        color = scheme.onSurface
+//                    textStyle = UrbanistText.Placeholder.copy(
+//                        color = scheme.onSurface
+//                    ),
+                    textStyle = UrbanistText.BodyRegular.copy(
+                        color = scheme.surface
                     ),
                     modifier = Modifier.fillMaxWidth(),
                     decorationBox = { innerTextField ->
-                        if (value.isBlank()) {
-                            Text(
-                                text = placeholder,
-                                style = UrbanistText.Placeholder,
-                                color = scheme.outline
-                            )
+                        Box {
+                            // ✅ Placeholder
+                            if (value.isBlank()) {
+                                Text(
+                                    text = placeholder,
+                                    style = UrbanistText.Placeholder,
+                                    color = scheme.outline
+                                )
+                            }
+
+                            innerTextField()
                         }
-                        innerTextField()
+//                        if (value.isBlank()) {
+//                            Text(
+//                                text = placeholder,
+//                                style = UrbanistText.Placeholder,
+//                                color = scheme.outline
+//                            )
+//                        }
+//                        innerTextField()
                     }
                 )
             }

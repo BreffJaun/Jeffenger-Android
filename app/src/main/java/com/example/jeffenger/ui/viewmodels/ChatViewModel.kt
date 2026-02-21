@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.Message
+import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.UserRepositoryInterface
@@ -31,72 +32,144 @@ class ChatViewModel(
 
     val chatId: String = savedStateHandle.toRoute<ChatRoute>().id
 
-    private val currentUserIdFlow: Flow<String?> =
-        authRepository.authState.map { it?.uid }
+    val currentUserId: StateFlow<String?> =
+        authRepository.authState
+            .map { it?.uid }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    private val companyIdFlow: Flow<String?> =
-        userRepository.appUser.map { it?.companyId }
-
-    private val companyAndUserFlow: Flow<Pair<String, String>> =
-        combine(companyIdFlow, currentUserIdFlow) { companyId, userId ->
-            companyId to userId
-        }.flatMapLatest { (companyId, userId) ->
-            if (companyId == null || userId == null) flowOf(null)
-            else flowOf(companyId to userId)
-        }.map { it ?: return@map null }
-            .flatMapLatest { pair ->
-                if (pair == null) flowOf(Pair("", "")) else flowOf(pair)
-            }
+    val companyId: StateFlow<String?> =
+        userRepository.appUser
+            .map { it?.companyId }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // Chat-Dokument (Header-Daten)
     val chat: StateFlow<Chat?> =
-        companyIdFlow
-            .flatMapLatest { companyId ->
-                if (companyId.isNullOrBlank()) flowOf(null)
-                else chatRepository.observeChat(companyId, chatId)
+        companyId
+            .flatMapLatest { cid ->
+                if (cid.isNullOrBlank()) flowOf(null)
+                else chatRepository.observeChat(cid, chatId)
             }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                null
-            )
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // Messages für den Chat
     val messages: StateFlow<List<Message>> =
-        companyIdFlow
-            .flatMapLatest { companyId ->
-                if (companyId.isNullOrBlank()) flowOf(emptyList())
-                else chatRepository.observeMessages(companyId, chatId)
+        companyId
+            .flatMapLatest { cid ->
+                if (cid.isNullOrBlank()) flowOf(emptyList())
+                else chatRepository.observeMessages(cid, chatId)
             }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                emptyList()
-            )
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    // Teilnehmer (für Titel/Subtitel in TopBar)
+    val participants: StateFlow<List<User>> =
+        combine(companyId, chat) { cid, c -> cid to c }
+            .flatMapLatest { (cid, c) ->
+                if (cid.isNullOrBlank() || c == null || c.participantIds.isEmpty()) {
+                    flowOf(emptyList())
+                } else {
+                    chatRepository.observeUsers(cid, c.participantIds)
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun sendTextMessage(text: String) {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return
 
         viewModelScope.launch {
-            val companyId = companyIdFlow.stateIn(
-                viewModelScope,
-                SharingStarted.Eagerly,
-                null
-            ).value
+            val cid = companyId.value
+            val uid = currentUserId.value
 
-            val userId = authRepository.authState.value?.uid
-
-            if (companyId.isNullOrBlank() || userId.isNullOrBlank()) return@launch
+            if (cid.isNullOrBlank() || uid.isNullOrBlank()) return@launch
 
             val msg = Message(
                 chatId = chatId,
-                senderId = userId,
+                senderId = uid,
                 text = trimmed,
                 createdAt = System.currentTimeMillis()
             )
 
-            chatRepository.sendMessage(companyId, chatId, msg)
+            chatRepository.sendMessage(cid, chatId, msg)
         }
     }
 }
+
+//@OptIn(ExperimentalCoroutinesApi::class)
+//class ChatViewModel(
+//    savedStateHandle: SavedStateHandle,
+//    private val chatRepository: ChatRepositoryInterface,
+//    private val authRepository: AuthRepositoryInterface,
+//    private val userRepository: UserRepositoryInterface
+//) : ViewModel() {
+//
+//    val chatId: String = savedStateHandle.toRoute<ChatRoute>().id
+//
+//    private val currentUserIdFlow: Flow<String?> =
+//        authRepository.authState.map { it?.uid }
+//
+//    private val companyIdFlow: Flow<String?> =
+//        userRepository.appUser.map { it?.companyId }
+//
+//    private val companyAndUserFlow: Flow<Pair<String, String>> =
+//        combine(companyIdFlow, currentUserIdFlow) { companyId, userId ->
+//            companyId to userId
+//        }.flatMapLatest { (companyId, userId) ->
+//            if (companyId == null || userId == null) flowOf(null)
+//            else flowOf(companyId to userId)
+//        }.map { it ?: return@map null }
+//            .flatMapLatest { pair ->
+//                if (pair == null) flowOf(Pair("", "")) else flowOf(pair)
+//            }
+//
+//    // Chat-Dokument (Header-Daten)
+//    val chat: StateFlow<Chat?> =
+//        companyIdFlow
+//            .flatMapLatest { companyId ->
+//                if (companyId.isNullOrBlank()) flowOf(null)
+//                else chatRepository.observeChat(companyId, chatId)
+//            }
+//            .stateIn(
+//                viewModelScope,
+//                SharingStarted.WhileSubscribed(5_000),
+//                null
+//            )
+//
+//    // Messages für den Chat
+//    val messages: StateFlow<List<Message>> =
+//        companyIdFlow
+//            .flatMapLatest { companyId ->
+//                if (companyId.isNullOrBlank()) flowOf(emptyList())
+//                else chatRepository.observeMessages(companyId, chatId)
+//            }
+//            .stateIn(
+//                viewModelScope,
+//                SharingStarted.WhileSubscribed(5_000),
+//                emptyList()
+//            )
+//
+//    fun sendTextMessage(text: String) {
+//        val trimmed = text.trim()
+//        if (trimmed.isEmpty()) return
+//
+//        viewModelScope.launch {
+//            val companyId = companyIdFlow.stateIn(
+//                viewModelScope,
+//                SharingStarted.Eagerly,
+//                null
+//            ).value
+//
+//            val userId = authRepository.authState.value?.uid
+//
+//            if (companyId.isNullOrBlank() || userId.isNullOrBlank()) return@launch
+//
+//            val msg = Message(
+//                chatId = chatId,
+//                senderId = userId,
+//                text = trimmed,
+//                createdAt = System.currentTimeMillis()
+//            )
+//
+//            chatRepository.sendMessage(companyId, chatId, msg)
+//        }
+//    }
+//}

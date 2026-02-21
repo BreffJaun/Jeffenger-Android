@@ -22,7 +22,8 @@ interface ChatRepositoryInterface {
         companyId: String,
         participantIds: List<String>,
         isGroupChat: Boolean,
-        title: String? = null
+        title: String? = null,
+        imageUrl: String?
     ): String
 
     suspend fun findDirectChat(
@@ -34,6 +35,12 @@ interface ChatRepositoryInterface {
         companyId: String,
         participantIds: List<String>
     ): String
+
+    suspend fun updateChatImage(
+        companyId: String,
+        chatId: String,
+        imageUrl: String
+    )
 }
 
 

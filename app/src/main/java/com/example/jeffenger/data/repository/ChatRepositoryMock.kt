@@ -66,7 +66,8 @@ class ChatRepositoryMock : ChatRepositoryInterface {
         companyId: String,
         participantIds: List<String>,
         isGroupChat: Boolean,
-        title: String?
+        title: String?,
+        imageUrl: String?
     ): String {
         val id = "mock_${System.currentTimeMillis()}"
 
@@ -136,6 +137,14 @@ class ChatRepositoryMock : ChatRepositoryInterface {
 
             newId
         }
+    }
+
+    override suspend fun updateChatImage(
+        companyId: String,
+        chatId: String,
+        imageUrl: String
+    ) {
+        // Für Mock erstmal leer lassen
     }
 }
 

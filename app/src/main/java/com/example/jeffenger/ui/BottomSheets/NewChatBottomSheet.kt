@@ -82,6 +82,16 @@ fun NewChatBottomSheet(
                 viewModel.generalMembersUiState.collectAsState()
         }
 
+        val sheetTitle = when (mode) {
+            NewChatSheetMode.COMPANY -> "Company Chat erstellen"
+            NewChatSheetMode.COMPANY_WITH_JEFF -> "Company + Jeff Chat erstellen"
+            NewChatSheetMode.GENERAL -> "Neuen Chat erstellen"
+        }
+
+        val showGroupToggle =
+            mode == NewChatSheetMode.GENERAL &&
+                    selectedIds.size == 1
+
         ModalBottomSheet(
             onDismissRequest = onClose,
             sheetState = modalSheetState,
@@ -116,8 +126,9 @@ fun NewChatBottomSheet(
 
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Neuen Chat erstellen",
-                        style = MaterialTheme.typography.displaySmall,
+                        text = sheetTitle,
+//                        style = MaterialTheme.typography.displaySmall,
+                        style = MaterialTheme.typography.titleLarge,
                         color = scheme.onSurface,
                         textAlign = TextAlign.Center
                     )
@@ -145,7 +156,8 @@ fun NewChatBottomSheet(
 
                                 Text(
                                     text = user.displayName,
-                                    style = MaterialTheme.typography.titleLarge,
+//                                    style = MaterialTheme.typography.titleLarge,
+                                    style = UrbanistText.BodyRegular,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
                                 )
@@ -180,7 +192,7 @@ fun NewChatBottomSheet(
                             Spacer(Modifier.height(12.dp))
 
                             // Checkbox only if exactly 1 person
-                            if (selectedIds.size == 1) {
+                            if (showGroupToggle) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {

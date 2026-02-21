@@ -1,6 +1,5 @@
 package com.example.jeffenger.data.repository
 
-import com.example.jeffenger.data.local.MockData.chats
 import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.Message
 import com.example.jeffenger.data.remote.model.User
@@ -8,6 +7,7 @@ import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.utils.enums.CollectionNames
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -111,7 +111,7 @@ class ChatRepositoryFirebase(
 
         val companyUsers = mutableMapOf<String, User>()
         val globalUsers = mutableMapOf<String, User>()
-        val listeners = mutableListOf<com.google.firebase.firestore.ListenerRegistration>()
+        val listeners = mutableListOf<ListenerRegistration>()
 
         // COMPANY USERS
         val companyUsersRef = db.collection(CollectionNames.COMPANIES.path)
@@ -242,8 +242,9 @@ class ChatRepositoryFirebase(
     override suspend fun createChat(
         companyId: String,
         participantIds: List<String>,
-        isGroupChat: Boolean,
-        title: String?
+        groupChat: Boolean,
+        title: String?,
+        imageUrl: String?
     ): String {
 
         val chatRef = db.collection(CollectionNames.COMPANIES.path)
@@ -256,15 +257,16 @@ class ChatRepositoryFirebase(
         val distinctParticipants = participantIds.distinct()
 
         val directKey =
-            if (!isGroupChat) {
+            if (!groupChat) {
                 distinctParticipants.sorted().joinToString("_")
             } else null
 
         val chatToSave = Chat(
             id = chatRef.id,
             participantIds = distinctParticipants,
-            groupChat = isGroupChat,
+            groupChat = groupChat,
             title = title,
+            imageUrl = imageUrl,
             createdAt = now,
             lastMessageTimestamp = now,
             lastMessageText = null,
@@ -290,7 +292,7 @@ class ChatRepositoryFirebase(
         val snapshot = db.collection(CollectionNames.COMPANIES.path)
             .document(companyId)
             .collection(CollectionNames.CHATS.path)
-            .whereEqualTo("isGroupChat", false)
+            .whereEqualTo("groupChat", false)
             .whereEqualTo("directChatKey", key)
             .limit(1)
             .get()
@@ -314,7 +316,7 @@ class ChatRepositoryFirebase(
         val snapshot = db.collection(CollectionNames.COMPANIES.path)
             .document(companyId)
             .collection(CollectionNames.CHATS.path)
-            .whereEqualTo("isGroupChat", false)
+            .whereEqualTo("groupChat", false)
             .whereEqualTo("directChatKey", key)
             .limit(1)
             .get()
@@ -330,9 +332,23 @@ class ChatRepositoryFirebase(
             createChat(
                 companyId = companyId,
                 participantIds = distinctParticipants,
-                isGroupChat = false,
-                title = null
+                groupChat = false,
+                title = null,
+                imageUrl = null
             )
         }
+    }
+
+    override suspend fun updateChatImage(
+        companyId: String,
+        chatId: String,
+        imageUrl: String
+    ) {
+        db.collection(CollectionNames.COMPANIES.path)
+            .document(companyId)
+            .collection(CollectionNames.CHATS.path)
+            .document(chatId)
+            .update("imageUrl", imageUrl)
+            .await()
     }
 }

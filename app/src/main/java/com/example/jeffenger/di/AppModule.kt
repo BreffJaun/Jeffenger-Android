@@ -7,14 +7,18 @@ import com.example.jeffenger.data.repository.AuthRepositoryFirebase
 import com.example.jeffenger.data.repository.ChatRepositoryFirebase
 import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.data.repository.ChatRepositoryMock
+import com.example.jeffenger.data.repository.StorageRepositoryFirebase
 import com.example.jeffenger.data.repository.UserRepositoryFirebase
 import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
+import com.example.jeffenger.data.repository.interfaces.StorageRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.UserRepositoryInterface
 import com.example.jeffenger.dataStore
 import com.example.jeffenger.ui.viewmodels.AuthViewModel
 import com.example.jeffenger.ui.viewmodels.ChatViewModel
 import com.example.jeffenger.ui.viewmodels.ChatsViewModel
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -30,6 +34,10 @@ val appModule = module {
 
     single {
         FirebaseFirestore.getInstance()
+    }
+
+    single {
+        FirebaseStorage.getInstance()
     }
 
     single<AuthRepositoryInterface> {
@@ -54,6 +62,10 @@ val appModule = module {
             get(),
             get()
         )
+    }
+
+    single<StorageRepositoryInterface> {
+        StorageRepositoryFirebase(get())
     }
 
     viewModelOf(::ChatsViewModel)   // Chat LIST

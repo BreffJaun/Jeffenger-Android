@@ -153,7 +153,16 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
 
     // Firebase
+    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
+
+
+//    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+//    implementation(libs.firebase.auth)
+//    implementation(libs.firebase.storage.ktx)
+//    implementation("com.google.firebase:firebase-firestore-ktx")
 
     // Android Splashscreen
     implementation("androidx.core:core-splashscreen:1.0.1")
