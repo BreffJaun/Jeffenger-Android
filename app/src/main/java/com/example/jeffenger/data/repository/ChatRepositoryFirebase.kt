@@ -201,7 +201,6 @@ class ChatRepositoryFirebase(
         awaitClose { listener.remove() }
     }
 
-
     override suspend fun sendMessage(
         companyId: String,
         chatId: String,
@@ -222,21 +221,74 @@ class ChatRepositoryFirebase(
             chatId = chatId
         )
 
-        // 1) Save message
+        // 1️⃣ Message speichern
         msgRef.set(msgToSave).await()
 
-        // 2) Update chat metadata
+        // 2️⃣ Aktuelles Chat-Dokument holen
+        val snapshot = chatRef.get().await()
+        val chat = snapshot.toObject(Chat::class.java) ?: return
+
+        val currentUnread = chat.unreadCount.toMutableMap()
+
+        // 3️⃣ Für alle außer Sender +1
+        chat.participantIds.forEach { userId ->
+            if (userId != message.senderId) {
+                val old = currentUnread[userId] ?: 0
+                currentUnread[userId] = old + 1
+            } else {
+                currentUnread[userId] = 0
+            }
+        }
+
         val lastText = msgToSave.text
             ?: if (msgToSave.imageUrl != null) "📷 Bild" else "Nachricht"
 
+        // 4️⃣ Chat updaten
         chatRef.update(
             mapOf(
                 "lastMessageId" to msgToSave.id,
                 "lastMessageText" to lastText,
-                "lastMessageTimestamp" to msgToSave.createdAt
+                "lastMessageTimestamp" to msgToSave.createdAt,
+                "unreadCount" to currentUnread
             )
         ).await()
     }
+
+//    override suspend fun sendMessage(
+//        companyId: String,
+//        chatId: String,
+//        message: Message
+//    ) {
+//
+//        val chatRef = db.collection(CollectionNames.COMPANIES.path)
+//            .document(companyId)
+//            .collection(CollectionNames.CHATS.path)
+//            .document(chatId)
+//
+//        val msgRef = chatRef
+//            .collection(CollectionNames.MESSAGES.path)
+//            .document()
+//
+//        val msgToSave = message.copy(
+//            id = msgRef.id,
+//            chatId = chatId
+//        )
+//
+//        // 1) Save message
+//        msgRef.set(msgToSave).await()
+//
+//        // 2) Update chat metadata
+//        val lastText = msgToSave.text
+//            ?: if (msgToSave.imageUrl != null) "📷 Bild" else "Nachricht"
+//
+//        chatRef.update(
+//            mapOf(
+//                "lastMessageId" to msgToSave.id,
+//                "lastMessageText" to lastText,
+//                "lastMessageTimestamp" to msgToSave.createdAt
+//            )
+//        ).await()
+//    }
 
 
     override suspend fun createChat(
@@ -350,5 +402,25 @@ class ChatRepositoryFirebase(
             .document(chatId)
             .update("imageUrl", imageUrl)
             .await()
+    }
+
+    override suspend fun resetUnreadCount(
+        companyId: String,
+        chatId: String,
+        userId: String
+    ) {
+
+        val chatRef = db.collection(CollectionNames.COMPANIES.path)
+            .document(companyId)
+            .collection(CollectionNames.CHATS.path)
+            .document(chatId)
+
+        val snapshot = chatRef.get().await()
+        val chat = snapshot.toObject(Chat::class.java) ?: return
+
+        val updated = chat.unreadCount.toMutableMap()
+        updated[userId] = 0
+
+        chatRef.update("unreadCount", updated).await()
     }
 }

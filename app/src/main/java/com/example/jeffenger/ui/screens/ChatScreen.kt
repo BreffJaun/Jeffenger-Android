@@ -1,6 +1,5 @@
 package com.example.jeffenger.ui.screens
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -19,13 +18,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.ui.components.ChatInputBar
 import com.example.jeffenger.ui.components.MessageBubble
-import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.viewmodels.ChatViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.mapper.mapToAvatarUiModel
@@ -48,6 +44,8 @@ fun ChatScreen(
         val participants by viewModel.participants.collectAsState()
 
         var input by remember { mutableStateOf("") }
+
+        val listState = rememberLazyListState()
 
         // TopBar State updaten (jedes Mal wenn sich Header-relevante Daten ändern)
         LaunchedEffect(chat, participants, myId) {
@@ -100,6 +98,18 @@ fun ChatScreen(
             )
         }
 
+        LaunchedEffect(messages.size) {
+            if (messages.isNotEmpty()) {
+//                listState.animateScrollToItem(messages.lastIndex)
+                listState.scrollToItem(messages.lastIndex)
+                viewModel.markChatAsRead()
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            viewModel.markChatAsRead()
+        }
+
         // Beim Verlassen: TopBar wieder zurücksetzen
         DisposableEffect(Unit) {
             onDispose { onTopBarStateChange(null) }
@@ -113,6 +123,7 @@ fun ChatScreen(
 
             // MESSAGES
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -133,10 +144,6 @@ fun ChatScreen(
                         isMine = (myId != null && msg.senderId == myId),
                         senderName = senderDisplayName
                     )
-//                    MessageBubble(
-//                        message = msg,
-//                        isMine = (myId != null && msg.senderId == myId)
-//                    )
                 }
             }
 

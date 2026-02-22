@@ -146,6 +146,14 @@ class ChatRepositoryMock : ChatRepositoryInterface {
     ) {
         // Für Mock erstmal leer lassen
     }
+
+    override suspend fun resetUnreadCount(
+        companyId: String,
+        chatId: String,
+        userId: String
+    ) {
+        // Für Mock erstmal leer lassen
+    }
 }
 
 //class ChatRepositoryMock : ChatRepositoryInterface {

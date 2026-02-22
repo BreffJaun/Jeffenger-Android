@@ -399,39 +399,3 @@ class ChatsViewModel(
 }
 
 
-
-//    fun startCompanyChat() {
-//        viewModelScope.launch {
-//
-//            val currentUserId = currentUserIdState.value ?: return@launch
-//            val companyId = companyIdState.value ?: return@launch
-//
-//            val chatId = chatRepository.createChat(
-//                companyId = companyId,
-//                participantIds = listOf(currentUserId),
-//                isGroupChat = true,
-//                title = "Company"
-//            )
-//
-//            _navigateToChat.emit(chatId)
-//        }
-//    }
-
-//    fun startCompanyWithJeffChat() {
-//        viewModelScope.launch {
-//
-//            val currentUserId = currentUserIdState.value ?: return@launch
-//            val companyId = companyIdState.value ?: return@launch
-//            val jeffId = jeffUserIdState.value ?: return@launch
-//
-//            val chatId = chatRepository.createChat(
-//                companyId = companyId,
-//                participantIds = listOf(currentUserId, jeffId),
-//                isGroupChat = true,
-//                title = "Company + Jeff"
-//            )
-//
-//            _navigateToChat.emit(chatId)
-//        }
-//    }
-

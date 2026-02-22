@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,6 +38,11 @@ fun ChatListItem(
     LogComposable("ChatListItem") {
         val scheme = MaterialTheme.colorScheme
 
+        val unreadCount = item.unreadCount
+        val unreadText = when {
+            unreadCount > 99 -> "99+"
+            else -> unreadCount.toString()
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -46,63 +52,71 @@ fun ChatListItem(
         ) {
 
             // Avatar
-            AvatarCircle(
-                avatar = item.avatar
-            )
+            AvatarCircle(avatar = item.avatar)
 
             Spacer(Modifier.width(12.dp))
 
-            // NAME + LAST MESSAGE
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp) // Figma spacing
-            ) {
-                Text(
-                    text = item.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
-
-                Text(
-                    text = item.lastMessageText ?: "",
-                    style = UrbanistText.BodyRegular,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            // TIME + UNREAD MESSAGS
-            Column(
-                horizontalAlignment = Alignment.End,
                 modifier = Modifier
-                    .height(48.dp)
+                    .weight(1f)
+                    .height(48.dp),
+                verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = item.lastMessageTimestamp.relativeTimeString(),
-                    style = UrbanistText.Label,
-                    color = if (item.unreadCount > 0)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurface
-                )
 
-                Spacer(modifier = Modifier.weight(1f))
+                // NAME + TIME
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = scheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
 
-                if (item.unreadCount > 0) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = item.unreadCount.toString(),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            style = UrbanistText.Label
-                        )
+                    Text(
+                        text = item.lastMessageTimestamp.relativeTimeString(),
+                        style = UrbanistText.Label,
+                        color = if (unreadCount > 0) scheme.primary else scheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // LAST MESSAGE + UNREAD MESSAGS BADGE
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.lastMessageText ?: "",
+                        style = UrbanistText.BodyRegular,
+                        color = scheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    if (unreadCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .height(20.dp)
+                                .widthIn(min = 20.dp)
+                                .clip(CircleShape)
+                                .background(scheme.primary)
+                                .padding(horizontal = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = unreadText,
+                                color = scheme.onPrimary,
+                                style = UrbanistText.Label,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }
@@ -126,3 +140,93 @@ private fun ChatListItemPreview() {
 //        ChatListItem()
     }
 }
+
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .clickable { onClick() }
+//                .padding(bottom = 15.dp),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//
+//            // Avatar
+//            AvatarCircle(
+//                avatar = item.avatar
+//            )
+//
+//            Spacer(Modifier.width(12.dp))
+//
+//            // NAME + LAST MESSAGE
+//            Column(
+//                modifier = Modifier.weight(1f),
+//                verticalArrangement = Arrangement.spacedBy(4.dp)
+//            ) {
+//                Text(
+//                    text = item.displayName,
+//                    style = MaterialTheme.typography.titleMedium,
+//                    color = scheme.onSurface,
+//                    maxLines = 1
+//                )
+//
+//                Text(
+//                    text = item.lastMessageText ?: "",
+//                    style = UrbanistText.BodyRegular,
+//                    color = scheme.onSurfaceVariant,
+//                    maxLines = 1,
+//                    overflow = TextOverflow.Ellipsis
+//                )
+//            }
+//
+//            // TIME + UNREAD MESSAGS
+//            Column(
+//                horizontalAlignment = Alignment.End,
+//                modifier = Modifier
+//                    .height(48.dp)
+//            ) {
+//                Text(
+//                    text = item.lastMessageTimestamp.relativeTimeString(),
+//                    style = UrbanistText.Label,
+//                    color = if (item.unreadCount > 0)
+//                        scheme.primary
+//                    else
+//                        scheme.onSurface
+//                )
+//
+//                Spacer(modifier = Modifier.weight(1f))
+//
+//                if (unreadCount > 0) {
+//                    Box(
+//                        modifier = Modifier
+//                            .height(20.dp)
+//                            .widthIn(min = 20.dp)
+//                            .clip(CircleShape)
+//                            .background(scheme.primary)
+//                            .padding(horizontal = 6.dp),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Text(
+//                            text = unreadText,
+//                            color = scheme.onPrimary,
+//                            style = UrbanistText.Label,
+//                            maxLines = 1
+//                        )
+//                    }
+//                }
+//
+////                if (item.unreadCount > 0) {
+////                    Box(
+////                        modifier = Modifier
+////                            .size(20.dp)
+////                            .clip(CircleShape)
+////                            .background(MaterialTheme.colorScheme.primary),
+////                        contentAlignment = Alignment.Center
+////                    ) {
+////                        Text(
+////                            text = item.unreadCount.toString(),
+////                            color = MaterialTheme.colorScheme.onPrimary,
+////                            style = UrbanistText.Label
+////                        )
+////                    }
+////                }
+//            }
+//        }

@@ -41,6 +41,12 @@ interface ChatRepositoryInterface {
         chatId: String,
         imageUrl: String
     )
+
+    suspend fun resetUnreadCount(
+        companyId: String,
+        chatId: String,
+        userId: String
+    )
 }
 
 
