@@ -23,6 +23,7 @@ import com.example.jeffenger.navigation.AppStart
 import com.example.jeffenger.ui.viewmodels.SettingsViewModel
 import de.syntax_institut.jetpack.a04_05_online_shopper.utilities.BackgroundWrapper
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import com.example.jeffenger.navigation.screens.AuthScreen
 import com.example.jeffenger.ui.screens.ErrorScreen
 import com.example.jeffenger.ui.screens.LoadingScreen

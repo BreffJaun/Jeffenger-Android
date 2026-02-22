@@ -1,12 +1,11 @@
 package com.example.jeffenger.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.utils.debugging.LogComposable
 
@@ -39,7 +37,8 @@ fun AppTextField(
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .height(42.dp)
+                .heightIn(min = 42.dp, max = 120.dp)
+//                .height(42.dp)
 //                .background(
 //                    color = scheme.tertiaryContainer,
 //                    shape = RoundedCornerShape(10.dp)
@@ -47,9 +46,11 @@ fun AppTextField(
 //                .padding(horizontal = 12.dp),
                 .background(
                     color = scheme.onSurface,
-                    shape = RoundedCornerShape(100.dp)
+                    shape = RoundedCornerShape(25.dp)
+//                    shape = RoundedCornerShape(100.dp)
                 )
-                .padding(horizontal = 15.dp),
+                .padding(horizontal = 15.dp, vertical = 10.dp),
+//                .padding(horizontal = 15.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -70,6 +71,7 @@ fun AppTextField(
                     value = value,
                     onValueChange = onValueChange,
                     singleLine = singleLine,
+                    maxLines = 5,
                     enabled = enabled,
 //                    textStyle = UrbanistText.Placeholder.copy(
 //                        color = scheme.onSurface
@@ -80,7 +82,7 @@ fun AppTextField(
                     modifier = Modifier.fillMaxWidth(),
                     decorationBox = { innerTextField ->
                         Box {
-                            // ✅ Placeholder
+                            // PLACHOLDER
                             if (value.isBlank()) {
                                 Text(
                                     text = placeholder,
@@ -91,17 +93,10 @@ fun AppTextField(
 
                             innerTextField()
                         }
-//                        if (value.isBlank()) {
-//                            Text(
-//                                text = placeholder,
-//                                style = UrbanistText.Placeholder,
-//                                color = scheme.outline
-//                            )
-//                        }
-//                        innerTextField()
                     }
                 )
             }
         }
     }
 }
+

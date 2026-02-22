@@ -5,6 +5,7 @@ import com.example.jeffenger.data.remote.model.Chat
 import com.example.jeffenger.data.remote.model.Message
 import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
+import com.example.jeffenger.utils.enums.CollectionNames
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.Flow
@@ -151,6 +152,23 @@ class ChatRepositoryMock : ChatRepositoryInterface {
         companyId: String,
         chatId: String,
         userId: String
+    ) {
+        // Für Mock erstmal leer lassen
+    }
+
+    override suspend fun editMessage(
+        companyId: String,
+        chatId: String,
+        messageId: String,
+        newText: String
+    ) {
+        // Für Mock erstmal leer lassen
+    }
+
+    override suspend fun deleteMessage(
+        companyId: String,
+        chatId: String,
+        messageId: String
     ) {
         // Für Mock erstmal leer lassen
     }

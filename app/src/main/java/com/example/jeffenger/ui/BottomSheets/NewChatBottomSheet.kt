@@ -38,6 +38,7 @@ import com.example.jeffenger.data.remote.model.ui_model.AvatarUiModel
 import com.example.jeffenger.ui.components.AppTextField
 import com.example.jeffenger.ui.components.AvatarCircle
 import com.example.jeffenger.ui.components.ChatStartButton
+import com.example.jeffenger.ui.components.MemberTextInput
 import com.example.jeffenger.ui.components.RoundCheckbox
 import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.ui.viewmodels.ChatsViewModel
@@ -259,7 +260,7 @@ fun NewChatBottomSheet(
                                         }
                                     }
 
-                                    AppTextField(
+                                    MemberTextInput(
                                         value = groupTitle,
                                         placeholder = "Gruppenname (optional)",
                                         onValueChange = { viewModel.setGroupTitle(it) },

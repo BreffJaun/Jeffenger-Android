@@ -28,12 +28,16 @@ import com.example.jeffenger.utils.debugging.LogComposable
 fun ChatInputBar(
     value: String,
     onValueChange: (String) -> Unit,
-    onSend: () -> Unit
+    onSend: () -> Unit,
+//    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     LogComposable("ChatInputBar") {
         val scheme = MaterialTheme.colorScheme
 
-        Column {
+        Column (
+            modifier = modifier
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -53,7 +57,8 @@ fun ChatInputBar(
                     value = value,
                     placeholder = "Nachricht",
                     onValueChange = onValueChange,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    singleLine = false
                 )
 
                 Spacer(Modifier.width(12.dp))

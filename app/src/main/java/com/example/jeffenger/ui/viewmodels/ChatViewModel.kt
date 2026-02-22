@@ -106,5 +106,19 @@ class ChatViewModel(
             )
         }
     }
+
+    fun editMessage(messageId: String, newText: String) {
+        viewModelScope.launch {
+            val cid = companyId.value ?: return@launch
+            chatRepository.editMessage(cid, chatId, messageId, newText)
+        }
+    }
+
+    fun deleteMessage(messageId: String) {
+        viewModelScope.launch {
+            val cid = companyId.value ?: return@launch
+            chatRepository.deleteMessage(cid, chatId, messageId)
+        }
+    }
 }
 

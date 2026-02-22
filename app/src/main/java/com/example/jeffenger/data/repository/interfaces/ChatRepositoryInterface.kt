@@ -47,6 +47,19 @@ interface ChatRepositoryInterface {
         chatId: String,
         userId: String
     )
+
+    suspend fun editMessage(
+        companyId: String,
+        chatId: String,
+        messageId: String,
+        newText: String
+    )
+
+    suspend fun deleteMessage(
+        companyId: String,
+        chatId: String,
+        messageId: String
+    )
 }
 
 

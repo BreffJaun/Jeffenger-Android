@@ -3,20 +3,30 @@ package com.example.jeffenger.navigation
 import android.content.res.Configuration
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -33,6 +43,7 @@ import com.example.jeffenger.ui.screens.ChatScreen
 import com.example.jeffenger.ui.screens.ChatsScreen
 import com.example.jeffenger.ui.screens.SettingsScreen
 import com.example.jeffenger.ui.theme.AppTheme
+import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.ui.viewmodels.SettingsViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.debugging.LogStateMap
@@ -41,7 +52,6 @@ import de.syntax_institut.projektwoche1.ui.component.TopBar
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppStart(
@@ -64,6 +74,9 @@ fun AppStart(
 
         var chatTopBarState by remember { mutableStateOf<ChatTopBarUiState?>(null) }
 
+        // SNACKBAR -> TOAST
+        val snackbarHostState = remember { SnackbarHostState() }
+
         LogStateMap(
             "AppStart",
             "selectedTab" to selectedTab
@@ -73,6 +86,30 @@ fun AppStart(
         Scaffold(
             modifier = modifier.fillMaxSize(),
             containerColor = Color.Transparent,
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState
+                ) { snackbarData ->
+
+                    Box(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.primary)
+                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = snackbarData.visuals.message,
+                            style = UrbanistText.BodyRegular,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+//                SnackbarHost(
+//                    hostState = snackbarHostState
+//                )
+            },
+
             topBar = {
                 TopBar(
                     currentRoute = currentRoute,
@@ -80,7 +117,8 @@ fun AppStart(
                     onAddChatClick = {
                         if (currentRoute?.startsWith(ChatsRoute::class.qualifiedName ?: "") == true) {
                             // Trigger event
-                            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
+                                .launch {
                                 openNewChatSheet.emit(Unit)
                             }
                         }
@@ -88,11 +126,9 @@ fun AppStart(
                     chatTopBarState = chatTopBarState,
                     onChatHeaderClick = {
                         // später: Chat-Info Screen / Participants / Settings
-                        // vorerst: no-op oder Log
+                        // vorerst: leer ...
                     },
-                    onChatCalendarClick = {
-                        // später: Kalender/Termine im Chat
-                    }
+                    onChatCalendarClick = { }
                 )
             },
             bottomBar = {
@@ -159,8 +195,18 @@ fun AppStart(
 
                 }
 
+//                composable<ChatRoute> {
+//                    ChatScreen(
+//                        onBack = { navController.popBackStack() },
+//                        onTopBarStateChange = { state ->
+//                            chatTopBarState = state
+//                        }
+//                    )
+//                }
+
                 composable<ChatRoute> {
                     ChatScreen(
+                        snackbarHostState = snackbarHostState,
                         onBack = { navController.popBackStack() },
                         onTopBarStateChange = { state ->
                             chatTopBarState = state
