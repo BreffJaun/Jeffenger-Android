@@ -5,12 +5,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,13 +16,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.Preferences
 import com.example.jeffenger.ui.theme.AppTheme
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jeffenger.navigation.AppStart
-import com.example.jeffenger.ui.viewmodels.SettingsViewModel
 import de.syntax_institut.jetpack.a04_05_online_shopper.utilities.BackgroundWrapper
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.WindowCompat
-import com.example.jeffenger.navigation.screens.AuthScreen
+import com.example.jeffenger.ui.auth.AuthScreen
 import com.example.jeffenger.ui.screens.ErrorScreen
 import com.example.jeffenger.ui.screens.LoadingScreen
 import com.example.jeffenger.ui.screens.SplashScreen

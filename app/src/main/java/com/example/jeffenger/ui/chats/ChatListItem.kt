@@ -1,4 +1,4 @@
-package com.example.jeffenger.ui.components
+package com.example.jeffenger.ui.chats
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
@@ -25,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.ui_model.ChatListItemUiModel
+import com.example.jeffenger.ui.core.avatar.AvatarCircle
 import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.utils.extensions.relativeTimeString
@@ -101,7 +101,7 @@ fun ChatListItem(
                         modifier = Modifier.weight(1f)
                     )
 
-                    // ✅ Platz rechts immer reservieren
+                    // Platz rechts immer reservieren
                     Box(
                         modifier = Modifier
                             .width(44.dp),
@@ -127,39 +127,6 @@ fun ChatListItem(
                         }
                     }
                 }
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.spacedBy(25.dp)
-//                ) {
-//                    Text(
-//                        text = item.lastMessageText ?: "",
-//                        style = UrbanistText.BodyRegular,
-//                        color = scheme.onSurfaceVariant,
-//                        maxLines = 1,
-//                        overflow = TextOverflow.Ellipsis,
-//                        modifier = Modifier.weight(1f)
-//                    )
-//
-//                    if (unreadCount > 0) {
-//                        Box(
-//                            modifier = Modifier
-//                                .height(20.dp)
-//                                .widthIn(min = 20.dp)
-//                                .clip(CircleShape)
-//                                .background(scheme.primary)
-//                                .padding(horizontal = 6.dp),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Text(
-//                                text = unreadText,
-//                                color = scheme.onPrimary,
-//                                style = UrbanistText.Label,
-//                                maxLines = 1
-//                            )
-//                        }
-//                    }
-//                }
             }
         }
     }

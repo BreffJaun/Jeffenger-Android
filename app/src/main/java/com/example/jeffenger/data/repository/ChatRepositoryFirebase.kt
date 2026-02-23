@@ -430,102 +430,36 @@ class ChatRepositoryFirebase(
         messageId: String,
         newText: String
     ) {
-        val msgRef = db.collection(CollectionNames.COMPANIES.path)
+        val chatRef = db.collection(CollectionNames.COMPANIES.path)
             .document(companyId)
             .collection(CollectionNames.CHATS.path)
             .document(chatId)
+
+        val msgRef = chatRef
             .collection(CollectionNames.MESSAGES.path)
             .document(messageId)
 
+        // 1️⃣ Message aktualisieren
         msgRef.update(
             mapOf(
                 "text" to newText,
                 "editedAt" to System.currentTimeMillis()
             )
         ).await()
+
+        // 2️⃣ Chat holen
+        val chatSnap = chatRef.get().await()
+        val chat = chatSnap.toObject(Chat::class.java) ?: return
+
+        // 3️⃣ Nur wenn es die letzte Nachricht ist → Chat-Metadaten updaten
+        if (chat.lastMessageId == messageId) {
+            chatRef.update(
+                mapOf(
+                    "lastMessageText" to newText
+                )
+            ).await()
+        }
     }
-
-//    override suspend fun deleteMessage(
-//        companyId: String,
-//        chatId: String,
-//        messageId: String
-//    ) {
-//        val msgRef = db.collection(CollectionNames.COMPANIES.path)
-//            .document(companyId)
-//            .collection(CollectionNames.CHATS.path)
-//            .document(chatId)
-//            .collection(CollectionNames.MESSAGES.path)
-//            .document(messageId)
-//
-//        msgRef.delete().await()
-//    }
-
-//    override suspend fun deleteMessage(
-//        companyId: String,
-//        chatId: String,
-//        messageId: String
-//    ) {
-//        val chatRef = db.collection(CollectionNames.COMPANIES.path)
-//            .document(companyId)
-//            .collection(CollectionNames.CHATS.path)
-//            .document(chatId)
-//
-//        val msgRef = chatRef
-//            .collection(CollectionNames.MESSAGES.path)
-//            .document(messageId)
-//
-//        // 0) Message VORHER holen (für senderId + ggf. Safety)
-//        val msgSnap = msgRef.get().await()
-//        val msg = msgSnap.toObject(Message::class.java)
-//
-//        // 1) Chat holen (für lastMessageId + unreadCount + createdAt)
-//        val chatSnap = chatRef.get().await()
-//        val chat = chatSnap.toObject(Chat::class.java) ?: run {
-//            msgRef.delete().await()
-//            return
-//        }
-//
-//        val wasLastMessage = chat.lastMessageId == messageId
-//
-//        // 2) Message löschen
-//        msgRef.delete().await()
-//
-//        // 3) Wenn es NICHT die letzte war -> fertig
-//        if (!wasLastMessage) return
-//
-//        // 4) Neue letzte Nachricht suchen (neueste by createdAt)
-//        val newestSnap = chatRef.collection(CollectionNames.MESSAGES.path)
-//            .orderBy("createdAt", Query.Direction.DESCENDING)
-//            .limit(1)
-//            .get()
-//            .await()
-//
-//        val newestMsgDoc = newestSnap.documents.firstOrNull()
-//        val newestMsg = newestMsgDoc?.toObject(Message::class.java)
-//
-//        if (newestMsg != null && newestMsgDoc != null) {
-//            val lastText = newestMsg.text
-//                ?: if (newestMsg.imageUrl != null) "📷 Bild" else "Nachricht"
-//
-//            chatRef.update(
-//                mapOf(
-//                    "lastMessageId" to newestMsgDoc.id,
-//                    "lastMessageText" to lastText,
-//                    "lastMessageTimestamp" to newestMsg.createdAt
-//                )
-//            ).await()
-//        } else {
-//            // Keine Messages mehr im Chat -> Metadaten zurücksetzen
-//            chatRef.update(
-//                mapOf(
-//                    "lastMessageId" to null,
-//                    "lastMessageText" to null,
-//                    // WICHTIG: nicht null lassen, weil observeChatsForUser() danach orderBy macht
-//                    "lastMessageTimestamp" to (chat.createdAt ?: System.currentTimeMillis())
-//                )
-//            ).await()
-//        }
-//    }
 
     override suspend fun deleteMessage(
         companyId: String,

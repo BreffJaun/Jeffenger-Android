@@ -1,4 +1,4 @@
-package com.example.jeffenger.ui.components
+package com.example.jeffenger.ui.auth
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text

@@ -1,4 +1,4 @@
-package com.example.jeffenger.ui.screens
+package com.example.jeffenger.ui.chat
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,11 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -27,7 +24,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -36,10 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.Message
-import com.example.jeffenger.ui.BottomSheets.MessageActionsSheet
-import com.example.jeffenger.ui.components.AppTextField
-import com.example.jeffenger.ui.components.ChatInputBar
-import com.example.jeffenger.ui.components.MessageBubble
+import com.example.jeffenger.ui.core.AppConfirmDialog
+import com.example.jeffenger.ui.core.AppTextField
 import com.example.jeffenger.ui.viewmodels.ChatViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.mapper.mapToAvatarUiModel
@@ -74,6 +68,9 @@ fun ChatScreen(
         // EDIT MESSAGE
         var editingMessage by remember { mutableStateOf<Message?>(null) }
         var editText by remember { mutableStateOf("") }
+
+        // DELETE MESSAGE
+        var messageToDelete by remember { mutableStateOf<Message?>(null) }
 
         // SNACKBAR -> TOAST
         val scope = rememberCoroutineScope()
@@ -193,7 +190,7 @@ fun ChatScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // ✅ nur wenn Keyboard offen ist: genug Luft für Gesture/NavBar + ein paar Extra-Pixel
+                    // Nur wenn Keyboard offen ist: genug Luft für Gesture/NavBar + ein paar Extra-Pixel
                     .padding(bottom = if (isKeyboardOpen) navBottomDp + extraKick else 0.dp)
             ) {
                 ChatInputBar(
@@ -206,15 +203,6 @@ fun ChatScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-//            ChatInputBar(
-//                value = input,
-//                onValueChange = { input = it },
-//                onSend = {
-//                    viewModel.sendTextMessage(input)
-//                    input = ""
-//                },
-//                modifier = Modifier.fillMaxWidth()
-//            )
         }
 
         if (showSheet && selectedMessage != null) {
@@ -228,18 +216,9 @@ fun ChatScreen(
                 },
 
                 onDelete = {
-                    viewModel.deleteMessage(selectedMessage!!.id)
+                    messageToDelete = selectedMessage
                     showSheet = false
-
-                    scope.launch {
-                        snackbarHostState.showSnackbar("Nachricht gelöscht")
-                    }
                 },
-
-//                onDelete = {
-//                    viewModel.deleteMessage(selectedMessage!!.id)
-//                    showSheet = false
-//                },
 
                 onDismiss = {
                     showSheet = false
@@ -248,46 +227,43 @@ fun ChatScreen(
         }
 
         if (editingMessage != null) {
-            AlertDialog(
-                onDismissRequest = { editingMessage = null },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            viewModel.editMessage(
-                                editingMessage!!.id,
-                                editText
-                            )
-                            editingMessage = null
-
-                            scope.launch {
-                                snackbarHostState.showSnackbar("Nachricht bearbeitet")
-                            }
-                        }
-                    ) {
-                        Text("Speichern")
-                    }
-                },
-
-                dismissButton = {
-                    TextButton(
-                        onClick = { editingMessage = null }
-                    ) {
-                        Text("Abbrechen")
-                    }
-                },
-
-                title = { Text("Nachricht bearbeiten") },
-
-                text = {
-                    AppTextField(
-                        value = editText,
-                        placeholder = "",
-                        onValueChange = { editText = it },
-                        singleLine = false,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 42.dp, max = 120.dp)
+            AppEditMessageDialog(
+                text = editText,
+                onTextChange = { editText = it },
+                onConfirm = {
+                    viewModel.editMessage(
+                        editingMessage!!.id,
+                        editText
                     )
+                    editingMessage = null
+
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Nachricht bearbeitet")
+                    }
+                },
+                onDismiss = {
+                    editingMessage = null
+                }
+            )
+        }
+
+        if (messageToDelete != null) {
+            AppConfirmDialog(
+                title = "Nachricht löschen",
+                message = "Möchtest du diese Nachricht wirklich löschen?",
+                confirmText = "Löschen",
+                dismissText = "Abbrechen",
+                isDestructive = true,
+                onConfirm = {
+                    viewModel.deleteMessage(messageToDelete!!.id)
+                    messageToDelete = null
+
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Nachricht gelöscht")
+                    }
+                },
+                onDismiss = {
+                    messageToDelete = null
                 }
             )
         }

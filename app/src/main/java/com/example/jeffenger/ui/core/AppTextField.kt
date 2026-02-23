@@ -1,4 +1,4 @@
-package com.example.jeffenger.ui.components
+package com.example.jeffenger.ui.core
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

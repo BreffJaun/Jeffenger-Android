@@ -1,10 +1,11 @@
-package com.example.jeffenger.ui.components
+package com.example.jeffenger.ui.core.avatar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,7 +56,7 @@ fun AvatarCircle(
 
             AvatarType.COMPANY_ICON -> {
                 // SVG / XML from drawable
-                androidx.compose.material3.Icon(
+                Icon(
                     painter = painterResource(id = avatar.iconResId!!),
                     contentDescription = null,
                     tint = scheme.onTertiaryContainer,
@@ -65,7 +66,7 @@ fun AvatarCircle(
 
             AvatarType.GROUP_ICON -> {
                 // Material 3 Icon
-                androidx.compose.material3.Icon(
+                Icon(
                     imageVector = avatar.iconVector!!,
                     contentDescription = null,
                     tint = scheme.onTertiaryContainer,

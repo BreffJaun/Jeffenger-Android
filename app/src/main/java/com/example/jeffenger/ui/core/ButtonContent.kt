@@ -1,4 +1,4 @@
-package com.example.jeffenger.ui.components
+package com.example.jeffenger.ui.core
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text

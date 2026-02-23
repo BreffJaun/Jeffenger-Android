@@ -1,11 +1,8 @@
 package com.example.jeffenger.navigation
 
 import android.content.res.Configuration
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
@@ -38,10 +34,10 @@ import com.example.jeffenger.navigation.helper.ChatRoute
 import com.example.jeffenger.navigation.helper.ChatsRoute
 import com.example.jeffenger.navigation.helper.SettingsRoute
 import com.example.jeffenger.navigation.screens.IosStyleBottomBar
-import com.example.jeffenger.ui.screens.CalendarScreen
-import com.example.jeffenger.ui.screens.ChatScreen
-import com.example.jeffenger.ui.screens.ChatsScreen
-import com.example.jeffenger.ui.screens.SettingsScreen
+import com.example.jeffenger.ui.calendar.CalendarScreen
+import com.example.jeffenger.ui.chat.ChatScreen
+import com.example.jeffenger.ui.chats.ChatsScreen
+import com.example.jeffenger.ui.settings.SettingsScreen
 import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.ui.viewmodels.SettingsViewModel

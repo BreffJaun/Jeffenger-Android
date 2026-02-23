@@ -1,4 +1,4 @@
-package com.example.jeffenger.ui.components
+package com.example.jeffenger.ui.chats
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +14,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.PersonOutline
 import com.example.jeffenger.R
 import com.example.jeffenger.utils.debugging.LogComposable

@@ -1,6 +1,5 @@
-package com.example.jeffenger.ui.components
+package com.example.jeffenger.ui.chat
 
-import android.R.id.message
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,17 +15,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.Message
 import com.example.jeffenger.ui.theme.UrbanistText
-import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.extensions.relativeTimeString
 
 @Composable
@@ -53,13 +48,13 @@ fun MessageBubble(
                 topStart = 20.dp,
                 topEnd = 20.dp,
                 bottomStart = 20.dp,
-                bottomEnd = 4.dp
+                bottomEnd = 0.dp
             )
         } else {
             RoundedCornerShape(
                 topStart = 20.dp,
                 topEnd = 20.dp,
-                bottomStart = 4.dp,
+                bottomStart = 0.dp,
                 bottomEnd = 20.dp
             )
         }
@@ -134,47 +129,6 @@ fun MessageBubble(
                         )
                     }
                 }
-//                Row(
-//                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//
-//                    // Zeit
-//                    Text(
-//                        text = time,
-//                        style = UrbanistText.Label,
-//                        color = scheme.surface.copy(alpha = 0.8f)
-//                    )
-//
-//                    // Sender (nur wenn nicht eigene Nachricht)
-//                    if (!isMine) {
-//                        Text(
-//                            text = " - ${senderName ?: message.senderId}",
-//                            style = UrbanistText.Label,
-//                            color = scheme.surface.copy(alpha = 0.8f)
-//                        )
-//                    }
-//
-//                    // Edited Label
-//                    if (message.editedAt != null) {
-//                        Text(
-//                            text = " - bearbeitet",
-//                            style = UrbanistText.Label,
-//                            color = scheme.surface.copy(alpha = 0.6f)
-//                        )
-//                    }
-//
-//
-//                }
-//                Text(
-//                    text =
-//                        if (isMine)
-//                            time
-//                        else
-//                            "$time - ${senderName ?: message.senderId}",
-//                    style = UrbanistText.Label,
-//                    color = scheme.surface.copy(alpha = 0.8f)
-//                )
 
                 Spacer(Modifier.height(4.dp))
 

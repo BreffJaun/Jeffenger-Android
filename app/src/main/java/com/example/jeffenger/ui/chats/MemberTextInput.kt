@@ -1,4 +1,4 @@
-package com.example.jeffenger.ui.components
+package com.example.jeffenger.ui.chats
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,10 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.ui.theme.UrbanistText
-import com.example.jeffenger.utils.debugging.LogComposable
 
 
 @Composable
@@ -83,7 +82,7 @@ fun MemberTextInput(
                 textStyle = UrbanistText.BodyRegular.copy(
                     color = scheme.onSurface
                 ),
-                cursorBrush = androidx.compose.ui.graphics.SolidColor(scheme.onSurface),
+                cursorBrush = SolidColor(scheme.onSurface),
                 interactionSource = interactionSource,
                 modifier = Modifier.weight(1f),
                 decorationBox = { innerTextField ->

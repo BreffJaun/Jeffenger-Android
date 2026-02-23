@@ -19,3 +19,4 @@ sealed class LoadingState {
 }
 
 // Sealed class instead of enum, because we need parameters!
+

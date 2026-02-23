@@ -1,37 +1,50 @@
-package com.example.jeffenger.ui.screens
+package com.example.jeffenger.ui.settings
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.jeffenger.navigation.components.TabItem
+import androidx.compose.ui.unit.dp
 import com.example.jeffenger.ui.theme.AppTheme
+import com.example.jeffenger.ui.viewmodels.AuthViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun CalendarScreen(
+fun SettingsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: AuthViewModel = koinViewModel()
 ) {
-    LogComposable("CalendarScreen") {
+    LogComposable("SettingsScreen") {
         val scheme = MaterialTheme.colorScheme
 
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             Text(
-                "CALENDAR SCREEN",
+                "SETTINGS SCREEN",
                 color = scheme.onSurface
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = { viewModel.logout() }
+            ) {
+                Text("Logout")
+            }
         }
     }
 }
@@ -48,8 +61,8 @@ fun CalendarScreen(
     uiMode = Configuration.UI_MODE_NIGHT_NO
 )
 @Composable
-private fun CalendarScreenPreview() {
+private fun SettingsScreenPreview() {
     AppTheme {
-//        CalendarScreen()
+//        SettingsScreen()
     }
 }

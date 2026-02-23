@@ -1,4 +1,4 @@
-package com.example.jeffenger.ui.BottomSheets
+package com.example.jeffenger.ui.chat
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -107,36 +107,3 @@ fun MessageActionsSheet(
     }
 }
 
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun MessageActionsSheet(
-//    message: Message,
-//    onEdit: () -> Unit,
-//    onDelete: () -> Unit,
-//    onDismiss: () -> Unit
-//) {
-//    ModalBottomSheet(
-//        onDismissRequest = onDismiss
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(24.dp),
-//            verticalArrangement = Arrangement.spacedBy(20.dp)
-//        ) {
-//
-//            Text(
-//                text = "Nachricht bearbeiten",
-//                style = MaterialTheme.typography.bodyLarge,
-//                modifier = Modifier.clickable { onEdit() }
-//            )
-//
-//            Text(
-//                text = "Nachricht löschen",
-//                style = MaterialTheme.typography.bodyLarge,
-//                color = MaterialTheme.colorScheme.error,
-//                modifier = Modifier.clickable { onDelete() }
-//            )
-//        }
-//    }
-//}
