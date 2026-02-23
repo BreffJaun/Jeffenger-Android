@@ -1,6 +1,8 @@
 package com.example.jeffenger.navigation
 
 import android.content.res.Configuration
+import android.net.http.SslCertificate.restoreState
+import android.net.http.SslCertificate.saveState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -51,6 +54,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppStart(
+    navController: NavHostController,
     modifier: Modifier = Modifier,
     settingsViewModel: SettingsViewModel = viewModel()
 ) {
@@ -58,7 +62,7 @@ fun AppStart(
         val scheme = MaterialTheme.colorScheme
 
         // NAVIGATION
-        val navController = rememberNavController()
+//        val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
