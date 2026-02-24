@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.jeffenger.data.remote.model.ui_model.AvatarUiModel
@@ -23,14 +24,16 @@ import com.example.jeffenger.utils.enums.AvatarType
 @Composable
 fun AvatarCircle(
     avatar: AvatarUiModel,
+    boxSize: Dp = 50.dp,
+    iconSize: Dp = 36.dp,
     modifier: Modifier = Modifier
 ) {
     val scheme = MaterialTheme.colorScheme
-    val AvatarIconSize = 36.dp
+//    val AvatarIconSize = 36.dp
 
     Box(
         modifier = modifier
-            .size(50.dp)
+            .size(boxSize)
             .clip(CircleShape)
             .background(scheme.tertiaryContainer),
         contentAlignment = Alignment.Center
@@ -60,7 +63,7 @@ fun AvatarCircle(
                     painter = painterResource(id = avatar.iconResId!!),
                     contentDescription = null,
                     tint = scheme.onTertiaryContainer,
-                    modifier = Modifier.size(AvatarIconSize)
+                    modifier = Modifier.size(iconSize)
                 )
             }
 
@@ -70,7 +73,7 @@ fun AvatarCircle(
                     imageVector = avatar.iconVector!!,
                     contentDescription = null,
                     tint = scheme.onTertiaryContainer,
-                    modifier = Modifier.size(AvatarIconSize)
+                    modifier = Modifier.size(iconSize)
                 )
             }
         }

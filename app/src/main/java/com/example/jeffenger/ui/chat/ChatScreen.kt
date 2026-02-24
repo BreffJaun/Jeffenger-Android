@@ -32,11 +32,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.Message
+import com.example.jeffenger.data.remote.model.ui_model.AvatarUiModel
 import com.example.jeffenger.ui.core.AppConfirmDialog
 import com.example.jeffenger.ui.core.AppTextField
 import com.example.jeffenger.ui.viewmodels.ChatViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.mapper.mapToAvatarUiModel
+import com.example.jeffenger.utils.mapper.mapUserToAvatarUiModel
 import com.example.jeffenger.utils.model.ChatTopBarUiState
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -45,7 +47,8 @@ import org.koin.androidx.compose.koinViewModel
 fun ChatScreen(
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
-    onTopBarStateChange: (ChatTopBarUiState?) -> Unit,
+//    onTopBarStateChange: (ChatTopBarUiState?) -> Unit,
+    onTopBarStateChange: (ChatTopBarUiState?, List<Pair<AvatarUiModel, String>>) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ChatViewModel = koinViewModel(),
 ) {
@@ -88,8 +91,13 @@ fun ChatScreen(
             val c = chat
             val me = myId
 
+//            if (c == null || me == null) {
+//                onTopBarStateChange(null)
+//                return@LaunchedEffect
+//            }
+
             if (c == null || me == null) {
-                onTopBarStateChange(null)
+                onTopBarStateChange(null, emptyList())
                 return@LaunchedEffect
             }
 
@@ -123,6 +131,20 @@ fun ChatScreen(
                 users = participants
             )
 
+            val participantData = participants.map { user ->
+                mapUserToAvatarUiModel(user) to user.displayName
+            }
+
+//            onTopBarStateChange(
+//                ChatTopBarUiState(
+//                    chatId = c.id,
+//                    title = title,
+//                    subtitle = subtitle,
+//                    avatar = avatarUi,
+//                    isGroup = isGroup
+//                )
+//            )
+
             onTopBarStateChange(
                 ChatTopBarUiState(
                     chatId = c.id,
@@ -130,7 +152,8 @@ fun ChatScreen(
                     subtitle = subtitle,
                     avatar = avatarUi,
                     isGroup = isGroup
-                )
+                ),
+                participantData
             )
         }
 
@@ -148,7 +171,8 @@ fun ChatScreen(
 
         // Beim Verlassen: TopBar wieder zurücksetzen
         DisposableEffect(Unit) {
-            onDispose { onTopBarStateChange(null) }
+//            onDispose { onTopBarStateChange(null) }
+            onDispose { onTopBarStateChange(null, emptyList()) }
         }
 
         Column(

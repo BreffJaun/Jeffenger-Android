@@ -31,6 +31,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.jeffenger.data.remote.model.ui_model.AvatarUiModel
 import com.example.jeffenger.navigation.components.TabItem
 import com.example.jeffenger.navigation.helper.CalendarRoute
 import com.example.jeffenger.navigation.helper.ChatRoute
@@ -38,6 +39,7 @@ import com.example.jeffenger.navigation.helper.ChatsRoute
 import com.example.jeffenger.navigation.helper.SettingsRoute
 import com.example.jeffenger.navigation.screens.IosStyleBottomBar
 import com.example.jeffenger.ui.calendar.CalendarScreen
+import com.example.jeffenger.ui.chat.ChatInfoDialog
 import com.example.jeffenger.ui.chat.ChatScreen
 import com.example.jeffenger.ui.chats.ChatsScreen
 import com.example.jeffenger.ui.settings.SettingsScreen
@@ -73,6 +75,10 @@ fun AppStart(
         val openNewChatSheet = remember { MutableSharedFlow<Unit>() }
 
         var chatTopBarState by remember { mutableStateOf<ChatTopBarUiState?>(null) }
+        var chatParticipants by remember {
+            mutableStateOf<List<Pair<AvatarUiModel, String>>>(emptyList())
+        }
+        var showChatInfo by remember { mutableStateOf(false) }
 
         // SNACKBAR -> TOAST
         val snackbarHostState = remember { SnackbarHostState() }
@@ -125,8 +131,7 @@ fun AppStart(
                     },
                     chatTopBarState = chatTopBarState,
                     onChatHeaderClick = {
-                        // später: Chat-Info Screen / Participants / Settings
-                        // vorerst: leer ...
+                        showChatInfo = true
                     },
                     onChatCalendarClick = { }
                 )
@@ -208,9 +213,13 @@ fun AppStart(
                     ChatScreen(
                         snackbarHostState = snackbarHostState,
                         onBack = { navController.popBackStack() },
-                        onTopBarStateChange = { state ->
+                        onTopBarStateChange = { state, participants ->
                             chatTopBarState = state
+                            chatParticipants = participants
                         }
+//                        onTopBarStateChange = { state ->
+//                            chatTopBarState = state
+//                        }
                     )
                 }
 
@@ -226,6 +235,14 @@ fun AppStart(
                     )
                 }
             }
+        }
+
+        if (showChatInfo && chatTopBarState != null) {
+            ChatInfoDialog(
+                state = chatTopBarState!!,
+                participants = chatParticipants,
+                onDismiss = { showChatInfo = false }
+            )
         }
     }
 }
