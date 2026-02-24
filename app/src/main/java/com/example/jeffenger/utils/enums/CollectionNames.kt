@@ -5,5 +5,6 @@ enum class CollectionNames(val path: String) {
     COMPANIES("companies"),         // companies/{companyId}/...
     CHATS("chats"),                 // .../chats/{chatId}
     MESSAGES("messages"),           // .../messages/{messageId}
-    GLOBAL_USERS("globalUsers")     // globalUsers/{jeffId}
+    GLOBAL_USERS("globalUsers")    , // globalUsers/{jeffId}
+    CALENDAR_EVENTS("calendarEvents")
 }

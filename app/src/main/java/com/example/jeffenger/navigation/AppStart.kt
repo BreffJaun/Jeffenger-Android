@@ -80,6 +80,9 @@ fun AppStart(
         }
         var showChatInfo by remember { mutableStateOf(false) }
 
+        // CALENDAR EVENT
+        var showCreateEvent by remember { mutableStateOf(false) }
+
         // SNACKBAR -> TOAST
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -133,7 +136,8 @@ fun AppStart(
                     onChatHeaderClick = {
                         showChatInfo = true
                     },
-                    onChatCalendarClick = { }
+                    onChatCalendarClick = { },
+                    onCalendarAddClick = { showCreateEvent = true }
                 )
             },
             bottomBar = {
@@ -243,6 +247,10 @@ fun AppStart(
                 participants = chatParticipants,
                 onDismiss = { showChatInfo = false }
             )
+        }
+
+        if (showCreateEvent) {
+            // TODO: CreateEventDialog / BottomSheet
         }
     }
 }

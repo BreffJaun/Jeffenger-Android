@@ -74,6 +74,7 @@ fun TopBar(
     chatTopBarState: ChatTopBarUiState?,
     onChatHeaderClick: () -> Unit,
     onChatCalendarClick: () -> Unit,
+    onCalendarAddClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LogComposable("TopBar") {
@@ -215,14 +216,28 @@ fun TopBar(
                         }
                     }
 
+//                    AnimatedVisibility(
+//                        visible = isCalendarRoute,
+//                        enter = fadeIn(),
+//                        exit = fadeOut()
+//                    ) {
+//                        Box(modifier = Modifier
+//                            .width(1.dp)
+//                            .height(48.dp))
+//                    }
+
                     AnimatedVisibility(
                         visible = isCalendarRoute,
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
-                        Box(modifier = Modifier
-                            .width(1.dp)
-                            .height(48.dp))
+                        GlassIconButton(onClick = onCalendarAddClick) {
+                            Icon(
+                                imageVector = Icons.Outlined.Add,
+                                tint = scheme.onSurface,
+                                contentDescription = "New Event"
+                            )
+                        }
                     }
 
                     AnimatedVisibility(
