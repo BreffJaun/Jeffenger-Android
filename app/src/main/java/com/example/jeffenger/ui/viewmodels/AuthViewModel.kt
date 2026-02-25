@@ -15,6 +15,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel responsible for handling authentication UI state and logic.
+ *
+ * Responsibilities:
+ * - Holds form state (email, password, name, company)
+ * - Performs validation logic
+ * - Delegates authentication to AuthRepository
+ * - Stores UX preference via AuthPreferencesRepository
+ *
+ * Does NOT directly interact with Firebase.
+ * Keeps UI reactive via StateFlow.
+ */
 class AuthViewModel(
     private val authRepository: AuthRepositoryInterface,
     private val authPreferencesRepository: AuthPreferencesRepository
@@ -38,9 +50,6 @@ class AuthViewModel(
         Patterns.EMAIL_ADDRESS.matcher(input).matches()
     }
 
-//    private val passwordRegex =
-//        Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{6,}$")
-
     val hasMinLength = password.map { it.length >= 6 }
     val hasUppercase = password.map { it.any { char -> char.isUpperCase() } }
     val hasLowercase = password.map { it.any { char -> char.isLowerCase() } }
@@ -62,19 +71,6 @@ class AuthViewModel(
         SharingStarted.WhileSubscribed(5_000),
         false
     )
-
-//    ^                         Start
-//    (?=.*[a-z])               mind. 1 Kleinbuchstabe
-//    (?=.*[A-Z])               mind. 1 Großbuchstabe
-//    (?=.*\d)                  mind. 1 Zahl
-//    (?=.*[@$!%*#?&])          mind. 1 Sonderzeichen
-//    [A-Za-z\d@$!%*#?&]{6,}    mindestens 6 erlaubte Zeichen
-//    $                         Ende
-
-//    val isPasswordValid = password.map { input ->
-//        passwordRegex.matches(input)
-//    }
-
 
     val isDisplayNameValid = displayName.map { it.isNotBlank() }
     val isCompanyValid = company.map { it.isNotBlank() }
@@ -166,14 +162,17 @@ class AuthViewModel(
         _company.value = ""
     }
 
+    // FOR POSSIBLE ERROR
     fun retryLastAction() {
         lastAuthAction?.invoke()
     }
 
+    // REGISTER OR LOGIN
     fun setAuthMode(mode: AuthMode) {
         _authMode.value = mode
     }
 
+    //
     fun submit() {
         when (_authMode.value) {
             AuthMode.REGISTER -> registerWithEmailAndPassword()

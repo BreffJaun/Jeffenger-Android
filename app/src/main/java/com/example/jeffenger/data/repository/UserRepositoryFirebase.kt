@@ -29,6 +29,11 @@ class UserRepositoryFirebase(
         observeUserChanges()
     }
 
+    /**
+     * Listens to FirebaseAuth login/logout changes and updates the appUser accordingly.
+     * Ensures that only the currently authenticated user is observed in Firestore.
+     * observeUserChanges is the "watchdog" that constantly checks who is actually logged in.
+     */
     private fun observeUserChanges() {
         auth.addAuthStateListener { firebaseAuth ->
             // alten Firestore-Listener entfernen
@@ -45,15 +50,20 @@ class UserRepositoryFirebase(
         }
     }
 
+    /**
+     * Attaches a live Firestore SnapshotListener to the authenticated user's document.
+     * Falls back to the global collection if no local user document exists.
+     * Lstens only to the current loggedin user
+     */
     private fun attachListenerForUser(uid: String) {
         val localRef = db.collection(CollectionNames.USERS.path).document(uid)
         val globalRef = db.collection(CollectionNames.GLOBAL_USERS.path).document(uid)
 
-        // 1) Erst prüfen, ob er in users existiert, sonst globalUsers
+        // 1 Erst prüfen, ob er in users existiert, sonst globalUsers
         localRef.get().addOnSuccessListener { snapshot ->
             val refToUse = if (snapshot.exists()) localRef else globalRef
 
-            // 2) Dann auf das richtige Dokument live hören
+            // 2 Dann auf das richtige Dokument live hören
             listenerRegistration = refToUse.addSnapshotListener { snap, error ->
                 if (error != null) {
                     _appUser.value = null
@@ -67,8 +77,11 @@ class UserRepositoryFirebase(
         }
     }
 
-//    override fun observeAppUser(): Flow<User?> = appUser
-
+    /**
+     * Observes all global users in Firestore and emits live updates as a Flow.
+     * Converts the SnapshotListener into a coroutine-based reactive stream.
+     * Listens to all global users
+     */
     override fun observeGlobalUsers(): Flow<List<User>> = callbackFlow {
         val listener = db.collection(CollectionNames.GLOBAL_USERS.path)
             .whereEqualTo("global", true)

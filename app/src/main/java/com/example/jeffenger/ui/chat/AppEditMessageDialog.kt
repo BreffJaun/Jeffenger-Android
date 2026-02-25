@@ -21,7 +21,10 @@ fun AppEditMessageDialog(
         onDismissRequest = onDismiss,
 
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(
+                onClick = onConfirm,
+                enabled = text.trim().isNotEmpty()
+            ) {
                 Text("Speichern")
             }
         },

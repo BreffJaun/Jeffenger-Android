@@ -11,10 +11,15 @@ import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.UserRepositoryInterface
 import com.example.jeffenger.navigation.helper.ChatRoute
+import com.example.jeffenger.utils.state.LoadingState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -30,8 +35,13 @@ class ChatViewModel(
     private val userRepository: UserRepositoryInterface
 ) : ViewModel() {
 
+    // FOR SNACKBAR
+    private val _uiEvents = MutableSharedFlow<String>()
+    val uiEvents = _uiEvents.asSharedFlow()
+
     val chatId: String = savedStateHandle.toRoute<ChatRoute>().id
-    private var lastMessageCount = 0
+    private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val loadingState: StateFlow<LoadingState> = _loadingState.asStateFlow()
 
     val currentUserId: StateFlow<String?> =
         authRepository.authState
@@ -83,14 +93,22 @@ class ChatViewModel(
 
             if (cid.isNullOrBlank() || uid.isNullOrBlank()) return@launch
 
-            val msg = Message(
-                chatId = chatId,
-                senderId = uid,
-                text = trimmed,
-                createdAt = System.currentTimeMillis()
-            )
+            try {
+                _loadingState.value = LoadingState.Loading("Nachricht wird gesendet")
 
-            chatRepository.sendMessage(cid, chatId, msg)
+                val msg = Message(
+                    chatId = chatId,
+                    senderId = uid,
+                    text = trimmed,
+                    createdAt = System.currentTimeMillis()
+                )
+
+                chatRepository.sendMessage(cid, chatId, msg)
+
+                _loadingState.value = LoadingState.Idle
+            } catch (e: Exception) {
+                _uiEvents.emit("Nachricht konnte nicht gesendet werden")
+            }
         }
     }
 
@@ -99,25 +117,56 @@ class ChatViewModel(
             val cid = companyId.value ?: return@launch
             val uid = currentUserId.value ?: return@launch
 
-            chatRepository.resetUnreadCount(
-                companyId = cid,
-                chatId = chatId,
-                userId = uid
-            )
+            try {
+                chatRepository.resetUnreadCount(
+                    companyId = cid,
+                    chatId = chatId,
+                    userId = uid
+                )
+            } catch (e: Exception) {
+//                _loadingState.value = LoadingState.Error(
+//                    message = "Lesestatus konnte nicht aktualisiert werden",
+//                    throwable = e
+//                )
+                _uiEvents.emit("Lesestatus konnte nicht aktualisiert werden")
+            }
         }
     }
 
     fun editMessage(messageId: String, newText: String) {
         viewModelScope.launch {
             val cid = companyId.value ?: return@launch
-            chatRepository.editMessage(cid, chatId, messageId, newText)
+            val trimmed = newText.trim()
+
+            if (trimmed.isEmpty()) {
+                _uiEvents.emit("Nachricht darf nicht leer sein")
+                return@launch
+            }
+
+            try {
+                chatRepository.editMessage(cid, chatId, messageId, trimmed)
+            } catch (e: Exception) {
+                _uiEvents.emit("Nachricht konnte nicht bearbeitet werden")
+            }
         }
     }
 
     fun deleteMessage(messageId: String) {
         viewModelScope.launch {
             val cid = companyId.value ?: return@launch
-            chatRepository.deleteMessage(cid, chatId, messageId)
+
+            try {
+                _loadingState.value = LoadingState.Loading("Nachricht wird gelöscht")
+
+                chatRepository.deleteMessage(cid, chatId, messageId)
+
+                _loadingState.value = LoadingState.Idle
+            } catch (e: Exception) {
+                _loadingState.value = LoadingState.Error(
+                    message = "Nachricht konnte nicht gelöscht werden",
+                    throwable = e
+                )
+            }
         }
     }
 }

@@ -35,15 +35,22 @@ class ChatsViewModel(
     private val storageRepository: StorageRepositoryInterface
 ) : ViewModel() {
 
+    // UI Events (Snackbar)
+    private val _uiEvents = MutableSharedFlow<String>()
+    val uiEvents = _uiEvents.asSharedFlow()
+
     // AUTH & USER STATE
+    // Current loggedIn User (Firebase Auth)
     private val currentUserIdState = authRepository.authState
         .map { it?.uid }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    // Company-ID of the loggedIn user
     private val companyIdState = userRepository.appUser
         .map { it?.companyId }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    // Globale "Jeff"-User-ID (is needed for speical Chat logic)
     private val jeffUserIdState = userRepository.observeGlobalUsers()
         .map { users -> users.firstOrNull { it.global }?.id }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -66,10 +73,12 @@ class ChatsViewModel(
     }
 
     // NAVIGATION
+    // ...into a specific chat
     private val _navigateToChat = MutableSharedFlow<String>()
     val navigateToChat = _navigateToChat.asSharedFlow()
 
     // RAW CHATS
+    // Observes all chats of the current user within their company
     private val userChatsFlow: Flow<List<Chat>> =
         combine(companyIdState, currentUserIdState) { companyId, userId ->
             companyId to userId
@@ -82,6 +91,7 @@ class ChatsViewModel(
         }
 
     // START CHAT UI STATE
+    // Controls which quick start options are displayed
     val startChatUiState: StateFlow<StartChatUiState> =
         combine(userChatsFlow, jeffUserIdState) { chats, jeffId ->
             buildStartChatUiState(chats, jeffId)
@@ -92,6 +102,7 @@ class ChatsViewModel(
         )
 
     // CHAT LIST UI
+    // Transforms raw chat data into UI models for the chat list
     val chatListItems: StateFlow<List<ChatListItemUiModel>> =
         combine(userChatsFlow, companyIdState, currentUserIdState) { chats, companyId, userId ->
             Triple(chats, companyId, userId)
@@ -122,6 +133,7 @@ class ChatsViewModel(
         )
 
     // MAPPERS
+    // Wandelt ein Chat-Domain-Objekt in ein ChatListItemUiModel für die Anzeige um
     private fun mapChatToUiModel(
         chat: Chat,
         currentUserId: String,
@@ -149,6 +161,7 @@ class ChatsViewModel(
     }
 
     // START CHAT LOGIK
+    // Checks existing chats to prevent showing a sinnless button
     private fun buildStartChatUiState(
         chats: List<Chat>,
         jeffId: String?
@@ -204,12 +217,14 @@ class ChatsViewModel(
 
     // COMPANY MEMBERS -> without current user
     // SELECTION STATE
+    // Contains currently selected user IDs for new chats
     private val _selectedParticipantIds =
         MutableStateFlow<Set<String>>(emptySet())
 
     val selectedParticipantIds: StateFlow<Set<String>> =
         _selectedParticipantIds
 
+    // Observes all company members (excluding the current user)
     val companyMembersUiState: StateFlow<List<User>> =
         companyIdState
             .flatMapLatest { companyId ->
@@ -228,6 +243,7 @@ class ChatsViewModel(
                 emptyList()
             )
 
+    // Optionally adds the global Jeff user to the selection
     val companyMembersWithJeffUiState: StateFlow<List<User>> =
         combine(
             companyMembersUiState,
@@ -249,6 +265,7 @@ class ChatsViewModel(
             emptyList()
         )
 
+    // All company members + Jeff are available
     val generalMembersUiState: StateFlow<List<User>> =
         combine(companyMembersUiState, jeffUserIdState) { members, jeffId ->
             if (jeffId == null) members
@@ -264,22 +281,29 @@ class ChatsViewModel(
         )
 
     // ACTIONS
+    // Create or find a direct chat with Jeff
     fun startDirectJeffChat() {
         viewModelScope.launch {
+            try {
+                val currentUserId = currentUserIdState.value ?: return@launch
+                val companyId = companyIdState.value ?: return@launch
+                val jeffId = jeffUserIdState.value ?: return@launch
 
-            val currentUserId = currentUserIdState.value ?: return@launch
-            val companyId = companyIdState.value ?: return@launch
-            val jeffId = jeffUserIdState.value ?: return@launch
+                val chatId = chatRepository.findOrCreateDirectChat(
+                    companyId = companyId,
+                    participantIds = listOf(currentUserId, jeffId)
+                )
 
-            val chatId = chatRepository.findOrCreateDirectChat(
-                companyId = companyId,
-                participantIds = listOf(currentUserId, jeffId)
-            )
+                _navigateToChat.emit(chatId)
 
-            _navigateToChat.emit(chatId)
+            } catch (e: Exception) {
+                _uiEvents.emit("Chat konnte nicht gestartet werden")
+            }
         }
     }
 
+    // Adds or removes user from selection
+    // Automatically activates group mode with >= 2 participants
     fun toggleParticipantSelection(userId: String) {
         val current = _selectedParticipantIds.value.toMutableSet()
 
@@ -302,57 +326,63 @@ class ChatsViewModel(
         }
     }
 
+    // Creates chat based on current selection
+    // Optionally uploads group image and updates chat afterwards
     fun createChatFromSelection() {
         viewModelScope.launch {
+            try {
 
-            val currentUserId = currentUserIdState.value ?: return@launch
-            val companyId = companyIdState.value ?: return@launch
-            val selected = _selectedParticipantIds.value
-            val imageUri = _groupImageUri.value
+                val currentUserId = currentUserIdState.value ?: return@launch
+                val companyId = companyIdState.value ?: return@launch
+                val selected = _selectedParticipantIds.value
+                val imageUri = _groupImageUri.value
 
-            if (selected.isEmpty()) return@launch
+                if (selected.isEmpty()) return@launch
 
-            val participants = (selected + currentUserId).distinct()
-            val isGroup = _isGroupMode.value || selected.size >= 2
+                val participants = (selected + currentUserId).distinct()
+                val isGroup = _isGroupMode.value || selected.size >= 2
 
-            val finalTitle =
-                if (isGroup) {
-                    _groupTitle.value.takeIf { it.isNotBlank() }
-                        ?: "Gruppe"
-                } else null
+                val finalTitle =
+                    if (isGroup) {
+                        _groupTitle.value.takeIf { it.isNotBlank() }
+                            ?: "Gruppe"
+                    } else null
 
-            // 🔥 1. Chat ERST erstellen (ohne Bild)
-            val chatId = chatRepository.createChat(
-                companyId = companyId,
-                participantIds = participants.toList(),
-                isGroupChat = isGroup,
-                title = finalTitle,
-                imageUrl = null
-            )
-
-            // 🔥 2. Falls Bild existiert → hochladen
-            if (imageUri != null) {
-
-                val imageUrl = storageRepository.uploadGroupImage(
-                    uri = imageUri,
-                    chatId = chatId
-                )
-
-                // 🔥 3. Chat danach updaten
-                chatRepository.updateChatImage(
+                // 1. Chat ERST erstellen (ohne Bild)
+                val chatId = chatRepository.createChat(
                     companyId = companyId,
-                    chatId = chatId,
-                    imageUrl = imageUrl
+                    participantIds = participants.toList(),
+                    isGroupChat = isGroup,
+                    title = finalTitle,
+                    imageUrl = null
                 )
+
+                // 2. Falls Bild existiert → hochladen
+                if (imageUri != null) {
+
+                    val imageUrl = storageRepository.uploadGroupImage(
+                        uri = imageUri,
+                        chatId = chatId
+                    )
+
+                    // 3. Chat danach updaten
+                    chatRepository.updateChatImage(
+                        companyId = companyId,
+                        chatId = chatId,
+                        imageUrl = imageUrl
+                    )
+                }
+
+                // 4. Reset danach
+                resetSelection()
+                _isGroupMode.value = false
+                _groupTitle.value = ""
+                _groupImageUri.value = null
+
+                _navigateToChat.emit(chatId)
+            } catch (e: Exception) {
+                _uiEvents.emit("Chat konnte nicht erstellt werden")
             }
-
-            // 🔥 4. Reset danach
-            resetSelection()
-            _isGroupMode.value = false
-            _groupTitle.value = ""
-            _groupImageUri.value = null
-
-            _navigateToChat.emit(chatId)
         }
     }
 
@@ -374,28 +404,32 @@ class ChatsViewModel(
         _isGroupMode.value = true
     }
 
-    fun createGroupChatFromSelection() {
-        viewModelScope.launch {
-            val currentUserId = currentUserIdState.value ?: return@launch
-            val companyId = companyIdState.value ?: return@launch
-
-            val participants = (_selectedParticipantIds.value + currentUserId).distinct()
-            if (participants.size < 2) return@launch
-
-            val title = _groupTitle.value.takeIf { it.isNotBlank() } ?: "Gruppe"
-
-            val chatId = chatRepository.createChat(
-                companyId = companyId,
-                participantIds = participants,
-                isGroupChat = true,
-                title = title,
-                imageUrl = null
-            )
-
-            resetSelection()
-            _navigateToChat.emit(chatId)
-        }
-    }
+//    fun createGroupChatFromSelection() {
+//        viewModelScope.launch {
+//            try {
+//                val currentUserId = currentUserIdState.value ?: return@launch
+//                val companyId = companyIdState.value ?: return@launch
+//
+//                val participants = (_selectedParticipantIds.value + currentUserId).distinct()
+//                if (participants.size < 2) return@launch
+//
+//                val title = _groupTitle.value.takeIf { it.isNotBlank() } ?: "Gruppe"
+//
+//                val chatId = chatRepository.createChat(
+//                    companyId = companyId,
+//                    participantIds = participants,
+//                    isGroupChat = true,
+//                    title = title,
+//                    imageUrl = null
+//                )
+//
+//                resetSelection()
+//                _navigateToChat.emit(chatId)
+//
+//            } catch (e: Exception) {
+//                _uiEvents.emit("Gruppenchat konnte nicht erstellt werden")
+//            }
+//        }
+//    }
 }
-
 

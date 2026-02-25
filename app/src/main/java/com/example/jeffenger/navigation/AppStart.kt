@@ -50,6 +50,8 @@ import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.debugging.LogStateMap
 import com.example.jeffenger.utils.model.ChatTopBarUiState
 import de.syntax_institut.projektwoche1.ui.component.TopBar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
@@ -69,9 +71,9 @@ fun AppStart(
         val currentRoute = navBackStackEntry?.destination?.route
 
         // UI STATE
-        val selectedTab by rememberSaveable { mutableStateOf(TabItem.CHATS) }
+//        val selectedTab by rememberSaveable { mutableStateOf(TabItem.CHATS) }
 
-        // SHARED STATE
+        //
         val openNewChatSheet = remember { MutableSharedFlow<Unit>() }
 
         var chatTopBarState by remember { mutableStateOf<ChatTopBarUiState?>(null) }
@@ -86,11 +88,10 @@ fun AppStart(
         // SNACKBAR -> TOAST
         val snackbarHostState = remember { SnackbarHostState() }
 
-        LogStateMap(
-            "AppStart",
-            "selectedTab" to selectedTab
-        )
-
+//        LogStateMap(
+//            "AppStart",
+//            "selectedTab" to selectedTab
+//        )
 
         Scaffold(
             modifier = modifier.fillMaxSize(),
@@ -114,9 +115,6 @@ fun AppStart(
                         )
                     }
                 }
-//                SnackbarHost(
-//                    hostState = snackbarHostState
-//                )
             },
 
             topBar = {
@@ -126,9 +124,9 @@ fun AppStart(
                     onAddChatClick = {
                         if (currentRoute?.startsWith(ChatsRoute::class.qualifiedName ?: "") == true) {
                             // Trigger event
-                            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
+                            CoroutineScope(Dispatchers.Main)
                                 .launch {
-                                openNewChatSheet.emit(Unit)
+                                openNewChatSheet.emit(Unit) // Sends Event WITHOUT Data, just Signl
                             }
                         }
                     },
@@ -157,20 +155,7 @@ fun AppStart(
                     )
                 }
             }
-//            bottomBar = {
-//                IosStyleBottomBar(
-//                    currentRoute = currentRoute,
-//                    onTabSelected = { tab ->
-//                        navController.navigate(tab.route) {
-//                            popUpTo(ChatsRoute) {
-//                                saveState = true
-//                            }
-//                            launchSingleTop = true
-//                            restoreState = true
-//                        }
-//                    },
-//                )
-//            }
+
         ) { p ->
             NavHost(
                 navController = navController,
@@ -179,39 +164,16 @@ fun AppStart(
                 modifier = Modifier.padding(p)
             ) {
                 composable<ChatsRoute> {
-//                    ChatsScreen { chat ->
-//                        navController.navigate(
-//                            ChatRoute(
-//                                id = chat.id,
-//                            )
-//                        )
-//                    }
-
-//                    ChatsScreen { chatId ->
-//                        navController.navigate(
-//                            ChatRoute(id = chatId)
-//                        )
-//                    }
-
                     ChatsScreen(
                         openNewChatSheetFlow = openNewChatSheet,
+                        snackbarHostState = snackbarHostState,
                         onNavigateToDetail = { chatId ->
                             navController.navigate(
                                 ChatRoute(id = chatId)
                             )
                         }
                     )
-
                 }
-
-//                composable<ChatRoute> {
-//                    ChatScreen(
-//                        onBack = { navController.popBackStack() },
-//                        onTopBarStateChange = { state ->
-//                            chatTopBarState = state
-//                        }
-//                    )
-//                }
 
                 composable<ChatRoute> {
                     ChatScreen(
@@ -221,9 +183,6 @@ fun AppStart(
                             chatTopBarState = state
                             chatParticipants = participants
                         }
-//                        onTopBarStateChange = { state ->
-//                            chatTopBarState = state
-//                        }
                     )
                 }
 

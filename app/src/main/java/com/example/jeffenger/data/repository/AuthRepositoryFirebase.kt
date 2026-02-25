@@ -6,6 +6,7 @@ import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
 import com.example.jeffenger.utils.enums.CollectionNames
 import com.example.jeffenger.utils.normalization.normalizeCompanyId
 import com.example.jeffenger.utils.state.LoadingState
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -14,6 +15,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+
+/**
+ * Firebase-backed implementation of [AuthRepositoryInterface].
+ *
+ * Responsibilities:
+ * - Handles user authentication via FirebaseAuth
+ * - Creates user entries in Firestore (top-level + nested company structure)
+ * - Exposes authentication state as reactive StateFlows
+ *
+ * Exposed reactive states:
+ * - authState: current authenticated Firebase user (null if logged out)
+ * - errorMessage: latest authentication error
+ * - loadingState: represents loading, success or error state
+ *
+ * This repository does NOT handle local preference logic.
+ * Local flags like "hasRegistered" are handled by AuthPreferencesRepository.
+ */
 class AuthRepositoryFirebase(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore
@@ -70,24 +88,25 @@ class AuthRepositoryFirebase(
                     lastActiveAt = System.currentTimeMillis()
                 )
 
-                // 1) Top-level user index
+                // Top-level user index
                 val topLevelWrite = db.collection(CollectionNames.USERS.path)
                     .document(userId)
                     .set(newUser)
 
-                // 2) Nested company user
+                // Nested company user
                 val nestedWrite = db.collection(CollectionNames.COMPANIES.path)
                     .document(companyId)
                     .collection(CollectionNames.USERS.path)
                     .document(userId)
                     .set(newUser)
 
-                com.google.android.gms.tasks.Tasks.whenAllComplete(topLevelWrite, nestedWrite)
+                Tasks.whenAllSuccess<Void>(topLevelWrite, nestedWrite)
                     .addOnSuccessListener {
                         _loadingState.value = LoadingState.Success()
                     }
                     .addOnFailureListener {
-                        _loadingState.value = LoadingState.Error(it.message ?: "Fehler beim Speichern")
+                        _loadingState.value =
+                            LoadingState.Error(it.message ?: "Fehler beim Speichern")
                     }
             }
             .addOnFailureListener {

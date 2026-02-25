@@ -38,6 +38,21 @@ import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.enums.AuthMode
 import org.koin.androidx.compose.koinViewModel
 
+/**
+ * Authentication screen composable.
+ *
+ * Displays:
+ * - Registration form
+ * - Login form
+ * - Password validation feedback
+ *
+ * Observes:
+ * - Form state from AuthViewModel
+ * - Loading state
+ * - Validation flows
+ *
+ * Pure UI layer — contains no business logic.
+ */
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = koinViewModel()
@@ -49,14 +64,12 @@ fun AuthScreen(
         val password by viewModel.password.collectAsState()
         val displayName by viewModel.displayName.collectAsState()
         val company by viewModel.company.collectAsState()
-        val loadingState by viewModel.loadingState.collectAsState()
 
         val isEmailValid by viewModel.isEmailValid.collectAsState(initial = false)
         val isPasswordValid by viewModel.isPasswordValid.collectAsState(initial = false)
         val isDisplayNameValid by viewModel.isDisplayNameValid.collectAsState(initial = false)
         val isCompanyValid by viewModel.isCompanyValid.collectAsState(initial = false)
         val isFormValid by viewModel.isFormValid.collectAsState(initial = false)
-        var isRegister by remember { mutableStateOf(true) }
         val authMode by viewModel.authMode.collectAsState()
 
         val hasMinLength by viewModel.hasMinLength.collectAsState(false)

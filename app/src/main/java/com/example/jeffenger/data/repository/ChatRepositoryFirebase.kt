@@ -81,6 +81,7 @@ class ChatRepositoryFirebase(
             .document(chatId)
             .collection(CollectionNames.MESSAGES.path)
             .orderBy("createdAt", Query.Direction.ASCENDING)
+            .limit(50) // Later adding "startAfter()" for loading the "rest" of the messages step by step.
 
         val listener = ref.addSnapshotListener { snapshot, error ->
             if (error != null) {
@@ -221,16 +222,16 @@ class ChatRepositoryFirebase(
             chatId = chatId
         )
 
-        // 1️⃣ Message speichern
+        //  Message speichern
         msgRef.set(msgToSave).await()
 
-        // 2️⃣ Aktuelles Chat-Dokument holen
+        // Aktuelles Chat-Dokument holen
         val snapshot = chatRef.get().await()
         val chat = snapshot.toObject(Chat::class.java) ?: return
 
         val currentUnread = chat.unreadCount.toMutableMap()
 
-        // 3️⃣ Für alle außer Sender +1
+        // Für alle außer Sender +1
         chat.participantIds.forEach { userId ->
             if (userId != message.senderId) {
                 val old = currentUnread[userId] ?: 0
@@ -243,7 +244,7 @@ class ChatRepositoryFirebase(
         val lastText = msgToSave.text
             ?: if (msgToSave.imageUrl != null) "📷 Bild" else "Nachricht"
 
-        // 4️⃣ Chat updaten
+        // Chat updaten
         chatRef.update(
             mapOf(
                 "lastMessageId" to msgToSave.id,
@@ -253,42 +254,6 @@ class ChatRepositoryFirebase(
             )
         ).await()
     }
-
-//    override suspend fun sendMessage(
-//        companyId: String,
-//        chatId: String,
-//        message: Message
-//    ) {
-//
-//        val chatRef = db.collection(CollectionNames.COMPANIES.path)
-//            .document(companyId)
-//            .collection(CollectionNames.CHATS.path)
-//            .document(chatId)
-//
-//        val msgRef = chatRef
-//            .collection(CollectionNames.MESSAGES.path)
-//            .document()
-//
-//        val msgToSave = message.copy(
-//            id = msgRef.id,
-//            chatId = chatId
-//        )
-//
-//        // 1) Save message
-//        msgRef.set(msgToSave).await()
-//
-//        // 2) Update chat metadata
-//        val lastText = msgToSave.text
-//            ?: if (msgToSave.imageUrl != null) "📷 Bild" else "Nachricht"
-//
-//        chatRef.update(
-//            mapOf(
-//                "lastMessageId" to msgToSave.id,
-//                "lastMessageText" to lastText,
-//                "lastMessageTimestamp" to msgToSave.createdAt
-//            )
-//        ).await()
-//    }
 
 
     override suspend fun createChat(
@@ -439,7 +404,7 @@ class ChatRepositoryFirebase(
             .collection(CollectionNames.MESSAGES.path)
             .document(messageId)
 
-        // 1️⃣ Message aktualisieren
+        // Message aktualisieren
         msgRef.update(
             mapOf(
                 "text" to newText,
@@ -447,11 +412,11 @@ class ChatRepositoryFirebase(
             )
         ).await()
 
-        // 2️⃣ Chat holen
+        // Chat holen
         val chatSnap = chatRef.get().await()
         val chat = chatSnap.toObject(Chat::class.java) ?: return
 
-        // 3️⃣ Nur wenn es die letzte Nachricht ist → Chat-Metadaten updaten
+        // Nur wenn es die letzte Nachricht ist → Chat-Metadaten updaten
         if (chat.lastMessageId == messageId) {
             chatRef.update(
                 mapOf(
@@ -475,11 +440,11 @@ class ChatRepositoryFirebase(
             .collection(CollectionNames.MESSAGES.path)
             .document(messageId)
 
-        // 0) Message VORHER holen (für senderId + ggf. Safety)
+        // 0 Message VORHER holen (für senderId + ggf. Safety)
         val msgSnap = msgRef.get().await()
         val msg = msgSnap.toObject(Message::class.java)
 
-        // 1) Chat holen (für lastMessageId + unreadCount + createdAt)
+        // 1 Chat holen (für lastMessageId + unreadCount + createdAt)
         val chatSnap = chatRef.get().await()
         val chat = chatSnap.toObject(Chat::class.java) ?: run {
             msgRef.delete().await()
@@ -488,10 +453,10 @@ class ChatRepositoryFirebase(
 
         val wasLastMessage = chat.lastMessageId == messageId
 
-        // 2) Message löschen
+        // 2 Message löschen
         msgRef.delete().await()
 
-        // 3) ✅ unreadCount reduzieren (nur wenn wir senderId kennen)
+        // 3 unreadCount reduzieren (nur wenn wir senderId kennen)
         if (msg != null) {
             val updatedUnread = chat.unreadCount.toMutableMap()
             chat.participantIds.forEach { userId ->
@@ -503,10 +468,10 @@ class ChatRepositoryFirebase(
             chatRef.update("unreadCount", updatedUnread).await()
         }
 
-        // 4) Wenn NICHT die letzte Message -> fertig
+        // 4 Wenn NICHT die letzte Message -> fertig
         if (!wasLastMessage) return
 
-        // 5) Neue letzte Message suchen
+        // 5 Neue letzte Message suchen
         val newestSnap = chatRef.collection(CollectionNames.MESSAGES.path)
             .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .limit(1)

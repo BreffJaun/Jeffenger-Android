@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
@@ -90,8 +91,7 @@ fun TopBar(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(top = 60.dp)
-//                .padding(horizontal = 25.dp)
+                .statusBarsPadding()
         ) {
 
 
@@ -143,7 +143,7 @@ fun TopBar(
 
                         Spacer(Modifier.width(10.dp))
 
-                        androidx.compose.foundation.layout.Column(
+                        Column(
                             modifier = Modifier.width(190.dp)
                         ) {
                             Text(
@@ -252,6 +252,7 @@ fun TopBar(
                 }
             }
 
+            // DIVIDRE
             if (isChatRoute) {
                 Box(
                     modifier = Modifier

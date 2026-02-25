@@ -2,6 +2,7 @@ package com.example.jeffenger.utils.debugging
 
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 
 /**
@@ -25,6 +26,13 @@ fun LogComposable(
     LaunchedEffect(Unit) {
         Log.d("ComposableLogging", "$name loaded")
     }
+
     content()
+
+    DisposableEffect(Unit) {
+        onDispose {
+            Log.d("ComposableLogging", "$name unloaded")
+        }
+    }
 }
 

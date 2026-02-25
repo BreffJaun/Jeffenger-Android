@@ -32,7 +32,7 @@ class JeffengerMessagingService : FirebaseMessagingService() {
         }
     }
 
-        // ✅ Systemseitig: sind Notifications für die App erlaubt?
+        // Systemseitig: sind Notifications für die App erlaubt?
         val notificationsAllowed = NotificationManagerCompat
             .from(applicationContext)
             .areNotificationsEnabled()
@@ -50,7 +50,7 @@ class JeffengerMessagingService : FirebaseMessagingService() {
         val notificationId = chatId.hashCode()
 
         val intent =
-            android.content.Intent(this, com.example.jeffenger.MainActivity::class.java).apply {
+            Intent(this, com.example.jeffenger.MainActivity::class.java).apply {
                 action = "OPEN_CHAT"
                 putExtra("chatId", chatId)
                 addFlags(

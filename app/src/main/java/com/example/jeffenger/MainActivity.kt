@@ -36,7 +36,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "da
 
 class MainActivity : ComponentActivity() {
 
-    // Muss als Property der Activity hier oben stehen (nicht in setContent)
+    // Holds the latest launch intent for cold/warm start deep links; cleared after handling to avoid reprocessing on recomposition.
     private val intentState = mutableStateOf<Intent?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,12 +100,14 @@ class MainActivity : ComponentActivity() {
                                     AppStart(navController = navController)
                                 }
 
-                                // Läuft bei Cold Start UND jedes Mal neu bei Warm Start
+                                // Handles deep link intents (e.g., notification tap). Runs once
+                                // per new intent and clears state to prevent duplicate navigation.
+                                // -> Runs during cold start AND every time during warm start
                                 LaunchedEffect(currentIntent) {
                                     handleIntentIfNeeded(currentIntent, navController)
 
-                                    // Optional aber sinnvoll:
-                                    // verhindert, dass derselbe Intent nochmal feuert (z.B. Recompose)
+                                    // Optional but useful:
+                                    // prevents the SAME intent from firing again
                                     intentState.value = null
                                 }
                             } else {
@@ -120,6 +122,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Deep link handler for notification intents.
+    // Navigates directly to the requested chat when action == "OPEN_CHAT".
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -135,7 +139,7 @@ class MainActivity : ComponentActivity() {
         val chatId = intent.getStringExtra("chatId") ?: return
 
         navController.navigate(ChatRoute(id = chatId)) {
-            launchSingleTop = true
+            launchSingleTop = true // JUST PUSH 1x TIME ON THIS STACK
         }
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +37,7 @@ import kotlinx.coroutines.flow.SharedFlow
 @Composable
 fun ChatsScreen(
     openNewChatSheetFlow: SharedFlow<Unit>,
+    snackbarHostState: SnackbarHostState,
     viewModel: ChatsViewModel = koinViewModel(),
     onNavigateToDetail: (String) -> Unit
 ) {
@@ -56,6 +58,12 @@ fun ChatsScreen(
         LaunchedEffect(Unit) {
             viewModel.navigateToChat.collect { chatId ->
                 onNavigateToDetail(chatId)
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            viewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message)
             }
         }
 

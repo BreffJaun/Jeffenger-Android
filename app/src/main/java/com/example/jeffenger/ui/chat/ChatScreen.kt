@@ -47,7 +47,6 @@ import org.koin.androidx.compose.koinViewModel
 fun ChatScreen(
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
-//    onTopBarStateChange: (ChatTopBarUiState?) -> Unit,
     onTopBarStateChange: (ChatTopBarUiState?, List<Pair<AvatarUiModel, String>>) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ChatViewModel = koinViewModel(),
@@ -59,6 +58,12 @@ fun ChatScreen(
         val messages by viewModel.messages.collectAsState()
         val myId by viewModel.currentUserId.collectAsState()
         val participants by viewModel.participants.collectAsState()
+
+        LaunchedEffect(Unit) {
+            viewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message)
+            }
+        }
 
         var input by remember { mutableStateOf("") }
 
