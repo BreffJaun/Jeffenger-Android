@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Visibility
@@ -30,6 +31,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -101,10 +104,15 @@ fun AuthTextField(
                     value = value,
                     onValueChange = onValueChange,
                     singleLine = true,
-//                    visualTransformation = if (isPassword)
-//                        PasswordVisualTransformation()
-//                    else
-//                        VisualTransformation.None,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = when {
+                            isPassword -> KeyboardType.Password
+                            label.contains("E-Mail", ignoreCase = true) -> KeyboardType.Email
+                            else -> KeyboardType.Text
+                        },
+                        autoCorrect = false,
+                        capitalization = KeyboardCapitalization.None
+                    ),
                     visualTransformation = when {
                         isPassword && !passwordVisible -> PasswordVisualTransformation()
                         else -> VisualTransformation.None
