@@ -1,5 +1,7 @@
 package com.example.jeffenger.data.remote.model
 
+import com.example.jeffenger.utils.enums.MessageStatus
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 
 data class Chat(
@@ -14,9 +16,9 @@ data class Chat(
 
     val lastMessageId: String? = null,
     val lastMessageText: String? = null,
-    val lastMessageTimestamp: Long = 0L,
+    val lastMessageTimestamp: Timestamp? = null,
 
-    val createdAt: Long = 0L,
+    val createdAt: Timestamp? = null,
 
     // Unread handling
     val unreadCount: Map<String, Int> = emptyMap(),
@@ -26,3 +28,6 @@ data class Chat(
 
     val directChatKey: String? = null
 )
+
+
+

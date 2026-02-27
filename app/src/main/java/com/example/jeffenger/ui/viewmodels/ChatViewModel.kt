@@ -11,6 +11,7 @@ import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.UserRepositoryInterface
 import com.example.jeffenger.navigation.helper.ChatRoute
+import com.example.jeffenger.utils.state.AppForegroundState
 import com.example.jeffenger.utils.state.LoadingState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +22,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -38,6 +41,12 @@ class ChatViewModel(
     // FOR SNACKBAR
     private val _uiEvents = MutableSharedFlow<String>()
     val uiEvents = _uiEvents.asSharedFlow()
+
+    // MESSAGES & PAGINATION
+    private val _messages = MutableStateFlow<List<Message>>(emptyList())
+    val messages: StateFlow<List<Message>> = _messages.asStateFlow()
+    private var oldestLoadedMessage: Message? = null
+    private var isLoadingMore = false
 
     val chatId: String = savedStateHandle.toRoute<ChatRoute>().id
     private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
@@ -63,13 +72,45 @@ class ChatViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // Messages für den Chat
-    val messages: StateFlow<List<Message>> =
-        companyId
-            .flatMapLatest { cid ->
-                if (cid.isNullOrBlank()) flowOf(emptyList())
-                else chatRepository.observeMessages(cid, chatId)
+//    private fun observeRealtimeMessages(companyId: String) {
+//        viewModelScope.launch {
+//            chatRepository.observeLatestMessages(companyId, chatId)
+//                .collect { latestMessages ->
+//                    _messages.value = latestMessages
+//                    oldestLoadedMessage = latestMessages.firstOrNull()
+//                }
+//        }
+//    }
+
+    fun loadMoreMessages() {
+        val cid = companyId.value ?: return
+        val oldest = oldestLoadedMessage ?: return
+        if (isLoadingMore) return
+
+        viewModelScope.launch {
+            isLoadingMore = true
+
+            val olderMessages = chatRepository.loadMoreMessages(
+                cid,
+                chatId,
+                oldest
+            )
+
+            if (olderMessages.isNotEmpty()) {
+                _messages.value = olderMessages + _messages.value
+                oldestLoadedMessage = olderMessages.first()
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+            isLoadingMore = false
+        }
+    }
+//    val messages: StateFlow<List<Message>> =
+//        companyId
+//            .flatMapLatest { cid ->
+//                if (cid.isNullOrBlank()) flowOf(emptyList())
+//                else chatRepository.observeMessages(cid, chatId)
+//            }
+//            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // Teilnehmer (für Titel/Subtitel in TopBar)
     val participants: StateFlow<List<User>> =
@@ -82,6 +123,26 @@ class ChatViewModel(
                 }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    init {
+        viewModelScope.launch {
+            companyId
+                .filterNotNull()
+                .distinctUntilChanged()
+                .flatMapLatest { cid ->
+                    chatRepository.observeLatestMessages(cid, chatId)
+                }
+                .collect { latestMessages ->
+                    _messages.value = latestMessages
+                    oldestLoadedMessage = latestMessages.firstOrNull()
+
+                    // When chat is open -> mark as read immediately
+                    if (AppForegroundState.currentOpenChatId == chatId) {
+                        markChatAsRead()
+                    }
+                }
+        }
+    }
 
     fun sendTextMessage(text: String) {
         val trimmed = text.trim()
@@ -100,7 +161,7 @@ class ChatViewModel(
                     chatId = chatId,
                     senderId = uid,
                     text = trimmed,
-                    createdAt = System.currentTimeMillis()
+                    clientCreatedAt = System.currentTimeMillis()
                 )
 
                 chatRepository.sendMessage(cid, chatId, msg)

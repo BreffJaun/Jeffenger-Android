@@ -6,5 +6,6 @@ enum class CollectionNames(val path: String) {
     CHATS("chats"),                 // .../chats/{chatId}
     MESSAGES("messages"),           // .../messages/{messageId}
     GLOBAL_USERS("globalUsers")    , // globalUsers/{jeffId}
-    CALENDAR_EVENTS("calendarEvents")
+    CALENDAR_EVENTS("calendarEvents"),
+    CALENDAR_BUSY("calendarBusy")
 }

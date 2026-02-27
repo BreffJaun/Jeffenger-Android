@@ -1,5 +1,6 @@
 package com.example.jeffenger.ui.chat
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import com.example.jeffenger.data.remote.model.Message
 import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.utils.extensions.relativeTimeString
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MessageBubble(
     message: Message,

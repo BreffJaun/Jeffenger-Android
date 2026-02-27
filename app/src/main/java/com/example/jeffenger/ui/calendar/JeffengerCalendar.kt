@@ -1,38 +1,33 @@
 package com.example.jeffenger.ui.calendar
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.CalendarEvent
-import com.kizitonwose.calendar.compose.HorizontalCalendar
-import com.kizitonwose.calendar.compose.rememberCalendarState
-import com.kizitonwose.calendar.core.WeekDay
-import java.time.DayOfWeek
+import com.example.jeffenger.utils.helper.buildMonthCells
 import java.time.LocalDate
 import java.time.YearMonth
-import kotlin.collections.isNotEmpty
 
 @Composable
 fun JeffengerCalendar(
-    eventsByDate: Map<LocalDate, List<CalendarEvent>>,
+    hasEvent: (LocalDate) -> Boolean,
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    val currentMonth = remember { YearMonth.now() }
-
-    val state = rememberCalendarState(
-        startMonth = currentMonth.minusMonths(12),
-        endMonth = currentMonth.plusMonths(12),
-        firstVisibleMonth = currentMonth,
-        firstDayOfWeek = DayOfWeek.MONDAY
-    )
+    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
+    val today = remember { LocalDate.now() }
 
     Column {
-        MonthHeader(state)
+
+        MonthHeader(
+            month = currentMonth,
+            onPrev = { currentMonth = currentMonth.minusMonths(1) },
+            onNext = { currentMonth = currentMonth.plusMonths(1) }
+        )
 
         Spacer(Modifier.height(12.dp))
 
@@ -40,19 +35,31 @@ fun JeffengerCalendar(
 
         Spacer(Modifier.height(8.dp))
 
-        HorizontalCalendar(
-            state = state,
-            dayContent = { day ->
-                val date = day.date
-                val hasEvents = eventsByDate[date]?.isNotEmpty() == true
+        val cells = remember(currentMonth) {
+            buildMonthCells(currentMonth)
+        }
 
-                DayCell(
-                    date = date,
-                    isSelected = date == selectedDate,
-                    hasEvents = hasEvents,
-                    onClick = { onDateSelected(date) }
-                )
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(7),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(cells, key = { it.key }) { cell ->
+
+                if (cell.date == null) {
+                    Spacer(Modifier.size(44.dp))
+                } else {
+                    DayCell(
+                        date = cell.date,
+                        isSelected = cell.date == selectedDate,
+                        isToday = cell.date == today,
+                        hasEvents = hasEvent(cell.date),
+                        onClick = { onDateSelected(cell.date) }
+                    )
+                }
             }
-        )
+        }
     }
 }
+

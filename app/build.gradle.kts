@@ -87,12 +87,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -102,16 +96,12 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.kotlinx.serialization.json)
 
     // Material Icons
     implementation("androidx.compose.material:material-icons-extended")
 
     // JSON Serialization
     implementation(libs.kotlinx.serialization.json)
-
-    // Filterchips
-    implementation(libs.androidx.compose.material3)
 
     // FlowRow
 //    implementation("androidx.compose.foundation:foundation:1.6.0+")
@@ -144,12 +134,23 @@ dependencies {
 
     // BOM -> Bill of Materials
     implementation(platform(libs.androidx.compose.bom))
+
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.compose.foundation)
+
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+//    implementation(platform(libs.androidx.compose.bom))
+//    implementation(libs.androidx.compose.ui.graphics)
+//    implementation(libs.androidx.compose.ui.tooling.preview)
+//    implementation(libs.androidx.compose.material3)
+//    implementation(libs.androidx.compose.material.icons.extended)
+//    implementation(libs.androidx.compose.foundation)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -159,15 +160,9 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging")
 
 
-//    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
-//    implementation(libs.firebase.auth)
-//    implementation(libs.firebase.storage.ktx)
-//    implementation("com.google.firebase:firebase-firestore-ktx")
-
     // Android Splashscreen
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation(libs.googleid)
 
-    // Kizitonwose Calendar
-    implementation("com.kizitonwose.calendar:compose:2.5.0")
+
 }

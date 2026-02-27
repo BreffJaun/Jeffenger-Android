@@ -10,8 +10,15 @@ interface ChatRepositoryInterface {
     fun observeChatsForUser(companyId: String, userId: String): Flow<List<Chat>>
 //    fun observeChats(): Flow<List<Chat>>
     fun observeChat(companyId: String, chatId: String): Flow<Chat?>
-    fun observeMessages(companyId: String, chatId: String): Flow<List<Message>>
+//    fun observeMessages(companyId: String, chatId: String): Flow<List<Message>>
 
+    fun observeLatestMessages(companyId: String, chatId: String): Flow<List<Message>>
+
+    suspend fun loadMoreMessages(
+        companyId: String,
+        chatId: String,
+        lastMessage: Message
+    ): List<Message>
     fun observeUsers(companyId: String, userIds: List<String>): Flow<List<User>>
 
     fun observeCompanyMembers(companyId: String): Flow<List<User>>

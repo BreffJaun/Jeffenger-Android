@@ -1,5 +1,6 @@
 package com.example.jeffenger.utils.extensions
 
+import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -24,4 +25,9 @@ fun Long.relativeTimeString(): String {
             formatter.format(Date(this))
         }
     }
+}
+
+fun Timestamp?.relativeTimeString(): String {
+    val millis = this?.toDate()?.time ?: return ""
+    return millis.relativeTimeString()
 }

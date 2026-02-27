@@ -29,6 +29,7 @@ import com.example.jeffenger.ui.screens.ErrorScreen
 import com.example.jeffenger.ui.screens.LoadingScreen
 import com.example.jeffenger.ui.screens.SplashScreen
 import com.example.jeffenger.ui.viewmodels.AuthViewModel
+import com.example.jeffenger.utils.state.AppForegroundState
 import com.example.jeffenger.utils.state.LoadingState
 import org.koin.androidx.compose.koinViewModel
 
@@ -128,6 +129,16 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         intentState.value = intent
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AppForegroundState.isAppInForeground = true
+    }
+
+    override fun onPause() {
+        super.onPause()
+        AppForegroundState.isAppInForeground = false
     }
 
     private fun handleIntentIfNeeded(

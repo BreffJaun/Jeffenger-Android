@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,7 @@ import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.mapper.mapToAvatarUiModel
 import com.example.jeffenger.utils.mapper.mapUserToAvatarUiModel
 import com.example.jeffenger.utils.model.ChatTopBarUiState
+import com.example.jeffenger.utils.state.AppForegroundState
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -68,6 +70,23 @@ fun ChatScreen(
         var input by remember { mutableStateOf("") }
 
         val listState = rememberLazyListState()
+
+        DisposableEffect(Unit) {
+            AppForegroundState.currentOpenChatId = viewModel.chatId
+
+            onDispose {
+                AppForegroundState.currentOpenChatId = null
+            }
+        }
+
+        LaunchedEffect(listState) {
+            snapshotFlow { listState.firstVisibleItemIndex }
+                .collect { index ->
+                    if (index <= 3) {
+                        viewModel.loadMoreMessages()
+                    }
+                }
+        }
 
         // LONGTAP ON MESSAGE BUBBLE
         var selectedMessage by remember { mutableStateOf<Message?>(null) }

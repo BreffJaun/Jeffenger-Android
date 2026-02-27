@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarToday
@@ -63,7 +65,6 @@ import com.example.jeffenger.utils.model.ChatTopBarUiState
  * - Navigation logic is delegated to the parent (`AppStart`)
  *
  * @param currentRoute The currently active navigation route
- * @param isDarkMode Current theme state (not directly used here)
  * @param onBackClick Callback invoked when the back button is pressed
  * @param modifier Optional modifier for layout adjustments
  */
@@ -94,81 +95,94 @@ fun TopBar(
                 .statusBarsPadding()
         ) {
 
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
-//                .padding(top = 60.dp)
-                    .padding(horizontal = 25.dp)
-                    .padding(bottom = 10.dp)
+                    .padding(horizontal = 25.dp, vertical = 10.dp)
             ) {
 
-                // LEFT SIDE
-                if (isChatRoute || isCalendarRoute) {
-                    GlassIconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowBackIosNew,
-                            tint = scheme.onSurface,
-                            contentDescription = "Back"
+                // LEFT
+                Box(
+                    modifier = Modifier.wrapContentWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    if (isChatRoute || isCalendarRoute) {
+                        GlassIconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.Rounded.ArrowBackIosNew,
+                                tint = scheme.onSurface,
+                                contentDescription = "Back"
+                            )
+                        }
+                    } else {
+                        Image(
+                            painter = painterResource(R.drawable.jeffenger_font),
+                            contentDescription = "Jeffenger Logo",
+                            contentScale = ContentScale.FillHeight,
+                            modifier = Modifier.height(20.dp)
                         )
                     }
-                } else {
-                    Image(
-                        painter = painterResource(R.drawable.jeffenger_font),
-                        contentDescription = "Jeffenger Logo",
-                        contentScale = ContentScale.FillHeight,
-                        modifier = Modifier.height(20.dp)
-                    )
                 }
 
-                // CENTER
-                AnimatedVisibility(
-                    visible = isChatRoute && chatTopBarState != null,
-                    enter = fadeIn(),
-                    exit = fadeOut()
+                Spacer(Modifier.width(10.dp))
+
+                // MIDDLE (Header) -> in ChatRoute LINKS
+                Box(
+                    modifier = Modifier
+                        .weight(1f),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    val state = chatTopBarState!!
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clickable { onChatHeaderClick() }
-                            .padding(horizontal = 10.dp)
+
+                    this@Row.AnimatedVisibility(
+                        visible = isChatRoute && chatTopBarState != null,
+                        enter = fadeIn(),
+                        exit = fadeOut()
                     ) {
-                        AvatarCircle(
-                            avatar = state.avatar,
-                            modifier = Modifier.size(48.dp)
-                        )
+                        val state = chatTopBarState!!
 
-                        Spacer(Modifier.width(10.dp))
-
-                        Column(
-                            modifier = Modifier.width(190.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clickable { onChatHeaderClick() }
+                                .padding(end = 10.dp)
                         ) {
-                            Text(
-                                text = state.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = scheme.onSurface,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+
+                            AvatarCircle(
+                                avatar = state.avatar,
+                                modifier = Modifier.size(44.dp)
                             )
-                            Text(
-                                text = state.subtitle,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = scheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+
+                            Spacer(Modifier.width(10.dp))
+
+                            Column(
+                                modifier = Modifier.widthIn(max = 220.dp)
+                            ) {
+                                Text(
+                                    text = state.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = scheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = state.subtitle,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = scheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }
 
-                // RIGHT SIDE
+                // RIGHT (Actions)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     AnimatedVisibility(
                         visible = isChatsRoute,
                         enter = fadeIn(),
@@ -216,16 +230,6 @@ fun TopBar(
                         }
                     }
 
-//                    AnimatedVisibility(
-//                        visible = isCalendarRoute,
-//                        enter = fadeIn(),
-//                        exit = fadeOut()
-//                    ) {
-//                        Box(modifier = Modifier
-//                            .width(1.dp)
-//                            .height(48.dp))
-//                    }
-
                     AnimatedVisibility(
                         visible = isCalendarRoute,
                         enter = fadeIn(),
@@ -245,14 +249,11 @@ fun TopBar(
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
-                        Box(modifier = Modifier
-                            .width(1.dp)
-                            .height(48.dp))
+                        Spacer(Modifier.size(48.dp))
                     }
                 }
             }
 
-            // DIVIDRE
             if (isChatRoute) {
                 Box(
                     modifier = Modifier

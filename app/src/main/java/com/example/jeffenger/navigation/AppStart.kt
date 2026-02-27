@@ -188,7 +188,9 @@ fun AppStart(
 
                 composable<CalendarRoute> {
                     CalendarScreen(
-                        onBack = { navController.popBackStack() }
+                        onBack = { navController.popBackStack() },
+                        showCreateEvent = showCreateEvent,
+                        onDismissCreateEvent = { showCreateEvent = false }
                     )
                 }
 
@@ -206,10 +208,6 @@ fun AppStart(
                 participants = chatParticipants,
                 onDismiss = { showChatInfo = false }
             )
-        }
-
-        if (showCreateEvent) {
-            // TODO: CreateEventDialog / BottomSheet
         }
     }
 }

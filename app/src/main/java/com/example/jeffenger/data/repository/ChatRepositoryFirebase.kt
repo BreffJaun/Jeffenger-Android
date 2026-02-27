@@ -6,6 +6,7 @@ import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.utils.enums.CollectionNames
 import com.google.firebase.firestore.FieldPath
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
@@ -69,8 +70,7 @@ class ChatRepositoryFirebase(
         awaitClose { listener.remove() }
     }
 
-
-    override fun observeMessages(
+    override fun observeLatestMessages(
         companyId: String,
         chatId: String
     ): Flow<List<Message>> = callbackFlow {
@@ -80,8 +80,9 @@ class ChatRepositoryFirebase(
             .collection(CollectionNames.CHATS.path)
             .document(chatId)
             .collection(CollectionNames.MESSAGES.path)
-            .orderBy("createdAt", Query.Direction.ASCENDING)
-            .limit(50) // Later adding "startAfter()" for loading the "rest" of the messages step by step.
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .orderBy(FieldPath.documentId(), Query.Direction.DESCENDING)
+            .limit(50)
 
         val listener = ref.addSnapshotListener { snapshot, error ->
             if (error != null) {
@@ -89,8 +90,21 @@ class ChatRepositoryFirebase(
                 return@addSnapshotListener
             }
 
+//            val messages = snapshot?.documents
+//                ?.mapNotNull { it.toObject(Message::class.java) }
+//                ?.sortedWith(
+//                    compareBy<Message> { it.createdAt }
+//                        .thenBy { it.id }
+//                )
+//                ?: emptyList()
+
             val messages = snapshot?.documents
                 ?.mapNotNull { it.toObject(Message::class.java) }
+                ?.sortedWith(
+                    compareBy<Message> {
+                        it.createdAt?.toDate()?.time ?: it.clientCreatedAt
+                    }.thenBy { it.id }
+                )
                 ?: emptyList()
 
             trySend(messages)
@@ -98,6 +112,70 @@ class ChatRepositoryFirebase(
 
         awaitClose { listener.remove() }
     }
+
+    override suspend fun loadMoreMessages(
+        companyId: String,
+        chatId: String,
+        lastMessage: Message
+    ): List<Message> {
+
+        val snapshot = db.collection(CollectionNames.COMPANIES.path)
+            .document(companyId)
+            .collection(CollectionNames.CHATS.path)
+            .document(chatId)
+            .collection(CollectionNames.MESSAGES.path)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .orderBy(FieldPath.documentId(), Query.Direction.DESCENDING)
+            .startAfter(lastMessage.createdAt, lastMessage.id)
+            .limit(50)
+            .get()
+            .await()
+
+//        return snapshot.documents
+//            .mapNotNull { it.toObject(Message::class.java) }
+//            .sortedWith(
+//                compareBy<Message> { it.createdAt }
+//                    .thenBy { it.id }
+//            )
+
+        return snapshot?.documents
+            ?.mapNotNull { it.toObject(Message::class.java) }
+            ?.sortedWith(
+                compareBy<Message> {
+                    it.createdAt?.toDate()?.time ?: it.clientCreatedAt
+                }.thenBy { it.id }
+            )
+            ?: emptyList()
+    }
+
+//    override fun observeMessages(
+//        companyId: String,
+//        chatId: String
+//    ): Flow<List<Message>> = callbackFlow {
+//
+//        val ref = db.collection(CollectionNames.COMPANIES.path)
+//            .document(companyId)
+//            .collection(CollectionNames.CHATS.path)
+//            .document(chatId)
+//            .collection(CollectionNames.MESSAGES.path)
+//            .orderBy("createdAt", Query.Direction.ASCENDING)
+//            .limit(50) // Later adding "startAfter()" for loading the "rest" of the messages step by step.
+//
+//        val listener = ref.addSnapshotListener { snapshot, error ->
+//            if (error != null) {
+//                close(error)
+//                return@addSnapshotListener
+//            }
+//
+//            val messages = snapshot?.documents
+//                ?.mapNotNull { it.toObject(Message::class.java) }
+//                ?: emptyList()
+//
+//            trySend(messages)
+//        }
+//
+//        awaitClose { listener.remove() }
+//    }
 
     override fun observeUsers(
         companyId: String,
@@ -217,15 +295,24 @@ class ChatRepositoryFirebase(
             .collection(CollectionNames.MESSAGES.path)
             .document()
 
-        val msgToSave = message.copy(
-            id = msgRef.id,
-            chatId = chatId
+        val clientNow = System.currentTimeMillis()
+
+        // 🔥 Message als Map speichern (für serverTimestamp)
+        val msgData = hashMapOf(
+//            "id" to msgRef.id,
+            "chatId" to chatId,
+            "senderId" to message.senderId,
+            "text" to message.text,
+            "imageUrl" to message.imageUrl,
+            "clientCreatedAt" to clientNow,
+            "createdAt" to FieldValue.serverTimestamp(),
+            "editedAt" to null
         )
 
-        //  Message speichern
-        msgRef.set(msgToSave).await()
+        // 1️⃣ Message speichern
+        msgRef.set(msgData).await()
 
-        // Aktuelles Chat-Dokument holen
+        // 2️⃣ Chat-Dokument holen
         val snapshot = chatRef.get().await()
         val chat = snapshot.toObject(Chat::class.java) ?: return
 
@@ -241,19 +328,73 @@ class ChatRepositoryFirebase(
             }
         }
 
-        val lastText = msgToSave.text
-            ?: if (msgToSave.imageUrl != null) "📷 Bild" else "Nachricht"
+        val lastText = message.text
+            ?: if (message.imageUrl != null) "📷 Bild" else "Nachricht"
 
-        // Chat updaten
+        // 3️⃣ Chat updaten
         chatRef.update(
             mapOf(
-                "lastMessageId" to msgToSave.id,
+                "lastMessageId" to msgRef.id,
                 "lastMessageText" to lastText,
-                "lastMessageTimestamp" to msgToSave.createdAt,
+                // 🔥 Auch hier Serverzeit verwenden
+                "lastMessageTimestamp" to FieldValue.serverTimestamp(),
                 "unreadCount" to currentUnread
             )
         ).await()
     }
+
+//    override suspend fun sendMessage(
+//        companyId: String,
+//        chatId: String,
+//        message: Message
+//    ) {
+//
+//        val chatRef = db.collection(CollectionNames.COMPANIES.path)
+//            .document(companyId)
+//            .collection(CollectionNames.CHATS.path)
+//            .document(chatId)
+//
+//        val msgRef = chatRef
+//            .collection(CollectionNames.MESSAGES.path)
+//            .document()
+//
+//        val msgToSave = message.copy(
+//            id = msgRef.id,
+//            chatId = chatId
+//        )
+//
+//        //  Message speichern
+//        msgRef.set(msgToSave).await()
+//
+//        // Aktuelles Chat-Dokument holen
+//        val snapshot = chatRef.get().await()
+//        val chat = snapshot.toObject(Chat::class.java) ?: return
+//
+//        val currentUnread = chat.unreadCount.toMutableMap()
+//
+//        // Für alle außer Sender +1
+//        chat.participantIds.forEach { userId ->
+//            if (userId != message.senderId) {
+//                val old = currentUnread[userId] ?: 0
+//                currentUnread[userId] = old + 1
+//            } else {
+//                currentUnread[userId] = 0
+//            }
+//        }
+//
+//        val lastText = msgToSave.text
+//            ?: if (msgToSave.imageUrl != null) "📷 Bild" else "Nachricht"
+//
+//        // Chat updaten
+//        chatRef.update(
+//            mapOf(
+//                "lastMessageId" to msgToSave.id,
+//                "lastMessageText" to lastText,
+//                "lastMessageTimestamp" to msgToSave.createdAt,
+//                "unreadCount" to currentUnread
+//            )
+//        ).await()
+//    }
 
 
     override suspend fun createChat(
@@ -278,21 +419,36 @@ class ChatRepositoryFirebase(
                 distinctParticipants.sorted().joinToString("_")
             } else null
 
-        val chatToSave = Chat(
-            id = chatRef.id,
-            participantIds = distinctParticipants,
-            groupChat = groupChat,
-            title = title,
-            imageUrl = imageUrl,
-            createdAt = now,
-            lastMessageTimestamp = now,
-            lastMessageText = null,
-            lastMessageId = null,
-            unreadCount = emptyMap(),
-            directChatKey = directKey
+//        val chatToSave = Chat(
+//            id = chatRef.id,
+//            participantIds = distinctParticipants,
+//            groupChat = groupChat,
+//            title = title,
+//            imageUrl = imageUrl,
+//            createdAt = now,
+//            lastMessageTimestamp = now,
+//            lastMessageText = null,
+//            lastMessageId = null,
+//            unreadCount = emptyMap(),
+//            directChatKey = directKey
+//        )
+        val chatData = hashMapOf(
+//            "id" to chatRef.id,
+            "participantIds" to distinctParticipants,
+            "groupChat" to groupChat,
+            "title" to title,
+            "imageUrl" to imageUrl,
+            "createdAt" to FieldValue.serverTimestamp(),
+            "lastMessageTimestamp" to FieldValue.serverTimestamp(),
+            "lastMessageText" to null,
+            "lastMessageId" to null,
+            "unreadCount" to emptyMap<String, Int>(),
+            "mutedUserIds" to emptyList<String>(),
+            "directChatKey" to directKey
         )
 
-        chatRef.set(chatToSave).await()
+        chatRef.set(chatData).await()
+//        chatRef.set(chatToSave).await()
         return chatRef.id
     }
 
@@ -408,7 +564,7 @@ class ChatRepositoryFirebase(
         msgRef.update(
             mapOf(
                 "text" to newText,
-                "editedAt" to System.currentTimeMillis()
+                "editedAt" to FieldValue.serverTimestamp()
             )
         ).await()
 
@@ -497,7 +653,8 @@ class ChatRepositoryFirebase(
                 mapOf(
                     "lastMessageId" to null,
                     "lastMessageText" to null,
-                    "lastMessageTimestamp" to (chat.createdAt ?: System.currentTimeMillis())
+//                    "lastMessageTimestamp" to (chat.createdAt ?: System.currentTimeMillis())
+                    "lastMessageTimestamp" to (chat.createdAt ?: FieldValue.serverTimestamp())
                 )
             ).await()
         }

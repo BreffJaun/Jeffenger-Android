@@ -7,11 +7,14 @@ junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
-composeBom = "2024.09.00"
+#composeBom = "2024.09.00"
+#composeBom = "2024.12.01"
+composeBom = "2025.02.00"
 material3 = "1.4.0"
 
 # Navigation
-navigationCompose = "2.8.3"
+navigationCompose = "2.9.6"
+#navigationCompose = "2.8.3"
 kotlinSerialization = "1.6.3"
 navigationComposeVersion = "2.9.6"
 
@@ -33,16 +36,16 @@ coilCompose = "3.0.0-rc02"
 benchmarkTraceprocessor = "1.4.1"
 datastoreCore = "1.2.0"
 cameraCore = "1.5.2"
-runtime = "1.10.1"
-runtimeSaveable = "1.10.1"
-foundation = "1.10.1"
+#runtime = "1.10.1"
+#runtimeSaveable = "1.10.1"
+#foundation = "1.10.1"
 volley = "1.2.1"
-ui = "1.10.1"
-foundationLayout = "1.10.1"
+#ui = "1.10.1"
+#foundationLayout = "1.10.1"
 
 # Koin
 koinBom = "4.1.0-Beta4"
-uiVersion = "1.10.2"
+#uiVersion = "1.10.2"
 
 # Firebase
 googleGmsGoogleServices = "4.4.4"
@@ -104,12 +107,12 @@ coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp"
 androidx-benchmark-traceprocessor = { group = "androidx.benchmark", name = "benchmark-traceprocessor", version.ref = "benchmarkTraceprocessor" }
 androidx-datastore-core = { group = "androidx.datastore", name = "datastore-core", version.ref = "datastoreCore" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
-androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
-androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name = "runtime-saveable", version.ref = "runtimeSaveable" }
-androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name = "runtime-saveable" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
-androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
-androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "uiVersion" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout" }
+#androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "uiVersion" }
 
 # Koin
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }

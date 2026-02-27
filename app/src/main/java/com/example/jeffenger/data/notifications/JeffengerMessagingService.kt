@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationManagerCompat
+import com.example.jeffenger.utils.state.AppForegroundState
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -20,6 +21,7 @@ class JeffengerMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
+
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val permissionGranted =
@@ -43,11 +45,20 @@ class JeffengerMessagingService : FirebaseMessagingService() {
         }
 
         val chatId = message.data["chatId"] ?: return
+
+        if (
+            AppForegroundState.isAppInForeground &&
+            AppForegroundState.currentOpenChatId == chatId
+        ) {
+            Log.d("FCM", "Chat already open -> skip notification")
+            return
+        }
+
         val title = message.data["title"] ?: return
         val body = message.data["body"] ?: return
         val unreadCount = message.data["unreadCount"]?.toIntOrNull() ?: 1
-
         val notificationId = chatId.hashCode()
+
 
         val intent =
             Intent(this, com.example.jeffenger.MainActivity::class.java).apply {

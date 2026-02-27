@@ -1,6 +1,5 @@
 package com.example.jeffenger.ui.calendar
 
-//import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,131 +7,158 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-//import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.ui.theme.AppTheme
-//import com.example.jeffenger.ui.viewmodels.CalendarViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import org.koin.androidx.compose.koinViewModel
-
 import android.content.res.Configuration
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronLeft
-import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.example.jeffenger.data.remote.model.CalendarEvent
-import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.viewmodels.CalendarViewModel
-import com.google.firebase.Timestamp
-import org.koin.androidx.compose.koinViewModel
+import com.example.jeffenger.utils.enums.EventsFilter
+import com.example.jeffenger.utils.state.CalendarListItem
 import java.time.*
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
+
 
 @Composable
 fun CalendarScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    showCreateEvent: Boolean,
+    onDismissCreateEvent: () -> Unit,
     viewModel: CalendarViewModel = koinViewModel(),
 ) {
-    val scheme = MaterialTheme.colorScheme
+    LogComposable("CalendarScreen") {
+        val scheme = MaterialTheme.colorScheme
 
-    val userId = "TODO_USER_ID"
-    val events by viewModel.events.collectAsState()
+        // SNACKBAR
+        val snackbarHostState = remember { SnackbarHostState() }
 
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+        // USER + EVENTS
+        val userId by viewModel.currentUserId.collectAsState()
+        val companyId by viewModel.companyId.collectAsState()
+        val hostUserId by viewModel.hostUserId.collectAsState()
+        val listItems by viewModel.eventsForList.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.loadEvents(userId)
-    }
+        var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+        var filter by rememberSaveable { mutableStateOf(EventsFilter.DAY) }
 
-    val zone = ZoneId.systemDefault()
-
-    val eventsByDate = remember(events) {
-        events.groupBy {
-            it.startTime.toDate()
-                .toInstant()
-                .atZone(zone)
-                .toLocalDate()
+        LaunchedEffect(Unit) {
+            viewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message)
+            }
         }
-    }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 25.dp)
-    ) {
-        Text(
-            text = "Kalender",
-            style = MaterialTheme.typography.titleLarge,
-            color = scheme.onSurface
-        )
+        val zone = ZoneId.systemDefault()
 
-        Spacer(Modifier.height(12.dp))
+        val itemsByDate = remember(listItems) {
+            listItems.groupBy { item ->
+                when (item) {
+                    is CalendarListItem.Event ->
+                        item.event.startTime.toDate()
+                            .toInstant()
+                            .atZone(zone)
+                            .toLocalDate()
 
-        JeffengerCalendar(
-            eventsByDate = eventsByDate,
-            selectedDate = selectedDate,
-            onDateSelected = { selectedDate = it }
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(
-            text = "Anstehende Termine",
-            style = MaterialTheme.typography.titleMedium,
-            color = scheme.onSurface
-        )
-
-        Spacer(Modifier.height(10.dp))
-
-        val todaysEvents = eventsByDate[selectedDate].orEmpty()
-
-        if (todaysEvents.isEmpty()) {
-            Text(
-                "Keine Termine an diesem Tag.",
-                color = scheme.onSurfaceVariant
-            )
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(todaysEvents, key = { it.id }) {
-//                    CalendarEventRow(it)
+                    is CalendarListItem.Busy ->
+                        item.slot.startTime.toDate()
+                            .toInstant()
+                            .atZone(zone)
+                            .toLocalDate()
                 }
             }
+        }
+
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 25.dp)
+        ) {
+            Text(
+                text = "Kalender",
+                style = MaterialTheme.typography.titleLarge,
+                color = scheme.onSurface
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            JeffengerCalendar(
+                hasEvent = viewModel::hasBusyOrEvent,
+                selectedDate = selectedDate,
+                onDateSelected = { selectedDate = it }
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            UpcomingHeader(
+                filter = filter,
+                onFilterChange = { filter = it }
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            val visibleItems = remember(listItems, itemsByDate, selectedDate, filter) {
+                when (filter) {
+                    EventsFilter.DAY -> itemsByDate[selectedDate].orEmpty()
+                    EventsFilter.ALL -> listItems
+                }
+            }
+
+            if (visibleItems.isEmpty()) {
+                Text(
+                    "Keine Termine an diesem Tag.",
+                    color = scheme.onSurfaceVariant
+                )
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = visibleItems,
+                        key = {
+                            when (it) {
+                                is CalendarListItem.Event -> it.event.id
+                                is CalendarListItem.Busy -> it.slot.id
+                            }
+                        }
+                    ) { item ->
+
+                        when (item) {
+                            is CalendarListItem.Event ->
+                                CalendarEventCard(event = item.event)
+
+                            is CalendarListItem.Busy ->
+                                BusySlotCard(slot = item.slot)
+                        }
+                    }
+                }
+            }
+        }
+
+        if (showCreateEvent && userId != null && companyId != null && hostUserId != null) {
+
+            CreateEventDialog(
+                selectedDate = selectedDate,
+                userId = userId!!,
+                companyId = companyId!!,
+                hostUserId = hostUserId!!,
+                onDismiss = onDismissCreateEvent,
+                onCreate = { event ->
+                    viewModel.createEvent(event)
+                    onDismissCreateEvent()
+                }
+            )
         }
     }
 }

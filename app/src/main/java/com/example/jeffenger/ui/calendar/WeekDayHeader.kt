@@ -33,35 +33,3 @@ fun WeekdayHeader() {
     }
 }
 
-private data class CalendarCell(
-    val date: LocalDate?,
-    val key: String // stable key for grid
-)
-
-//private fun buildMonthCells(yearMonth: YearMonth): List<CalendarCell> {
-//    val firstOfMonth = yearMonth.atDay(1)
-//    val daysInMonth = yearMonth.lengthOfMonth()
-//
-//    // Monday=1 ... Sunday=7
-//    val firstDayDow = firstOfMonth.dayOfWeek.value
-//    val leadingEmpty = (firstDayDow - DayOfWeek.MONDAY.value).let { if (it < 0) it + 7 else it }
-//
-//    val totalCellsTarget = 42 // 6 rows * 7 columns (stabil)
-//    val cells = mutableListOf<CalendarCell>()
-//
-//    repeat(leadingEmpty) { idx ->
-//        cells.add(CalendarCell(date = null, key = "e_pre_$idx"))
-//    }
-//
-//    for (day in 1..daysInMonth) {
-//        val date = yearMonth.atDay(day)
-//        cells.add(CalendarCell(date = date, key = date.toString()))
-//    }
-//
-//    // trailing empty to reach 42
-//    while (cells.size < totalCellsTarget) {
-//        cells.add(CalendarCell(date = null, key = "e_post_${cells.size}"))
-//    }
-//
-//    return cells
-//}

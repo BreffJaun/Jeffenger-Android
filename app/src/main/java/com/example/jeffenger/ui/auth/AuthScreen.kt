@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,6 +54,7 @@ import org.koin.androidx.compose.koinViewModel
  *
  * Pure UI layer — contains no business logic.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = koinViewModel()
