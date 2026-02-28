@@ -121,48 +121,84 @@ class ChatRepositoryFirebase(
 //            awaitClose { listener.remove() }
 //        }
 
+//    override fun observeAllCompanyMembers(): Flow<Map<String, List<User>>> = callbackFlow {
+//        Log.d("GLOBAL_MEMBERS", "observeAllCompanyMembers started")
+//            val ref = db.collection(CollectionNames.COMPANIES.path)
+//
+//            val listeners = mutableListOf<ListenerRegistration>()
+//            val result = mutableMapOf<String, List<User>>()
+//
+//            val companyListener = ref.addSnapshotListener { snapshot, error ->
+//
+//                if (error != null) {
+//                    Log.e("GLOBAL_MEMBERS", "companies listener error", error)
+//                    close(error)
+//                    return@addSnapshotListener
+//                }
+//                Log.d("GLOBAL_MEMBERS", "companies snapshot = ${snapshot?.size()}")
+//
+//                snapshot?.documents?.forEach { companyDoc ->
+//                    val companyId = companyDoc.id
+//
+//                    val usersRef = ref.document(companyId)
+//                        .collection(CollectionNames.USERS.path)
+//
+//                    val userListener =
+//                        usersRef.addSnapshotListener { userSnap, userErr ->
+//                            if (userErr != null) {
+//                                close(userErr)
+//                                return@addSnapshotListener
+//                            }
+//
+//                            val users = userSnap?.documents
+//                                ?.mapNotNull { it.toObject(User::class.java) }
+//                                ?: emptyList()
+//
+//                            result[companyId] = users
+//                            trySend(result)
+//                        }
+//
+//                    listeners += userListener
+//                }
+//            }
+//
+//            listeners += companyListener
+//
+//            awaitClose { listeners.forEach { it.remove() } }
+//        }
+
     override fun observeAllCompanyMembers(): Flow<Map<String, List<User>>> = callbackFlow {
 
-            val ref = db.collection(CollectionNames.COMPANIES.path)
+        val ref = db.collectionGroup(CollectionNames.USERS.path) // "users"
 
-            val listeners = mutableListOf<ListenerRegistration>()
-            val result = mutableMapOf<String, List<User>>()
-
-            val companyListener = ref.addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-
-                snapshot?.documents?.forEach { companyDoc ->
-                    val companyId = companyDoc.id
-
-                    val usersRef = ref.document(companyId)
-                        .collection(CollectionNames.USERS.path)
-
-                    val userListener =
-                        usersRef.addSnapshotListener { userSnap, userErr ->
-                            if (userErr != null) {
-                                close(userErr)
-                                return@addSnapshotListener
-                            }
-
-                            val users = userSnap?.documents
-                                ?.mapNotNull { it.toObject(User::class.java) }
-                                ?: emptyList()
-
-                            result[companyId] = users
-                            trySend(result)
-                        }
-
-                    listeners += userListener
-                }
+        val listener = ref.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("GLOBAL_MEMBERS", "collectionGroup users error", error)
+                close(error)
+                return@addSnapshotListener
             }
 
-            listeners += companyListener
+            val usersByCompany = (snapshot?.documents ?: emptyList())
+                .mapNotNull { doc ->
+                    val segments = doc.reference.path.split("/")
+                    val isCompanyUser =
+                        segments.size >= 4 &&
+                                segments[0] == CollectionNames.COMPANIES.path &&
+                                segments[2] == CollectionNames.USERS.path
 
-            awaitClose { listeners.forEach { it.remove() } }
+                    if (!isCompanyUser) return@mapNotNull null
+
+                    val companyId = segments[1]
+                    val user = doc.toObject(User::class.java) ?: return@mapNotNull null
+                    companyId to user.copy(companyId = companyId)
+                }
+                .groupBy({ it.first }, { it.second })
+
+            trySend(usersByCompany)
         }
+
+        awaitClose { listener.remove() }
+    }
 
     override fun observeChat(
         companyId: String,

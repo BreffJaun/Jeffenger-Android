@@ -66,36 +66,3 @@ fun RoundCheckbox(
         }
     }
 }
-//@Composable
-//fun RoundCheckbox(
-//    checked: Boolean,
-//    onCheckedChange: (Boolean) -> Unit,
-//    modifier: Modifier = Modifier
-//) {
-//    val scheme = MaterialTheme.colorScheme
-//
-//    Box(
-//        modifier = modifier
-//            .size(22.dp)
-//            .clip(CircleShape)
-//            .background(
-//                Color.Transparent
-//            )
-//            .border(
-//                width = 2.dp,
-//                color = if (checked) scheme.secondary else scheme.outline,
-//                shape = CircleShape
-//            )
-//            .clickable { onCheckedChange(!checked) },
-//        contentAlignment = Alignment.Center
-//    ) {
-//        if (checked) {
-//            Icon(
-//                imageVector = Icons.Default.Check,
-//                contentDescription = null,
-//                tint = scheme.secondary,
-//                modifier = Modifier.size(14.dp)
-//            )
-//        }
-//    }
-//}

@@ -61,9 +61,21 @@ class ChatsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
 
-    val currentUserIsGlobalState = userRepository.appUser
-            .map { it?.global == true }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+//    val currentUserIsGlobalState = userRepository.appUser
+//            .map { it?.global == true }
+//            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    val currentUserIsGlobalState =
+        combine(
+            currentUserIdState,
+            jeffUserIdState
+        ) { currentId, jeffId ->
+            currentId != null && currentId == jeffId
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            false
+        )
 
     // NEW CHAT
     private val _isGroupMode = MutableStateFlow(false)
@@ -84,8 +96,6 @@ class ChatsViewModel(
 
     // NAVIGATION
     // ...into a specific chat
-//    private val _navigateToChat = MutableSharedFlow<String>()
-//    val navigateToChat = _navigateToChat.asSharedFlow()
     private val _navigateToChat = MutableSharedFlow<Pair<String, String>>()
     val navigateToChat = _navigateToChat.asSharedFlow()
 
@@ -127,11 +137,30 @@ class ChatsViewModel(
             chatRepository.observeAllCompanyMembers()
         ) { isGlobal, allMembers ->
 
+            Log.d("GLOBAL_DEBUG", "isGlobal = $isGlobal")
+            Log.d("GLOBAL_DEBUG", "companies loaded = ${allMembers.keys}")
+            Log.d("GLOBAL_DEBUG", "company count = ${allMembers.size}")
+
             if (isGlobal) {
                 allMembers
             } else {
                 emptyMap()
             }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyMap()
+        )
+
+    val visibleGroupedMembersUiState: StateFlow<Map<String, List<User>>> =
+        combine(groupedMembersUiState, lockedCompanyId) { grouped, locked ->
+
+            if (locked == null) {
+                grouped
+            } else {
+                grouped.filterKeys { it == locked }
+            }
+
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
@@ -205,90 +234,6 @@ class ChatsViewModel(
             SharingStarted.WhileSubscribed(5_000),
             emptyList()
         )
-//    val chatListItems: StateFlow<List<ChatListItemUiModel>> =
-//        combine(
-//            userChatsFlow,
-//            companyIdState,
-//            currentUserIdState,
-//            currentUserIsGlobalState
-//        ) { chats, companyId, userId, isGlobal ->
-//            chats to Triple(companyId, userId, isGlobal)
-//        }.flatMapLatest { (chats, triple) ->
-//
-//            val (companyId, userId, isGlobal) = triple
-//
-//            if (userId == null) {
-//                flowOf(emptyList())
-//            } else {
-//
-//                val allUserIds = chats
-//                    .flatMap { it.participantIds }
-//                    .distinct()
-//
-//                if (allUserIds.isEmpty()) {
-//                    flowOf(emptyList())
-//                } else {
-//
-//                    when {
-//                        isGlobal -> {
-//                            chatRepository
-//                                .observeUsersFromMultipleCompanies(allUserIds)
-//                                .map { users ->
-//                                    Log.d("CHAT_UI_DEBUG", "Chats: ${chats.size} | Users: ${users.size}")
-//                                    chats.map { chat ->
-//                                        mapChatToUiModel(chat, userId, users)
-//                                    }
-//                                }
-//                        }
-//
-//                        companyId != null -> {
-//                            chatRepository
-//                                .observeUsers(companyId, allUserIds)
-//                                .map { users ->
-//                                    chats.map { chat ->
-//                                        mapChatToUiModel(chat, userId, users)
-//                                    }
-//                                }
-//                        }
-//
-//                        else -> flowOf(emptyList())
-//                    }
-//                }
-//            }
-//        }.stateIn(
-//            viewModelScope,
-//            SharingStarted.WhileSubscribed(5_000),
-//            emptyList()
-//        )
-
-//    val chatListItems: StateFlow<List<ChatListItemUiModel>> =
-//        combine(userChatsFlow, companyIdState, currentUserIdState) { chats, companyId, userId ->
-//            Triple(chats, companyId, userId)
-//        }.flatMapLatest { (chats, companyId, userId) ->
-//            if (companyId == null || userId == null) {
-//                flowOf(emptyList())
-//            } else {
-//
-//                val allUserIds = chats
-//                    .flatMap { it.participantIds }
-//                    .distinct()
-//
-//                chatRepository.observeUsers(companyId, allUserIds)
-//                    .map { users ->
-//                        chats.map { chat ->
-//                            mapChatToUiModel(
-//                                chat = chat,
-//                                currentUserId = userId,
-//                                users = users
-//                            )
-//                        }
-//                    }
-//            }
-//        }.stateIn(
-//            viewModelScope,
-//            SharingStarted.WhileSubscribed(5_000),
-//            emptyList()
-//        )
 
 
     // MAPPERS
@@ -489,27 +434,7 @@ class ChatsViewModel(
 
         _selectedParticipantIds.value = current
     }
-//    fun toggleParticipantSelection(userId: String) {
-//        val current = _selectedParticipantIds.value.toMutableSet()
-//
-//        if (current.contains(userId)) {
-//            current.remove(userId)
-//        } else {
-//            current.add(userId)
-//        }
-//
-//        _selectedParticipantIds.value = current
-//
-//        // Automatd Grouplogic
-//        if (current.size >= 2) {
-//            _isGroupMode.value = true
-//        } else if (current.size == 1) {
-//            // 1 Person -> frei wählbar
-//            // nichts erzwingen
-//        } else {
-//            _isGroupMode.value = false
-//        }
-//    }
+
 
     // Creates chat based on current selection
     // Optionally uploads group image and updates chat afterwards
@@ -590,79 +515,25 @@ class ChatsViewModel(
         _isGroupMode.value = true
     }
 
-//    fun createGroupChatFromSelection() {
-//        viewModelScope.launch {
-//            try {
-//                val currentUserId = currentUserIdState.value ?: return@launch
-//                val companyId = companyIdState.value ?: return@launch
-//
-//                val participants = (_selectedParticipantIds.value + currentUserId).distinct()
-//                if (participants.size < 2) return@launch
-//
-//                val title = _groupTitle.value.takeIf { it.isNotBlank() } ?: "Gruppe"
-//
-//                val chatId = chatRepository.createChat(
-//                    companyId = companyId,
-//                    participantIds = participants,
-//                    isGroupChat = true,
-//                    title = title,
-//                    imageUrl = null
-//                )
-//
-//                resetSelection()
-//                _navigateToChat.emit(chatId)
-//
-//            } catch (e: Exception) {
-//                _uiEvents.emit("Gruppenchat konnte nicht erstellt werden")
-//            }
-//        }
-//    }
+
+    init {
+        viewModelScope.launch {
+            currentUserIsGlobalState.collect {
+                Log.d("GLOBAL_CHECK", "currentUserIsGlobal = $it")
+            }
+        }
+
+        viewModelScope.launch {
+            jeffUserIdState.collect {
+                Log.d("GLOBAL_CHECK", "jeffUserId = $it")
+            }
+        }
+
+        viewModelScope.launch {
+            currentUserIdState.collect {
+                Log.d("GLOBAL_CHECK", "currentUserId = $it")
+            }
+        }
+    }
 }
 
-//    private val userChatsFlow: Flow<List<Chat>> =
-//        combine(
-//            currentUserIdState,
-//            companyIdState,
-//            currentUserIsGlobalState
-//        ) { userId, companyId, isGlobal ->
-//            Triple(userId, companyId, isGlobal)
-//        }.flatMapLatest { (userId, companyId, isGlobal) ->
-//
-//            Log.d(
-//                "CHAT_FLOW_DEBUG",
-//                "userId=$userId | companyId=$companyId | isGlobal=$isGlobal"
-//            )
-//
-//            when {
-//                userId == null -> {
-//                    Log.d("CHAT_FLOW_DEBUG", "→ userId NULL → empty")
-//                    flowOf(emptyList())
-//                }
-//
-//                isGlobal -> {
-//                    Log.d("CHAT_FLOW_DEBUG", "→ GLOBAL branch")
-//                    chatRepository.observeChatsForUserGlobal(userId)
-//                }
-//
-//                companyId != null -> {
-//                    Log.d("CHAT_FLOW_DEBUG", "→ COMPANY branch")
-//                    chatRepository.observeChatsForUser(companyId, userId)
-//                }
-//
-//                else -> {
-//                    Log.d("CHAT_FLOW_DEBUG", "→ FALLBACK empty")
-//                    flowOf(emptyList())
-//                }
-//            }
-//        }
-//    private val userChatsFlow: Flow<List<Chat>> =
-//        combine(companyIdState, currentUserIdState) { companyId, userId ->
-//            companyId to userId
-//        }.flatMapLatest { (companyId, userId) ->
-//            if (companyId == null || userId == null) {
-//                flowOf(emptyList())
-//            } else {
-////                chatRepository.observeChatsForUser(companyId, userId)
-//                chatRepository.observeChatsForUserGlobal(userId)
-//            }
-//        }
