@@ -8,6 +8,7 @@ object ChatsRoute
 @Serializable
 data class ChatRoute(
     val id: String,
+    val companyId: String
 )
 
 @Serializable

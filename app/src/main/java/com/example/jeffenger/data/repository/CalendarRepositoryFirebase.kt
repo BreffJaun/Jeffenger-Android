@@ -24,13 +24,11 @@ class CalendarRepositoryFirebase(
 
     // 🔹 1️⃣ Events für Host (Jeff)
     override fun observeEventsForHost(
-        hostUserId: String,
-        companyId: String
+        hostUserId: String
     ): Flow<List<CalendarEvent>> = callbackFlow {
 
         val listener = eventsCol
             .whereEqualTo("hostUserId", hostUserId)
-            .whereEqualTo("companyId", companyId)
             .addSnapshotListener { snapshot, error ->
 
                 if (error != null) {

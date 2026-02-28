@@ -48,7 +48,12 @@ class ChatViewModel(
     private var oldestLoadedMessage: Message? = null
     private var isLoadingMore = false
 
-    val chatId: String = savedStateHandle.toRoute<ChatRoute>().id
+//    val chatId: String = savedStateHandle.toRoute<ChatRoute>().id
+    private val route = savedStateHandle.toRoute<ChatRoute>()
+
+    val chatId: String = route.id
+    val companyId: String = route.companyId
+
     private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val loadingState: StateFlow<LoadingState> = _loadingState.asStateFlow()
 
@@ -57,19 +62,23 @@ class ChatViewModel(
             .map { it?.uid }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val companyId: StateFlow<String?> =
-        userRepository.appUser
-            .map { it?.companyId }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+//    val companyId: StateFlow<String?> =
+//        userRepository.appUser
+//            .map { it?.companyId }
+//            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // Chat-Dokument (Header-Daten)
     val chat: StateFlow<Chat?> =
-        companyId
-            .flatMapLatest { cid ->
-                if (cid.isNullOrBlank()) flowOf(null)
-                else chatRepository.observeChat(cid, chatId)
-            }
+        chatRepository.observeChat(companyId, chatId)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+//    val chat: StateFlow<Chat?> =
+//        companyId
+//            .flatMapLatest { cid ->
+//                if (cid.isNullOrBlank()) flowOf(null)
+//                else chatRepository.observeChat(cid, chatId)
+//            }
+//            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // Messages für den Chat
 //    private fun observeRealtimeMessages(companyId: String) {
@@ -83,7 +92,8 @@ class ChatViewModel(
 //    }
 
     fun loadMoreMessages() {
-        val cid = companyId.value ?: return
+//        val cid = companyId.value ?: return
+        val cid = companyId
         val oldest = oldestLoadedMessage ?: return
         if (isLoadingMore) return
 
@@ -114,24 +124,39 @@ class ChatViewModel(
 
     // Teilnehmer (für Titel/Subtitel in TopBar)
     val participants: StateFlow<List<User>> =
-        combine(companyId, chat) { cid, c -> cid to c }
-            .flatMapLatest { (cid, c) ->
-                if (cid.isNullOrBlank() || c == null || c.participantIds.isEmpty()) {
+        chat
+            .flatMapLatest { c ->
+                if (c == null || c.participantIds.isEmpty()) {
                     flowOf(emptyList())
                 } else {
-                    chatRepository.observeUsers(cid, c.participantIds)
+                    chatRepository.observeUsers(companyId, c.participantIds)
                 }
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+//    val participants: StateFlow<List<User>> =
+//        combine(companyId, chat) { cid, c -> cid to c }
+//            .flatMapLatest { (cid, c) ->
+//                if (cid.isNullOrBlank() || c == null || c.participantIds.isEmpty()) {
+//                    flowOf(emptyList())
+//                } else {
+//                    chatRepository.observeUsers(cid, c.participantIds)
+//                }
+//            }
+//            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
         viewModelScope.launch {
-            companyId
-                .filterNotNull()
-                .distinctUntilChanged()
-                .flatMapLatest { cid ->
-                    chatRepository.observeLatestMessages(cid, chatId)
-                }
+//            companyId
+//                .filterNotNull()
+//                .distinctUntilChanged()
+//                .flatMapLatest { cid ->
+//                    chatRepository.observeLatestMessages(cid, chatId)
+//                }
+            chatRepository.observeLatestMessages(companyId, chatId)
                 .collect { latestMessages ->
                     _messages.value = latestMessages
                     oldestLoadedMessage = latestMessages.firstOrNull()
@@ -149,7 +174,8 @@ class ChatViewModel(
         if (trimmed.isEmpty()) return
 
         viewModelScope.launch {
-            val cid = companyId.value
+//            val cid = companyId.value
+            val cid = companyId
             val uid = currentUserId.value
 
             if (cid.isNullOrBlank() || uid.isNullOrBlank()) return@launch
@@ -175,7 +201,8 @@ class ChatViewModel(
 
     fun markChatAsRead() {
         viewModelScope.launch {
-            val cid = companyId.value ?: return@launch
+//            val cid = companyId.value ?: return@launch
+            val cid = companyId
             val uid = currentUserId.value ?: return@launch
 
             try {
@@ -196,7 +223,8 @@ class ChatViewModel(
 
     fun editMessage(messageId: String, newText: String) {
         viewModelScope.launch {
-            val cid = companyId.value ?: return@launch
+//            val cid = companyId.value ?: return@launch
+            val cid = companyId
             val trimmed = newText.trim()
 
             if (trimmed.isEmpty()) {
@@ -214,7 +242,8 @@ class ChatViewModel(
 
     fun deleteMessage(messageId: String) {
         viewModelScope.launch {
-            val cid = companyId.value ?: return@launch
+//            val cid = companyId.value ?: return@launch
+            val cid = companyId
 
             try {
                 _loadingState.value = LoadingState.Loading("Nachricht wird gelöscht")

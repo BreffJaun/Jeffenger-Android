@@ -148,8 +148,17 @@ class MainActivity : ComponentActivity() {
         if (intent?.action != "OPEN_CHAT") return
 
         val chatId = intent.getStringExtra("chatId") ?: return
+        val companyId = intent.getStringExtra("companyId") ?: return
 
-        navController.navigate(ChatRoute(id = chatId)) {
+//        navController.navigate(ChatRoute(id = chatId)) {
+//            launchSingleTop = true // JUST PUSH 1x TIME ON THIS STACK
+//        }
+        navController.navigate(
+            ChatRoute(
+                id = chatId,
+                companyId = companyId
+            )
+        ) {
             launchSingleTop = true // JUST PUSH 1x TIME ON THIS STACK
         }
     }

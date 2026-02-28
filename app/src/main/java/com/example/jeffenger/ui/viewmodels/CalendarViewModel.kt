@@ -49,13 +49,11 @@ class CalendarViewModel(
 
     // 🔹 Events (nur echte Events für Host oder Requester)
     private val eventsFlow: Flow<List<CalendarEvent>> =
-        combine(companyId, hostUserId) { companyId, hostId ->
-            companyId to hostId
-        }.flatMapLatest { (companyId, hostId) ->
-            if (companyId == null || hostId == null) {
+        hostUserId.flatMapLatest { hostId ->
+            if (hostId == null) {
                 flowOf(emptyList())
             } else {
-                repository.observeEventsForHost(hostId, companyId)
+                repository.observeEventsForHost(hostId)
             }
         }
 
@@ -73,17 +71,37 @@ class CalendarViewModel(
 
     // 🔹 Kombinierte Liste für UI
     val eventsForList: StateFlow<List<CalendarListItem>> =
-        combine(eventsFlow, busyFlow, currentUserId) { events, busySlots, currentUserId ->
+        combine(eventsFlow, busyFlow, currentUserId, hostUserId)
+        { events, busySlots, currentUserId, hostUserId ->
 
-            val zone = ZoneId.systemDefault()
+            if (currentUserId == null || hostUserId == null) {
+                return@combine emptyList()
+            }
 
-            val eventIds = events.map { it.id }.toSet()
+            val visibleEvents = events.filter { event ->
+
+                when (currentUserId) {
+
+                    // Jeff sieht alles
+                    hostUserId -> true
+
+                    // Ersteller sieht nur seine eigenen
+                    event.requestedByUserId -> true
+
+                    // Eingeladene sehen nur ihre Events
+                    in event.attendeeIds -> true
+
+                    else -> false
+                }
+            }
+
+            val visibleEventIds = visibleEvents.map { it.id }.toSet()
 
             val busyItems = busySlots
-                .filter { it.eventId !in eventIds } // Keine Duplikate
+                .filter { it.eventId !in visibleEventIds }
                 .map { CalendarListItem.Busy(it) }
 
-            val eventItems = events
+            val eventItems = visibleEvents
                 .map { CalendarListItem.Event(it) }
 
             (eventItems + busyItems)

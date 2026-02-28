@@ -8,8 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface CalendarRepositoryInterface {
 
     fun observeEventsForHost(
-        hostUserId: String,
-        companyId: String
+        hostUserId: String
     ): Flow<List<CalendarEvent>>
 
     fun observeBusySlots(

@@ -8,9 +8,12 @@ import kotlinx.coroutines.flow.Flow
 interface ChatRepositoryInterface {
 
     fun observeChatsForUser(companyId: String, userId: String): Flow<List<Chat>>
-//    fun observeChats(): Flow<List<Chat>>
+
+    fun observeChatsForUserGlobal(userId: String): Flow<List<Chat>>
+
+    fun observeAllCompanyMembers(): Flow<Map<String, List<User>>>
+
     fun observeChat(companyId: String, chatId: String): Flow<Chat?>
-//    fun observeMessages(companyId: String, chatId: String): Flow<List<Message>>
 
     fun observeLatestMessages(companyId: String, chatId: String): Flow<List<Message>>
 
@@ -67,6 +70,8 @@ interface ChatRepositoryInterface {
         chatId: String,
         messageId: String
     )
+
+//    fun observeUsersFromMultipleCompanies(userIds: List<String>): Flow<List<User>>
 }
 
 

@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp
 
 data class ChatListItemUiModel(
     val chatId: String,
+    val companyId: String?,
     val displayName: String,
     val lastMessageText: String?,
     val lastMessageTimestamp: Timestamp? = null,

@@ -39,7 +39,8 @@ fun ChatsScreen(
     openNewChatSheetFlow: SharedFlow<Unit>,
     snackbarHostState: SnackbarHostState,
     viewModel: ChatsViewModel = koinViewModel(),
-    onNavigateToDetail: (String) -> Unit
+//    onNavigateToDetail: (String) -> Unit
+    onNavigateToDetail: (String, String) -> Unit
 ) {
     LogComposable("ChatsScreen") {
         val scheme = MaterialTheme.colorScheme
@@ -56,8 +57,11 @@ fun ChatsScreen(
         Log.d("DEBUG", "StartState = $startState")
 
         LaunchedEffect(Unit) {
-            viewModel.navigateToChat.collect { chatId ->
-                onNavigateToDetail(chatId)
+//            viewModel.navigateToChat.collect { chatId ->
+//                onNavigateToDetail(chatId)
+//            }
+            viewModel.navigateToChat.collect { (chatId, companyId) ->
+                onNavigateToDetail(chatId, companyId)
             }
         }
 
@@ -124,8 +128,17 @@ fun ChatsScreen(
                     ) { item ->
                         ChatListItem(
                             item = item,
-                            onClick = { onNavigateToDetail(item.chatId) }
+                            onClick = {
+                                item.companyId?.let { cid ->
+//                                    Log.d("NAV_DEBUG", "chatId=${item.chatId} companyId=${item.companyId}")
+                                    onNavigateToDetail(item.chatId, cid)
+                                }
+                            }
                         )
+//                        ChatListItem(
+//                            item = item,
+//                            onClick = { onNavigateToDetail(item.chatId) }
+//                        )
                     }
                 }
 

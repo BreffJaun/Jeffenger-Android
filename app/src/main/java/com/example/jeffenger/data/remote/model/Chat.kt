@@ -9,6 +9,7 @@ data class Chat(
     val id: String = "",
 
     val participantIds: List<String> = emptyList(),
+    var companyId: String? = null,
     val groupChat: Boolean = false,
 
     val title: String? = null,            // Groupname

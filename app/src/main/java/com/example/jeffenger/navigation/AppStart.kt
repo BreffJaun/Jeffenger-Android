@@ -167,9 +167,17 @@ fun AppStart(
                     ChatsScreen(
                         openNewChatSheetFlow = openNewChatSheet,
                         snackbarHostState = snackbarHostState,
-                        onNavigateToDetail = { chatId ->
+//                        onNavigateToDetail = { chatId ->
+//                            navController.navigate(
+//                                ChatRoute(id = chatId)
+//                            )
+//                        }
+                        onNavigateToDetail = { chatId, companyId ->
                             navController.navigate(
-                                ChatRoute(id = chatId)
+                                ChatRoute(
+                                    id = chatId,
+                                    companyId = companyId
+                                )
                             )
                         }
                     )

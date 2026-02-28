@@ -45,6 +45,7 @@ class JeffengerMessagingService : FirebaseMessagingService() {
         }
 
         val chatId = message.data["chatId"] ?: return
+        val companyId = message.data["companyId"] ?: return
 
         if (
             AppForegroundState.isAppInForeground &&
@@ -64,6 +65,7 @@ class JeffengerMessagingService : FirebaseMessagingService() {
             Intent(this, com.example.jeffenger.MainActivity::class.java).apply {
                 action = "OPEN_CHAT"
                 putExtra("chatId", chatId)
+                putExtra("companyId", companyId)
                 addFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TOP or
                     Intent.FLAG_ACTIVITY_SINGLE_TOP or

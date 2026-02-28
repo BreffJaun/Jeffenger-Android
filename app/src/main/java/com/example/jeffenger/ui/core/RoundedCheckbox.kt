@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -21,32 +22,80 @@ import androidx.compose.ui.unit.dp
 fun RoundCheckbox(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     val scheme = MaterialTheme.colorScheme
+
+    val borderColor =
+        when {
+            !enabled -> scheme.outline.copy(alpha = 0.4f)
+            checked -> scheme.secondary
+            else -> scheme.outline
+        }
+
+    val checkColor =
+        if (enabled) scheme.secondary
+        else scheme.secondary.copy(alpha = 0.4f)
 
     Box(
         modifier = modifier
             .size(22.dp)
             .clip(CircleShape)
-            .background(
-                Color.Transparent
-            )
+            .background(Color.Transparent)
             .border(
                 width = 2.dp,
-                color = if (checked) scheme.secondary else scheme.outline,
+                color = borderColor,
                 shape = CircleShape
             )
-            .clickable { onCheckedChange(!checked) },
+            .clickable(
+                enabled = enabled
+            ) {
+                onCheckedChange(!checked)
+            }
+            .alpha(if (enabled) 1f else 0.5f),
         contentAlignment = Alignment.Center
     ) {
         if (checked) {
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = null,
-                tint = scheme.secondary,
+                tint = checkColor,
                 modifier = Modifier.size(14.dp)
             )
         }
     }
 }
+//@Composable
+//fun RoundCheckbox(
+//    checked: Boolean,
+//    onCheckedChange: (Boolean) -> Unit,
+//    modifier: Modifier = Modifier
+//) {
+//    val scheme = MaterialTheme.colorScheme
+//
+//    Box(
+//        modifier = modifier
+//            .size(22.dp)
+//            .clip(CircleShape)
+//            .background(
+//                Color.Transparent
+//            )
+//            .border(
+//                width = 2.dp,
+//                color = if (checked) scheme.secondary else scheme.outline,
+//                shape = CircleShape
+//            )
+//            .clickable { onCheckedChange(!checked) },
+//        contentAlignment = Alignment.Center
+//    ) {
+//        if (checked) {
+//            Icon(
+//                imageVector = Icons.Default.Check,
+//                contentDescription = null,
+//                tint = scheme.secondary,
+//                modifier = Modifier.size(14.dp)
+//            )
+//        }
+//    }
+//}

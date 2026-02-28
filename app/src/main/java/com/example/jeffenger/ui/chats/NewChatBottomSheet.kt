@@ -50,6 +50,8 @@ fun NewChatBottomSheet(
         val groupTitle by viewModel.groupTitle.collectAsState()
         val groupImageUri by viewModel.groupImageUri.collectAsState()
         val showGroupSection = selectedIds.isNotEmpty()
+        val isGlobal by viewModel.currentUserIsGlobalState.collectAsState()
+        val lockedCompanyId by viewModel.lockedCompanyId.collectAsState()
 
         val photoPickerLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.PickVisualMedia()
@@ -87,6 +89,13 @@ fun NewChatBottomSheet(
             BackgroundWrapper(
                 isSheet = true
             ) {
+
+                if (isGlobal) {
+                    // GROUPED UI
+                } else {
+                    // Alte UI
+                }
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -150,12 +159,26 @@ fun NewChatBottomSheet(
 
                                 Spacer(Modifier.weight(1f))
 
+                                val disabled =
+                                    lockedCompanyId != null &&
+                                            lockedCompanyId != user.companyId
+
                                 RoundCheckbox(
                                     checked = isSelected,
+                                    enabled = !disabled,
                                     onCheckedChange = {
-                                        viewModel.toggleParticipantSelection(user.id)
+                                        if (!disabled) {
+                                            viewModel.toggleParticipantSelection(user)
+                                        }
                                     }
                                 )
+
+//                                RoundCheckbox(
+//                                    checked = isSelected,
+//                                    onCheckedChange = {
+//                                        viewModel.toggleParticipantSelection(user.id)
+//                                    }
+//                                )
                             }
                         }
                     }
