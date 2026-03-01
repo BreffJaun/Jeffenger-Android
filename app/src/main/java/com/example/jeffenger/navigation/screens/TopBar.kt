@@ -190,13 +190,13 @@ fun TopBar(
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 
-                            GlassIconButton(onClick = { /* Calendar */ }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.CalendarToday,
-                                    tint = scheme.outlineVariant,
-                                    contentDescription = "Calendar"
-                                )
-                            }
+//                            GlassIconButton(onClick = { /* Calendar */ }) {
+//                                Icon(
+//                                    imageVector = Icons.Outlined.CalendarToday,
+//                                    tint = scheme.outlineVariant,
+//                                    contentDescription = "Calendar"
+//                                )
+//                            }
 
                             GlassIconButton(onClick = onAddChatClick) {
                                 Icon(

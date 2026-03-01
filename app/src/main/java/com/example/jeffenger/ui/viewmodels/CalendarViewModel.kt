@@ -1,11 +1,14 @@
 package com.example.jeffenger.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jeffenger.data.remote.model.CalendarBusySlot
 import com.example.jeffenger.data.remote.model.CalendarEvent
+import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.CalendarRepositoryInterface
+import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.UserRepositoryInterface
 import com.example.jeffenger.utils.enums.EventStatus
 import com.example.jeffenger.utils.state.CalendarListItem
@@ -17,37 +20,79 @@ import java.time.ZoneId
 class CalendarViewModel(
     private val repository: CalendarRepositoryInterface,
     private val authRepository: AuthRepositoryInterface,
-    private val userRepository: UserRepositoryInterface
+    private val userRepository: UserRepositoryInterface,
+    private val chatRepository: ChatRepositoryInterface
 ) : ViewModel() {
 
-    // 🔹 Snackbar
+    // Snackbar
     private val _uiEvents = MutableSharedFlow<String>()
     val uiEvents = _uiEvents.asSharedFlow()
 
-    // 🔹 Current User
+    // Current User
     val currentUserId: StateFlow<String?> =
         authRepository.authState
             .map { it?.uid }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    // 🔹 CompanyId
+    // CompanyId
     val companyId: StateFlow<String?> =
         userRepository.appUser
             .map { it?.companyId }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    // 🔹 Global Jeff ID
+    // Global Jeff ID
     val hostUserId: StateFlow<String?> =
         userRepository.observeGlobalUsers()
             .map { users -> users.firstOrNull { it.global }?.id }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    // Check for events
-    val hasDateItems: (LocalDate) -> Boolean = { date ->
-        hasBusyOrEvent(date)
+    // Check if currentUser is also the Host (Global User)
+    val currentUserIsHost: StateFlow<Boolean> =
+        combine(currentUserId, hostUserId) { current, host ->
+            current != null && host != null && current == host
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            false
+        )
+
+    // Mitglieder der aktuellen Firma
+    val companyMembers: StateFlow<List<User>> =
+        companyId.flatMapLatest { companyId ->
+            if (companyId == null) {
+                flowOf(emptyList())
+            } else {
+                chatRepository.observeCompanyMembers(companyId)
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
+
+    // Global User → alle Firmen gruppiert
+    val groupedMembersForGlobal: StateFlow<Map<String, List<User>>> =
+        chatRepository.observeAllCompanyMembers()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                emptyMap()
+            )
+
+    init {
+        viewModelScope.launch {
+            currentUserIsHost.collect {
+                Log.d("HOST_CHECK", "isHost = $it")
+            }
+        }
     }
 
-    // 🔹 Events (nur echte Events für Host oder Requester)
+    // Check for events
+//    val hasDateItems: (LocalDate) -> Boolean = { date ->
+//        hasBusyOrEvent(date)
+//    }
+
+    // Events (nur echte Events für Host oder Requester)
     private val eventsFlow: Flow<List<CalendarEvent>> =
         hostUserId.flatMapLatest { hostId ->
             if (hostId == null) {
@@ -57,7 +102,7 @@ class CalendarViewModel(
             }
         }
 
-    // 🔹 Busy Slots (für alle sichtbar)
+    // Busy Slots (für alle sichtbar)
     private val busyFlow: Flow<List<CalendarBusySlot>> =
         combine(companyId, hostUserId) { companyId, hostId ->
             companyId to hostId
@@ -69,10 +114,10 @@ class CalendarViewModel(
             }
         }
 
-    // 🔹 Kombinierte Liste für UI
+    // Kombinierte Liste für UI
     val eventsForList: StateFlow<List<CalendarListItem>> =
-        combine(eventsFlow, busyFlow, currentUserId, hostUserId)
-        { events, busySlots, currentUserId, hostUserId ->
+        combine(eventsFlow, busyFlow, currentUserId, hostUserId, currentUserIsHost)
+        { events, busySlots, currentUserId, hostUserId, isHost ->
 
             if (currentUserId == null || hostUserId == null) {
                 return@combine emptyList()
@@ -114,11 +159,11 @@ class CalendarViewModel(
         }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // 🔹 Grid Punkt Logik
-    fun hasBusyOrEvent(date: LocalDate): Boolean {
+    // Grid Punkt Logik
+    fun getStatusForDate(date: LocalDate): EventStatus? {
         val zone = ZoneId.systemDefault()
 
-        return eventsForList.value.any { item ->
+        val itemsForDate = eventsForList.value.filter { item ->
             when (item) {
                 is CalendarListItem.Event ->
                     item.event.startTime.toDate()
@@ -133,9 +178,23 @@ class CalendarViewModel(
                         .toLocalDate() == date
             }
         }
+
+        val events = itemsForDate.filterIsInstance<CalendarListItem.Event>()
+
+        if (events.isEmpty()) {
+            return if (itemsForDate.isNotEmpty()) EventStatus.ACCEPTED else null
+        }
+
+        // Priorität (damit nicht random)
+        return when {
+            events.any { it.event.status == EventStatus.PENDING } -> EventStatus.PENDING
+            events.any { it.event.status == EventStatus.DECLINED } -> EventStatus.DECLINED
+            events.any { it.event.status == EventStatus.CANCELLED } -> EventStatus.CANCELLED
+            else -> EventStatus.ACCEPTED
+        }
     }
 
-    // 🔹 Create Event
+    // Create Event
     fun createEvent(event: CalendarEvent) {
         viewModelScope.launch {
             repository.createEvent(event)
@@ -143,10 +202,24 @@ class CalendarViewModel(
         }
     }
 
-    // 🔹 Update Status (nur Host darf)
+    // Update Status (nur Host darf)
     fun updateStatus(eventId: String, newStatus: EventStatus) {
         viewModelScope.launch {
             repository.updateEventStatus(eventId, newStatus)
+        }
+    }
+
+    fun deleteEvent(eventId: String) {
+        viewModelScope.launch {
+            repository.deleteEvent(eventId)
+            _uiEvents.emit("Termin gelöscht")
+        }
+    }
+
+    fun updateEvent(event: CalendarEvent) {
+        viewModelScope.launch {
+            repository.updateEvent(event)
+            _uiEvents.emit("Termin aktualisiert")
         }
     }
 }

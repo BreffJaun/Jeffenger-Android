@@ -8,6 +8,7 @@ val TealLight = Color(0xFFBCFEEA)
 
 // Status
 val Red = Color(0xFFFF6655)
+val Yellow = Color(0xFFFFC107)
 val Blue = Color(0xFF007BFF)
 val Blue_Light = Color(0xFFB3D1FF)
 

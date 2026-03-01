@@ -61,10 +61,6 @@ class ChatsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
 
-//    val currentUserIsGlobalState = userRepository.appUser
-//            .map { it?.global == true }
-//            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
-
     val currentUserIsGlobalState =
         combine(
             currentUserIdState,
@@ -516,24 +512,24 @@ class ChatsViewModel(
     }
 
 
-    init {
-        viewModelScope.launch {
-            currentUserIsGlobalState.collect {
-                Log.d("GLOBAL_CHECK", "currentUserIsGlobal = $it")
-            }
-        }
-
-        viewModelScope.launch {
-            jeffUserIdState.collect {
-                Log.d("GLOBAL_CHECK", "jeffUserId = $it")
-            }
-        }
-
-        viewModelScope.launch {
-            currentUserIdState.collect {
-                Log.d("GLOBAL_CHECK", "currentUserId = $it")
-            }
-        }
-    }
+//    init {
+//        viewModelScope.launch {
+//            currentUserIsGlobalState.collect {
+//                Log.d("GLOBAL_CHECK", "currentUserIsGlobal = $it")
+//            }
+//        }
+//
+//        viewModelScope.launch {
+//            jeffUserIdState.collect {
+//                Log.d("GLOBAL_CHECK", "jeffUserId = $it")
+//            }
+//        }
+//
+//        viewModelScope.launch {
+//            currentUserIdState.collect {
+//                Log.d("GLOBAL_CHECK", "currentUserId = $it")
+//            }
+//        }
+//    }
 }
 

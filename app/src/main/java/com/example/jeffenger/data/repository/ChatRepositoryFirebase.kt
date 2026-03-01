@@ -82,90 +82,6 @@ class ChatRepositoryFirebase(
             awaitClose { listener.remove() }
         }
 
-//    override fun observeChatsForUserGlobal(userId: String): Flow<List<Chat>> =
-//        callbackFlow {
-//            Log.d("AUTH_DEBUG", "Auth UID from Flow = $userId")
-//
-//            val ref = db.collectionGroup(CollectionNames.CHATS.path)
-//                .whereArrayContains("participantIds", userId)
-//
-//            val listener = ref.addSnapshotListener { snapshot, error ->
-//                if (error != null) {
-//                    close(error)
-//                    return@addSnapshotListener
-//                }
-//
-//                val documents = snapshot?.documents ?: emptyList()
-//
-//                Log.d("GLOBAL_QUERY_DEBUG", "Docs size: ${documents.size}")
-//
-//                documents.forEach { doc ->
-//                    Log.d(
-//                        "GLOBAL_QUERY_DEBUG",
-//                        "DocId=${doc.id} | participants=${doc.get("participantIds")}"
-//                    )
-//                }
-//
-//                val chats = documents
-//                    .mapNotNull { it.toObject(Chat::class.java) }
-//
-//                trySend(chats)
-////                val chats = snapshot?.documents
-////                    ?.mapNotNull { it.toObject(Chat::class.java) }
-////                    ?: emptyList()
-////
-////                Log.d("GLOBAL_QUERY_DEBUG", "Chats found: ${chats.size}")
-////                trySend(chats)
-//            }
-//
-//            awaitClose { listener.remove() }
-//        }
-
-//    override fun observeAllCompanyMembers(): Flow<Map<String, List<User>>> = callbackFlow {
-//        Log.d("GLOBAL_MEMBERS", "observeAllCompanyMembers started")
-//            val ref = db.collection(CollectionNames.COMPANIES.path)
-//
-//            val listeners = mutableListOf<ListenerRegistration>()
-//            val result = mutableMapOf<String, List<User>>()
-//
-//            val companyListener = ref.addSnapshotListener { snapshot, error ->
-//
-//                if (error != null) {
-//                    Log.e("GLOBAL_MEMBERS", "companies listener error", error)
-//                    close(error)
-//                    return@addSnapshotListener
-//                }
-//                Log.d("GLOBAL_MEMBERS", "companies snapshot = ${snapshot?.size()}")
-//
-//                snapshot?.documents?.forEach { companyDoc ->
-//                    val companyId = companyDoc.id
-//
-//                    val usersRef = ref.document(companyId)
-//                        .collection(CollectionNames.USERS.path)
-//
-//                    val userListener =
-//                        usersRef.addSnapshotListener { userSnap, userErr ->
-//                            if (userErr != null) {
-//                                close(userErr)
-//                                return@addSnapshotListener
-//                            }
-//
-//                            val users = userSnap?.documents
-//                                ?.mapNotNull { it.toObject(User::class.java) }
-//                                ?: emptyList()
-//
-//                            result[companyId] = users
-//                            trySend(result)
-//                        }
-//
-//                    listeners += userListener
-//                }
-//            }
-//
-//            listeners += companyListener
-//
-//            awaitClose { listeners.forEach { it.remove() } }
-//        }
 
     override fun observeAllCompanyMembers(): Flow<Map<String, List<User>>> = callbackFlow {
 
@@ -243,14 +159,6 @@ class ChatRepositoryFirebase(
                 return@addSnapshotListener
             }
 
-//            val messages = snapshot?.documents
-//                ?.mapNotNull { it.toObject(Message::class.java) }
-//                ?.sortedWith(
-//                    compareBy<Message> { it.createdAt }
-//                        .thenBy { it.id }
-//                )
-//                ?: emptyList()
-
             val messages = snapshot?.documents
                 ?.mapNotNull { it.toObject(Message::class.java) }
                 ?.sortedWith(
@@ -284,12 +192,6 @@ class ChatRepositoryFirebase(
             .get()
             .await()
 
-//        return snapshot.documents
-//            .mapNotNull { it.toObject(Message::class.java) }
-//            .sortedWith(
-//                compareBy<Message> { it.createdAt }
-//                    .thenBy { it.id }
-//            )
 
         return snapshot?.documents
             ?.mapNotNull { it.toObject(Message::class.java) }
@@ -301,34 +203,6 @@ class ChatRepositoryFirebase(
             ?: emptyList()
     }
 
-//    override fun observeMessages(
-//        companyId: String,
-//        chatId: String
-//    ): Flow<List<Message>> = callbackFlow {
-//
-//        val ref = db.collection(CollectionNames.COMPANIES.path)
-//            .document(companyId)
-//            .collection(CollectionNames.CHATS.path)
-//            .document(chatId)
-//            .collection(CollectionNames.MESSAGES.path)
-//            .orderBy("createdAt", Query.Direction.ASCENDING)
-//            .limit(50) // Later adding "startAfter()" for loading the "rest" of the messages step by step.
-//
-//        val listener = ref.addSnapshotListener { snapshot, error ->
-//            if (error != null) {
-//                close(error)
-//                return@addSnapshotListener
-//            }
-//
-//            val messages = snapshot?.documents
-//                ?.mapNotNull { it.toObject(Message::class.java) }
-//                ?: emptyList()
-//
-//            trySend(messages)
-//        }
-//
-//        awaitClose { listener.remove() }
-//    }
 
     override fun observeUsers(
         companyId: String,
@@ -408,67 +282,6 @@ class ChatRepositoryFirebase(
 
         awaitClose { listeners.forEach { it.remove() } }
     }
-
-//    override fun observeUsersFromMultipleCompanies(
-//        userIds: List<String>
-//    ): Flow<List<User>> = callbackFlow {
-//
-//        if (userIds.isEmpty()) {
-//            trySend(emptyList())
-//            close()
-//            return@callbackFlow
-//        }
-//
-//        val listeners = mutableListOf<ListenerRegistration>()
-//        val users = mutableMapOf<String, User>()
-//
-//        // 🔥 1) Alle Company-User über collectionGroup
-//        userIds.chunked(10).forEach { chunk ->
-//
-//            val query = db.collectionGroup(CollectionNames.USERS.path)
-//                .whereIn(FieldPath.documentId(), chunk)
-//
-//            val listener = query.addSnapshotListener { snapshot, error ->
-//                if (error != null) {
-//                    close(error)
-//                    return@addSnapshotListener
-//                }
-//
-//                snapshot?.documents
-//                    ?.mapNotNull { it.toObject(User::class.java) }
-//                    ?.forEach { users[it.id] = it }
-//
-//                trySend(users.values.toList())
-//            }
-//
-//            listeners += listener
-//        }
-//
-//        // 🔥 2) Global Users ebenfalls prüfen
-//        val globalRef = db.collection(CollectionNames.GLOBAL_USERS.path)
-//
-//        userIds.chunked(10).forEach { chunk ->
-//
-//            val query = globalRef.whereIn(FieldPath.documentId(), chunk)
-//
-//            val listener = query.addSnapshotListener { snapshot, error ->
-//                if (error != null) {
-//                    close(error)
-//                    return@addSnapshotListener
-//                }
-//
-//                snapshot?.documents
-//                    ?.mapNotNull { it.toObject(User::class.java) }
-//                    ?.forEach { users[it.id] = it }
-//
-//                trySend(users.values.toList())
-//            }
-//
-//            listeners += listener
-//        }
-//
-//        awaitClose { listeners.forEach { it.remove() } }
-//    }
 
     override fun observeCompanyMembers(
         companyId: String

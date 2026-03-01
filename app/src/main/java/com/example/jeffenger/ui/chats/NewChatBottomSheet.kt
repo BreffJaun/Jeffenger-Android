@@ -41,111 +41,146 @@ fun NewChatBottomSheet(
     viewModel: ChatsViewModel,
     onClose: () -> Unit
 ) {
-    val scheme = MaterialTheme.colorScheme
+    LogComposable("NewChatBottomSheet") {
+        val scheme = MaterialTheme.colorScheme
 
-    val modalSheetState = rememberModalBottomSheetState()
+        val modalSheetState = rememberModalBottomSheetState()
 
-    val selectedIds by viewModel.selectedParticipantIds.collectAsState()
-    val isGroupMode by viewModel.isGroupMode.collectAsState()
-    val groupTitle by viewModel.groupTitle.collectAsState()
-    val groupImageUri by viewModel.groupImageUri.collectAsState()
-    val isGlobal by viewModel.currentUserIsGlobalState.collectAsState()
+        val selectedIds by viewModel.selectedParticipantIds.collectAsState()
+        val isGroupMode by viewModel.isGroupMode.collectAsState()
+        val groupTitle by viewModel.groupTitle.collectAsState()
+        val groupImageUri by viewModel.groupImageUri.collectAsState()
+        val isGlobal by viewModel.currentUserIsGlobalState.collectAsState()
 
-    // Für Jeff (alle Companies)
-    val groupedMembers by viewModel.visibleGroupedMembersUiState.collectAsState()
+        // Für Jeff (alle Companies)
+        val groupedMembers by viewModel.visibleGroupedMembersUiState.collectAsState()
 
-    // Für normale User
-    val members by when (mode) {
-        NewChatSheetMode.COMPANY ->
-            viewModel.companyMembersUiState.collectAsState()
+        // Für normale User
+        val members by when (mode) {
+            NewChatSheetMode.COMPANY ->
+                viewModel.companyMembersUiState.collectAsState()
 
-        NewChatSheetMode.COMPANY_WITH_JEFF ->
-            viewModel.companyMembersWithJeffUiState.collectAsState()
+            NewChatSheetMode.COMPANY_WITH_JEFF ->
+                viewModel.companyMembersWithJeffUiState.collectAsState()
 
-        NewChatSheetMode.GENERAL ->
-            viewModel.generalMembersUiState.collectAsState()
-    }
+            NewChatSheetMode.GENERAL ->
+                viewModel.generalMembersUiState.collectAsState()
+        }
 
-    val showGroupSection = selectedIds.isNotEmpty()
+        val showGroupSection = selectedIds.isNotEmpty()
 
-    val showGroupToggle =
-        mode == NewChatSheetMode.GENERAL &&
-                selectedIds.size == 1
+        val showGroupToggle =
+            mode == NewChatSheetMode.GENERAL &&
+                    selectedIds.size == 1
 
-    val sheetTitle = when (mode) {
-        NewChatSheetMode.COMPANY -> "Company Chat erstellen"
-        NewChatSheetMode.COMPANY_WITH_JEFF -> "Company + Jeff Chat erstellen"
-        NewChatSheetMode.GENERAL -> "Neuen Chat erstellen"
-    }
+        val sheetTitle = when (mode) {
+            NewChatSheetMode.COMPANY -> "Company Chat erstellen"
+            NewChatSheetMode.COMPANY_WITH_JEFF -> "Company + Jeff Chat erstellen"
+            NewChatSheetMode.GENERAL -> "Neuen Chat erstellen"
+        }
 
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        viewModel.setGroupImageUri(uri)
-    }
+        val photoPickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+            viewModel.setGroupImageUri(uri)
+        }
 
-    ModalBottomSheet(
-        onDismissRequest = onClose,
-        sheetState = modalSheetState,
-        dragHandle = null
-    ) {
-        BackgroundWrapper(isSheet = true) {
+        ModalBottomSheet(
+            onDismissRequest = onClose,
+            sheetState = modalSheetState,
+            dragHandle = null
+        ) {
+            BackgroundWrapper(isSheet = true) {
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-            ) {
-
-                // Drag Handle
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp, bottom = 20.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(24.dp)
                 ) {
+
+                    // Drag Handle
                     Box(
                         modifier = Modifier
-                            .width(36.dp)
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(scheme.onSurface)
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, bottom = 20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(36.dp)
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(scheme.onSurface)
+                        )
+                    }
+
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = sheetTitle,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = scheme.onSurface,
+                        textAlign = TextAlign.Center
                     )
-                }
 
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = sheetTitle,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = scheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
+                    Spacer(Modifier.height(20.dp))
 
-                Spacer(Modifier.height(20.dp))
 
-                // =========================
-                //  EINZIGE LazyColumn
-                // =========================
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                        // GLOBAL USER (Jeff)
+                        if (isGlobal && mode == NewChatSheetMode.GENERAL) {
 
-                    // ===== GLOBAL (Jeff) =====
-                    if (isGlobal && mode == NewChatSheetMode.GENERAL) {
+                            groupedMembers.forEach { (companyId, usersInCompany) ->
 
-                        groupedMembers.forEach { (companyId, usersInCompany) ->
+                                item {
+                                    Text(
+                                        text = companyId,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = scheme.primary
+                                    )
+                                }
 
-                            item {
-                                Text(
-                                    text = companyId,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = scheme.primary
-                                )
+                                items(usersInCompany, key = { it.id }) { user ->
+
+                                    val isSelected = selectedIds.contains(user.id)
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+
+                                        AvatarCircle(
+                                            avatar = mapUserToAvatarUiModel(user),
+                                            modifier = Modifier.size(40.dp)
+                                        )
+
+                                        Spacer(Modifier.width(12.dp))
+
+                                        Text(
+                                            text = user.displayName,
+                                            style = UrbanistText.BodyRegular,
+                                            color = scheme.onSurface
+                                        )
+
+                                        Spacer(Modifier.weight(1f))
+
+                                        RoundCheckbox(
+                                            checked = isSelected,
+                                            onCheckedChange = {
+                                                viewModel.toggleParticipantSelection(user)
+                                            }
+                                        )
+                                    }
+                                }
                             }
 
-                            items(usersInCompany, key = { it.id }) { user ->
+                        } else {
+                            // NORMAL USER
+
+                            items(members, key = { it.id }) { user ->
 
                                 val isSelected = selectedIds.contains(user.id)
 
@@ -178,519 +213,122 @@ fun NewChatBottomSheet(
                                 }
                             }
                         }
-
-                    } else {
-                        // ===== NORMAL USER =====
-
-                        items(members, key = { it.id }) { user ->
-
-                            val isSelected = selectedIds.contains(user.id)
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-
-                                AvatarCircle(
-                                    avatar = mapUserToAvatarUiModel(user),
-                                    modifier = Modifier.size(40.dp)
-                                )
-
-                                Spacer(Modifier.width(12.dp))
-
-                                Text(
-                                    text = user.displayName,
-                                    style = UrbanistText.BodyRegular,
-                                    color = scheme.onSurface
-                                )
-
-                                Spacer(Modifier.weight(1f))
-
-                                RoundCheckbox(
-                                    checked = isSelected,
-                                    onCheckedChange = {
-                                        viewModel.toggleParticipantSelection(user)
-                                    }
-                                )
-                            }
-                        }
                     }
-                }
 
-                Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(20.dp))
 
-                // =========================
-                // GROUP SECTION
-                // =========================
+                    // GROUP SECTION
 
-                AnimatedVisibility(visible = showGroupSection) {
+                    AnimatedVisibility(visible = showGroupSection) {
 
-                    Column {
+                        Column {
 
-                        HorizontalDivider(
-                            thickness = 1.dp,
-                            color = scheme.outline
-                        )
-
-                        Spacer(Modifier.height(16.dp))
-
-                        if (showGroupToggle) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "Als Gruppenchat erstellen",
-                                    style = UrbanistText.BodyRegular,
-                                    color = scheme.onSurfaceVariant
-                                )
-                                Spacer(Modifier.weight(1f))
-                                RoundCheckbox(
-                                    checked = isGroupMode,
-                                    onCheckedChange = {
-                                        viewModel.setGroupMode(it)
-                                    }
-                                )
-                            }
+                            HorizontalDivider(
+                                thickness = 1.dp,
+                                color = scheme.outline
+                            )
 
                             Spacer(Modifier.height(16.dp))
-                        }
 
-                        AnimatedVisibility(
-                            visible = isGroupMode || selectedIds.size >= 2
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(56.dp)
-                                        .clip(CircleShape)
-                                        .border(
-                                            1.dp,
-                                            scheme.outlineVariant,
-                                            CircleShape
-                                        )
-                                        .background(scheme.tertiaryContainer)
-                                        .clickable {
-                                            photoPickerLauncher.launch(
-                                                PickVisualMediaRequest(
-                                                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                                                )
-                                            )
-                                        },
-                                    contentAlignment = Alignment.Center
+                            if (showGroupToggle) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-
-                                    if (groupImageUri != null) {
-                                        AsyncImage(
-                                            model = groupImageUri,
-                                            contentDescription = null,
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Outlined.CameraAlt,
-                                            contentDescription = null,
-                                            tint = scheme.primary
-                                        )
-                                    }
+                                    Text(
+                                        "Als Gruppenchat erstellen",
+                                        style = UrbanistText.BodyRegular,
+                                        color = scheme.onSurfaceVariant
+                                    )
+                                    Spacer(Modifier.weight(1f))
+                                    RoundCheckbox(
+                                        checked = isGroupMode,
+                                        onCheckedChange = {
+                                            viewModel.setGroupMode(it)
+                                        }
+                                    )
                                 }
 
-                                MemberTextInput(
-                                    value = groupTitle,
-                                    placeholder = "Gruppenname (optional)",
-                                    onValueChange = {
-                                        viewModel.setGroupTitle(it)
-                                    },
-                                    modifier = Modifier.weight(1f)
-                                )
+                                Spacer(Modifier.height(16.dp))
+                            }
+
+                            AnimatedVisibility(
+                                visible = isGroupMode || selectedIds.size >= 2
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+
+                                    Box(
+                                        modifier = Modifier
+                                            .size(56.dp)
+                                            .clip(CircleShape)
+                                            .border(
+                                                1.dp,
+                                                scheme.outlineVariant,
+                                                CircleShape
+                                            )
+                                            .background(scheme.tertiaryContainer)
+                                            .clickable {
+                                                photoPickerLauncher.launch(
+                                                    PickVisualMediaRequest(
+                                                        ActivityResultContracts.PickVisualMedia.ImageOnly
+                                                    )
+                                                )
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+
+                                        if (groupImageUri != null) {
+                                            AsyncImage(
+                                                model = groupImageUri,
+                                                contentDescription = null,
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Outlined.CameraAlt,
+                                                contentDescription = null,
+                                                tint = scheme.primary
+                                            )
+                                        }
+                                    }
+
+                                    MemberTextInput(
+                                        value = groupTitle,
+                                        placeholder = "Gruppenname (optional)",
+                                        onValueChange = {
+                                            viewModel.setGroupTitle(it)
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
                             }
                         }
                     }
+
+                    Spacer(Modifier.height(24.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        ChatStartButton(
+                            text = "Chat starten",
+                            iconVector = Icons.Outlined.AddComment,
+                            onClick = {
+                                viewModel.createChatFromSelection()
+                                onClose()
+                            },
+                            enabled = selectedIds.isNotEmpty()
+                        )
+                    }
+
+                    Spacer(Modifier.height(12.dp))
                 }
-
-                Spacer(Modifier.height(24.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    ChatStartButton(
-                        text = "Chat starten",
-                        iconVector = Icons.Outlined.AddComment,
-                        onClick = {
-                            viewModel.createChatFromSelection()
-                            onClose()
-                        },
-                        enabled = selectedIds.isNotEmpty()
-                    )
-                }
-
-                Spacer(Modifier.height(12.dp))
             }
         }
     }
 }
-//
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun NewChatBottomSheet(
-//    mode: NewChatSheetMode,
-//    viewModel: ChatsViewModel,
-//    onClose: () -> Unit
-//) {
-//    LogComposable("NewChatBottomSheet") {
-//        val scheme = MaterialTheme.colorScheme
-//
-//        val modalSheetState = rememberModalBottomSheetState()
-//        val selectedIds by viewModel.selectedParticipantIds.collectAsState()
-//        val isGroupMode by viewModel.isGroupMode.collectAsState()
-//        val groupTitle by viewModel.groupTitle.collectAsState()
-//        val groupImageUri by viewModel.groupImageUri.collectAsState()
-//        val showGroupSection = selectedIds.isNotEmpty()
-//        val isGlobal by viewModel.currentUserIsGlobalState.collectAsState()
-//        val lockedCompanyId by viewModel.lockedCompanyId.collectAsState()
-//        val groupedMembers by viewModel.visibleGroupedMembersUiState.collectAsState()
-//
-//        val photoPickerLauncher = rememberLauncherForActivityResult(
-//            contract = ActivityResultContracts.PickVisualMedia()
-//        ) { uri ->
-//            viewModel.setGroupImageUri(uri)
-//        }
-//
-//        val members by when (mode) {
-//            NewChatSheetMode.COMPANY ->
-//                viewModel.companyMembersUiState.collectAsState()
-//
-//            NewChatSheetMode.COMPANY_WITH_JEFF ->
-//                viewModel.companyMembersWithJeffUiState.collectAsState()
-//
-//            NewChatSheetMode.GENERAL ->
-//                viewModel.generalMembersUiState.collectAsState()
-//        }
-//
-//        val sheetTitle = when (mode) {
-//            NewChatSheetMode.COMPANY -> "Company Chat erstellen"
-//            NewChatSheetMode.COMPANY_WITH_JEFF -> "Company + Jeff Chat erstellen"
-//            NewChatSheetMode.GENERAL -> "Neuen Chat erstellen"
-//        }
-//
-//        val showGroupToggle =
-//            mode == NewChatSheetMode.GENERAL &&
-//                    selectedIds.size == 1
-//
-//        ModalBottomSheet(
-//            onDismissRequest = onClose,
-//            sheetState = modalSheetState,
-////            containerColor = Color.Transparent
-//            dragHandle = null
-//        ) {
-//            BackgroundWrapper(
-//                isSheet = true
-//            ) {
-//
-//                if (isGlobal) {
-//
-//                    LazyColumn(
-//                        verticalArrangement = Arrangement.spacedBy(20.dp)
-//                    ) {
-//
-//                        groupedMembers.forEach { (companyId, usersInCompany) ->
-//
-//                            item {
-//                                Text(
-//                                    text = companyId,
-//                                    style = MaterialTheme.typography.titleMedium,
-//                                    color = scheme.primary
-//                                )
-//                            }
-//
-//                            items(usersInCompany, key = { it.id }) { user ->
-//
-//                                val isSelected = selectedIds.contains(user.id)
-//
-//                                Row(
-//                                    modifier = Modifier.fillMaxWidth(),
-//                                    verticalAlignment = Alignment.CenterVertically
-//                                ) {
-//
-//                                    AvatarCircle(
-//                                        avatar = mapUserToAvatarUiModel(user),
-//                                        modifier = Modifier.size(40.dp)
-//                                    )
-//
-//                                    Spacer(Modifier.width(12.dp))
-//
-//                                    Text(
-//                                        text = user.displayName,
-//                                        style = UrbanistText.BodyRegular,
-//                                        color = MaterialTheme.colorScheme.onSurface,
-//                                        maxLines = 1,
-//                                    )
-//
-//                                    Spacer(Modifier.weight(1f))
-//
-//                                    RoundCheckbox(
-//                                        checked = isSelected,
-//                                        onCheckedChange = {
-//                                            viewModel.toggleParticipantSelection(user)
-//                                        }
-//                                    )
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                } else {
-//
-//                    // Bestehende Company-UI bleibt unverändert
-//                    LazyColumn(
-//                        verticalArrangement = Arrangement.spacedBy(12.dp)
-//                    ) {
-//                        items(members, key = { it.id }) { user ->
-//
-//                            val isSelected = selectedIds.contains(user.id)
-//
-//                            Row(
-//                                modifier = Modifier.fillMaxWidth(),
-//                                verticalAlignment = Alignment.CenterVertically
-//                            ) {
-//
-//                                AvatarCircle(
-//                                    avatar = mapUserToAvatarUiModel(user),
-//                                    modifier = Modifier.size(40.dp)
-//                                )
-//
-//                                Spacer(Modifier.width(12.dp))
-//
-//                                Text(
-//                                    text = user.displayName,
-//                                    style = UrbanistText.BodyRegular,
-//                                    color = MaterialTheme.colorScheme.onSurface,
-//                                    maxLines = 1,
-//                                )
-//
-//                                Spacer(Modifier.weight(1f))
-//
-//                                RoundCheckbox(
-//                                    checked = isSelected,
-//                                    onCheckedChange = {
-//                                        viewModel.toggleParticipantSelection(user)
-//                                    }
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(24.dp)
-//                ) {
-//                    // FAKE DRAG HANDLE 😎
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(top = 4.dp, bottom = 20.dp),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Box(
-//                            modifier = Modifier
-//                                .width(36.dp)
-//                                .height(4.dp)
-//                                .clip(RoundedCornerShape(50))
-//                                .background(
-//                                    MaterialTheme.colorScheme.onSurface
-//                                )
-//                        )
-//                    }
-//
-//                    Text(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        text = sheetTitle,
-////                        style = MaterialTheme.typography.displaySmall,
-//                        style = MaterialTheme.typography.titleLarge,
-//                        color = scheme.onSurface,
-//                        textAlign = TextAlign.Center
-//                    )
-//
-//                    Spacer(Modifier.height(16.dp))
-//
-//                    LazyColumn(
-//                        verticalArrangement = Arrangement.spacedBy(12.dp)
-//                    ) {
-//                        items(members, key = { it.id }) { user ->
-//
-//                            val isSelected = selectedIds.contains(user.id)
-//
-//                            Row(
-//                                modifier = Modifier.fillMaxWidth(),
-//                                verticalAlignment = Alignment.CenterVertically
-//                            ) {
-//
-//                                AvatarCircle(
-//                                    avatar = mapUserToAvatarUiModel(user),
-//                                    modifier = Modifier.size(40.dp)
-//                                )
-//
-//                                Spacer(Modifier.width(12.dp))
-//
-//                                Text(
-//                                    text = user.displayName,
-////                                    style = MaterialTheme.typography.titleLarge,
-//                                    style = UrbanistText.BodyRegular,
-//                                    color = MaterialTheme.colorScheme.onSurface,
-//                                    maxLines = 1,
-//                                )
-//
-//                                Spacer(Modifier.weight(1f))
-//
-////                                val disabled =
-////                                    lockedCompanyId != null &&
-////                                            lockedCompanyId != user.companyId
-//
-////                                RoundCheckbox(
-////                                    checked = isSelected,
-////                                    enabled = !disabled,
-////                                    onCheckedChange = {
-////                                        if (!disabled) {
-////                                            viewModel.toggleParticipantSelection(user)
-////                                        }
-////                                    }
-////                                )
-//                                RoundCheckbox(
-//                                    checked = isSelected,
-//                                    onCheckedChange = {
-//                                        viewModel.toggleParticipantSelection(user)
-//                                    }
-//                                )
-//                            }
-//                        }
-//                    }
-//
-//                    Spacer(Modifier.height(16.dp))
-//
-//                    AnimatedVisibility(
-//                        visible = showGroupSection
-//                    ) {
-//
-//                        Column {
-//
-//                            Spacer(Modifier.height(12.dp))
-//
-//                            HorizontalDivider(
-//                                thickness = 1.dp,
-//                                color = scheme.outline
-//                            )
-//
-//                            Spacer(Modifier.height(12.dp))
-//
-//                            // Checkbox only if exactly 1 person
-//                            if (showGroupToggle) {
-//                                Row(
-//                                    verticalAlignment = Alignment.CenterVertically
-//                                ) {
-//                                    Text(
-//                                        "Als Gruppenchat erstellen",
-//                                        style = UrbanistText.BodyRegular,
-//                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                                    )
-//                                    Spacer(Modifier.weight(1f))
-//                                    RoundCheckbox(
-//                                        checked = isGroupMode,
-//                                        onCheckedChange = { viewModel.setGroupMode(it) }
-//                                    )
-//                                }
-//
-//                                Spacer(Modifier.height(12.dp))
-//                            }
-//
-//                            // Group name visible when group mode is active or >= 2 persons
-//                            AnimatedVisibility(
-//                                visible = isGroupMode || selectedIds.size >= 2
-//                            ) {
-//                                Row(
-//                                    verticalAlignment = Alignment.CenterVertically,
-//                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-//                                    modifier = Modifier.fillMaxWidth()
-//                                ) {
-//
-//                                    Box(
-//                                        modifier = Modifier
-//                                            .size(56.dp)
-//                                            .clip(CircleShape)
-//                                            .border(
-//                                                width = 1.dp,
-//                                                color = scheme.outlineVariant,
-//                                                shape = CircleShape
-//                                            )
-//                                            .background(scheme.tertiaryContainer)
-//                                            .clickable {
-//                                                photoPickerLauncher.launch(
-//                                                    PickVisualMediaRequest(
-//                                                        ActivityResultContracts.PickVisualMedia.ImageOnly
-//                                                    )
-//                                                )
-//                                            },
-//                                        contentAlignment = Alignment.Center
-//                                    ) {
-//
-//                                        if (groupImageUri != null) {
-//                                            AsyncImage(
-//                                                model = groupImageUri,
-//                                                contentDescription = null,
-//                                                modifier = Modifier
-//                                                    .fillMaxSize(),
-//                                                contentScale = ContentScale.Crop,
-//
-//                                            )
-//                                        } else {
-//                                            Icon(
-//                                                imageVector = Icons.Outlined.CameraAlt,
-//                                                contentDescription = null,
-//                                                tint = scheme.primary
-//                                            )
-//                                        }
-//                                    }
-//
-//                                    MemberTextInput(
-//                                        value = groupTitle,
-//                                        placeholder = "Gruppenname (optional)",
-//                                        onValueChange = { viewModel.setGroupTitle(it) },
-//                                        modifier = Modifier.weight(1f)
-//                                    )
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    Spacer(Modifier.height(16.dp))
-//
-//                    Row(
-//                        horizontalArrangement = Arrangement.Center,
-//                        modifier = Modifier.fillMaxWidth()
-//                    ) {
-//                        ChatStartButton(
-//                            text = "Chat starten",
-//                            iconVector = Icons.Outlined.AddComment,
-//                            onClick = {
-//                                viewModel.createChatFromSelection()
-//                                onClose()
-//                            },
-//                            outlined = false,
-//                            enabled = selectedIds.isNotEmpty()
-//                        )
-//                    }
-//
-//                    Spacer(Modifier.height(12.dp))
-//                }
-//            }
-//        }
-//    }
-//}
-//

@@ -71,7 +71,6 @@ interface ChatRepositoryInterface {
         messageId: String
     )
 
-//    fun observeUsersFromMultipleCompanies(userIds: List<String>): Flow<List<User>>
 }
 
 

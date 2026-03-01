@@ -123,4 +123,43 @@ class CalendarRepositoryFirebase(
             }
         }.await()
     }
+
+    override suspend fun deleteEvent(eventId: String) {
+
+        val eventRef = eventsCol.document(eventId)
+        val busyRef = busyCol.document(eventId)
+
+        db.runBatch { batch ->
+            batch.delete(eventRef)
+            batch.delete(busyRef)
+        }.await()
+    }
+
+    override suspend fun updateEvent(event: CalendarEvent) {
+
+        val eventRef = eventsCol.document(event.id)
+        val busyRef = busyCol.document(event.id)
+
+        db.runBatch { batch ->
+
+            batch.update(
+                eventRef,
+                mapOf(
+                    "title" to event.title,
+                    "description" to event.description,
+                    "startTime" to event.startTime,
+                    "endTime" to event.endTime,
+                    "attendeeIds" to event.attendeeIds
+                )
+            )
+
+            batch.update(
+                busyRef,
+                mapOf(
+                    "startTime" to event.startTime,
+                    "endTime" to event.endTime
+                )
+            )
+        }.await()
+    }
 }

@@ -19,12 +19,15 @@ import com.example.jeffenger.utils.debugging.LogComposable
 import org.koin.androidx.compose.koinViewModel
 import android.content.res.Configuration
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.jeffenger.data.remote.model.CalendarEvent
 import com.example.jeffenger.ui.viewmodels.CalendarViewModel
 import com.example.jeffenger.utils.enums.EventsFilter
 import com.example.jeffenger.utils.state.CalendarListItem
@@ -49,10 +52,20 @@ fun CalendarScreen(
         val userId by viewModel.currentUserId.collectAsState()
         val companyId by viewModel.companyId.collectAsState()
         val hostUserId by viewModel.hostUserId.collectAsState()
+        val isHost by viewModel.currentUserIsHost.collectAsState()
         val listItems by viewModel.eventsForList.collectAsState()
+
+//        LaunchedEffect(userId, hostUserId, isHost) {
+//            android.util.Log.d(
+//                "HOST_DEBUG",
+//                "userId=$userId | hostUserId=$hostUserId | isHost=$isHost"
+//            )
+//        }
 
         var selectedDate by remember { mutableStateOf(LocalDate.now()) }
         var filter by rememberSaveable { mutableStateOf(EventsFilter.DAY) }
+        var editingEvent by remember { mutableStateOf<CalendarEvent?>(null) }
+        var deleteEvent by remember { mutableStateOf<CalendarEvent?>(null) }
 
         LaunchedEffect(Unit) {
             viewModel.uiEvents.collect { message ->
@@ -94,7 +107,8 @@ fun CalendarScreen(
             Spacer(Modifier.height(12.dp))
 
             JeffengerCalendar(
-                hasEvent = viewModel::hasBusyOrEvent,
+//                hasEvent = viewModel::hasBusyOrEvent,
+                getStatus = viewModel::getStatusForDate,
                 selectedDate = selectedDate,
                 onDateSelected = { selectedDate = it }
             )
@@ -136,7 +150,46 @@ fun CalendarScreen(
 
                         when (item) {
                             is CalendarListItem.Event ->
-                                CalendarEventCard(event = item.event)
+                                CalendarEventCard(
+                                    event = item.event,
+                                    currentUserId = userId!!,
+                                    isHost = isHost,
+                                    onStatusChange = { newStatus ->
+                                        viewModel.updateStatus(item.event.id, newStatus)
+                                    },
+                                    onDelete = {
+                                        deleteEvent = item.event
+//                                        viewModel.deleteEvent(item.event.id)
+                                    },
+                                    onEdit = {
+                                        editingEvent = item.event
+                                    }
+                                )
+
+//                                CalendarEventCard(
+//                                    event = item.event,
+//                                    currentUserId = userId!!,
+//                                    isHost = isHost,
+//                                    onStatusChange = { newStatus ->
+//                                        viewModel.updateStatus(item.event.id, newStatus)
+//                                    }
+//                                )
+
+//                                CalendarEventCard(
+//                                    event = item.event,
+//                                    isHost = isHost,
+//                                    onStatusChange = { newStatus ->
+//                                        viewModel.updateStatus(item.event.id, newStatus)
+//                                    }
+//                                )
+
+//                                CalendarEventCard(
+//                                    event = item.event,
+//                                    isHost = userId == hostUserId,
+//                                    onStatusChange = { newStatus ->
+//                                        viewModel.updateStatus(item.event.id, newStatus)
+//                                    }
+//                                )
 
                             is CalendarListItem.Busy ->
                                 BusySlotCard(slot = item.slot)
@@ -153,10 +206,55 @@ fun CalendarScreen(
                 userId = userId!!,
                 companyId = companyId!!,
                 hostUserId = hostUserId!!,
+                viewModel = viewModel,
                 onDismiss = onDismissCreateEvent,
                 onCreate = { event ->
                     viewModel.createEvent(event)
                     onDismissCreateEvent()
+                }
+            )
+        }
+
+        editingEvent?.let { event ->
+
+            CreateEventDialog(
+                selectedDate = event.startTime.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate(),
+                userId = userId!!,
+                companyId = event.companyId,
+                hostUserId = event.hostUserId,
+                viewModel = viewModel,
+                onDismiss = { editingEvent = null },
+                onCreate = { updatedEvent ->
+                    viewModel.updateEvent(updatedEvent)
+                    editingEvent = null
+                },
+                existingEvent = event,
+            )
+        }
+
+        deleteEvent?.let { event ->
+
+            AlertDialog(
+                onDismissRequest = { deleteEvent = null },
+                title = { Text("Termin löschen") },
+                text = { Text("Möchtest du diesen Termin wirklich löschen?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.deleteEvent(event.id)
+                            deleteEvent = null
+                        }
+                    ) {
+                        Text("Löschen")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { deleteEvent = null }) {
+                        Text("Abbrechen")
+                    }
                 }
             )
         }

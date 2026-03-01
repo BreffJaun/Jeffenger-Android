@@ -7,10 +7,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.CalendarBusySlot
+import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.extensions.toLocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -19,34 +21,58 @@ import java.time.format.DateTimeFormatter
 fun BusySlotCard(
     slot: CalendarBusySlot
 ) {
-    val scheme = MaterialTheme.colorScheme
-    val zone = ZoneId.systemDefault()
+    LogComposable("BusySlotCard") {
+        val scheme = MaterialTheme.colorScheme
+        val zone = ZoneId.systemDefault()
 
-    val start = slot.startTime.toLocalDateTime(zone)
-    val end = slot.endTime.toLocalDateTime(zone)
+        val start = slot.startTime.toLocalDateTime(zone)
+        val end = slot.endTime.toLocalDateTime(zone)
 
-    val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
+        val dateFmt = remember { DateTimeFormatter.ofPattern("dd.MM.yyyy") }
+        val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(scheme.surfaceVariant)
-            .padding(16.dp)
-    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(scheme.surfaceVariant)
+                .padding(16.dp)
+        ) {
 
-        Text(
-            text = "${start.format(timeFmt)} – ${end.format(timeFmt)}",
-            style = MaterialTheme.typography.labelLarge,
-            color = scheme.primary
-        )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = start.format(dateFmt),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = scheme.primary
+                )
 
-        Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.width(8.dp))
 
-        Text(
-            text = "Termin vergeben",
-            style = MaterialTheme.typography.titleMedium,
-            color = scheme.onSurfaceVariant
-        )
+                Text(
+                    text = "|",
+                    color = scheme.onSurfaceVariant
+                )
+
+                Spacer(Modifier.width(8.dp))
+
+                Text(
+                    text = "${start.format(timeFmt)} – ${end.format(timeFmt)}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = scheme.primary
+                )
+            }
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = "Termin vergeben",
+                style = MaterialTheme.typography.titleMedium,
+                color = scheme.onSurfaceVariant
+            )
+        }
     }
 }
+
