@@ -1,8 +1,10 @@
 package com.example.jeffenger.data.repository.interfaces
 
 import com.example.jeffenger.data.remote.model.User
+import com.example.jeffenger.utils.error.AppError
 import com.example.jeffenger.utils.state.LoadingState
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
@@ -26,7 +28,8 @@ interface AuthRepositoryInterface {
     // LOGGED OUT -> FirebaseUser == null
     val authState: StateFlow<FirebaseUser?>
 
-    val errorMessage: StateFlow<String?>
+    //    val errorMessage: StateFlow<String?>
+    val errorEvents: SharedFlow<AppError>
 
     val loadingState: StateFlow<LoadingState>
 

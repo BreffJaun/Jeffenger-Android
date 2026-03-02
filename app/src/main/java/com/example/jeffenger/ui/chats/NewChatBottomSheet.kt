@@ -64,7 +64,7 @@ fun NewChatBottomSheet(
                 viewModel.companyMembersWithJeffUiState.collectAsState()
 
             NewChatSheetMode.GENERAL ->
-                viewModel.generalMembersUiState.collectAsState()
+                viewModel.companyMembersWithJeffUiState.collectAsState()
         }
 
         val showGroupSection = selectedIds.isNotEmpty()

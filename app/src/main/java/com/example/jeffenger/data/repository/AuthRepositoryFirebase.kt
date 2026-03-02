@@ -3,6 +3,8 @@ package com.example.jeffenger.data.repository
 import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.data.repository.interfaces.AuthRepositoryInterface
 import com.example.jeffenger.utils.enums.CollectionNames
+import com.example.jeffenger.utils.error.AppError
+import com.example.jeffenger.utils.error.ErrorMapper
 import com.example.jeffenger.utils.normalization.normalizeCompanyId
 import com.example.jeffenger.utils.state.LoadingState
 import com.google.android.gms.tasks.Tasks
@@ -13,6 +15,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.google.firebase.firestore.FieldValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 
 
 /**
@@ -38,8 +46,11 @@ class AuthRepositoryFirebase(
     private val _authState = MutableStateFlow<FirebaseUser?>(null)
     override val authState: StateFlow<FirebaseUser?> = _authState.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    override val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    //    private val _errorMessage = MutableStateFlow<String?>(null)
+    //    override val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    private val _errorEvents = MutableSharedFlow<AppError>()
+    override val errorEvents: SharedFlow<AppError> = _errorEvents.asSharedFlow()
+    private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
     private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     override val loadingState: StateFlow<LoadingState> = _loadingState.asStateFlow()
@@ -57,11 +68,19 @@ class AuthRepositoryFirebase(
             .addOnSuccessListener {
                 _loadingState.value = LoadingState.Success()
             }
-            .addOnFailureListener {
-                _loadingState.value = LoadingState.Error(
-                    it.message ?: "Login fehlgeschlagen"
-                )
+            .addOnFailureListener { throwable ->
+
+                repositoryScope.launch {
+                    _errorEvents.emit(ErrorMapper.map(throwable))
+                }
+
+                _loadingState.value = LoadingState.Idle
             }
+//            .addOnFailureListener {
+//                _loadingState.value = LoadingState.Error(
+//                    it.message ?: "Login fehlgeschlagen"
+//                )
+//            }
     }
 
     override fun registerWithEmailAndPassword(
@@ -103,16 +122,28 @@ class AuthRepositoryFirebase(
                     .addOnSuccessListener {
                         _loadingState.value = LoadingState.Success()
                     }
-                    .addOnFailureListener {
-                        _loadingState.value =
-                            LoadingState.Error(it.message ?: "Fehler beim Speichern")
+                    .addOnFailureListener { throwable ->
+                        repositoryScope.launch {
+                            _errorEvents.emit(ErrorMapper.map(throwable))
+                        }
+                        _loadingState.value = LoadingState.Idle
                     }
+//                    .addOnFailureListener {
+//                        _loadingState.value =
+//                            LoadingState.Error(it.message ?: "Fehler beim Speichern")
+//                    }
             }
-            .addOnFailureListener {
-                _loadingState.value = LoadingState.Error(
-                    it.message ?: "Registrierung fehlgeschlagen"
-                )
+            .addOnFailureListener { throwable ->
+                repositoryScope.launch {
+                    _errorEvents.emit(ErrorMapper.map(throwable))
+                }
+                _loadingState.value = LoadingState.Idle
             }
+//            .addOnFailureListener {
+//                _loadingState.value = LoadingState.Error(
+//                    it.message ?: "Registrierung fehlgeschlagen"
+//                )
+//            }
     }
 
     override fun logout() {

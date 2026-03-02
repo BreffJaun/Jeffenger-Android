@@ -68,7 +68,7 @@ fun BusySlotCard(
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "Termin vergeben",
+                text = "Termin belegt",
                 style = MaterialTheme.typography.titleMedium,
                 color = scheme.onSurfaceVariant
             )

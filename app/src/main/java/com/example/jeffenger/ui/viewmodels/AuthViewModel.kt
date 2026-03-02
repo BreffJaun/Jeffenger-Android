@@ -31,6 +31,7 @@ class AuthViewModel(
     private val authRepository: AuthRepositoryInterface,
     private val authPreferencesRepository: AuthPreferencesRepository
 ) : ViewModel() {
+
     private val _authMode = MutableStateFlow(AuthMode.REGISTER)
     val authMode = _authMode.asStateFlow()
 
@@ -75,25 +76,55 @@ class AuthViewModel(
     val isDisplayNameValid = displayName.map { it.isNotBlank() }
     val isCompanyValid = company.map { it.isNotBlank() }
 
+//    val isFormValid = combine(
+//        isEmailValid,
+//        isPasswordValid,
+//        isDisplayNameValid,
+//        isCompanyValid,
+//        authMode
+//    ) { email, password, name, company, mode ->
+//        when (mode) {
+//            AuthMode.REGISTER -> email && password && name && company
+//            AuthMode.LOGIN -> email && password
+//        }
+//    }.stateIn(
+//        scope = viewModelScope,
+//        started = SharingStarted.WhileSubscribed(5_000),
+//        initialValue = false
+//    )
+
     val isFormValid = combine(
         isEmailValid,
+        password,
         isPasswordValid,
         isDisplayNameValid,
-        isCompanyValid,
-        authMode
-    ) { email, password, name, company, mode ->
+        isCompanyValid
+    ) { emailValid, passwordInput, passwordValid, nameValid, companyValid ->
+
+        Triple(
+            emailValid,
+            passwordInput,
+            passwordValid && nameValid && companyValid
+        )
+    }.combine(authMode) { base, mode ->
+
+        val (emailValid, passwordInput, registerValid) = base
+
         when (mode) {
-            AuthMode.REGISTER -> email && password && name && company
-            AuthMode.LOGIN -> email && password
+            AuthMode.REGISTER -> emailValid && registerValid
+            AuthMode.LOGIN -> emailValid && passwordInput.isNotBlank()
         }
+
     }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = false
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        false
     )
 
     val authState = authRepository.authState
-    val errorMessage = authRepository.errorMessage
+
+    //    val errorMessage = authRepository.errorMessage
+    val errorEvents = authRepository.errorEvents
     val loadingState = authRepository.loadingState
 
     private var lastAuthAction: (() -> Unit)? = null

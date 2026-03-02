@@ -26,3 +26,4 @@ interface CalendarRepositoryInterface {
     suspend fun deleteEvent(eventId: String)
     suspend fun updateEvent(event: CalendarEvent)
 }
+

@@ -18,7 +18,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 class CalendarViewModel(
-    private val repository: CalendarRepositoryInterface,
+    private val calendarRepository: CalendarRepositoryInterface,
     private val authRepository: AuthRepositoryInterface,
     private val userRepository: UserRepositoryInterface,
     private val chatRepository: ChatRepositoryInterface
@@ -79,30 +79,31 @@ class CalendarViewModel(
                 emptyMap()
             )
 
-    init {
-        viewModelScope.launch {
-            currentUserIsHost.collect {
-                Log.d("HOST_CHECK", "isHost = $it")
-            }
-        }
-    }
+//    init {
+//        viewModelScope.launch {
+//            currentUserIsHost.collect {
+//                Log.d("HOST_CHECK", "isHost = $it")
+//            }
+//        }
+//    }
 
     // Check for events
 //    val hasDateItems: (LocalDate) -> Boolean = { date ->
 //        hasBusyOrEvent(date)
 //    }
 
-    // Events (nur echte Events für Host oder Requester)
+    // Provides the full list of calendar events owned by the host.
+    // Visibility rules are handled later in eventsForList.
     private val eventsFlow: Flow<List<CalendarEvent>> =
         hostUserId.flatMapLatest { hostId ->
             if (hostId == null) {
                 flowOf(emptyList())
             } else {
-                repository.observeEventsForHost(hostId)
+                calendarRepository.observeEventsForHost(hostId)
             }
         }
 
-    // Busy Slots (für alle sichtbar)
+    // Busy Slots
     private val busyFlow: Flow<List<CalendarBusySlot>> =
         combine(companyId, hostUserId) { companyId, hostId ->
             companyId to hostId
@@ -110,14 +111,14 @@ class CalendarViewModel(
             if (companyId == null || hostId == null) {
                 flowOf(emptyList())
             } else {
-                repository.observeBusySlots(companyId, hostId)
+                calendarRepository.observeBusySlots(companyId, hostId)
             }
         }
 
-    // Kombinierte Liste für UI
+    // Combined list for UI
     val eventsForList: StateFlow<List<CalendarListItem>> =
-        combine(eventsFlow, busyFlow, currentUserId, hostUserId, currentUserIsHost)
-        { events, busySlots, currentUserId, hostUserId, isHost ->
+        combine(eventsFlow, busyFlow, currentUserId, hostUserId/*, currentUserIsHost*/)
+        { events, busySlots, currentUserId, hostUserId/*, isHost*/ ->
 
             if (currentUserId == null || hostUserId == null) {
                 return@combine emptyList()
@@ -197,7 +198,7 @@ class CalendarViewModel(
     // Create Event
     fun createEvent(event: CalendarEvent) {
         viewModelScope.launch {
-            repository.createEvent(event)
+            calendarRepository.createEvent(event)
             _uiEvents.emit("Termin wurde erstellt")
         }
     }
@@ -205,20 +206,20 @@ class CalendarViewModel(
     // Update Status (nur Host darf)
     fun updateStatus(eventId: String, newStatus: EventStatus) {
         viewModelScope.launch {
-            repository.updateEventStatus(eventId, newStatus)
+            calendarRepository.updateEventStatus(eventId, newStatus)
         }
     }
 
     fun deleteEvent(eventId: String) {
         viewModelScope.launch {
-            repository.deleteEvent(eventId)
+            calendarRepository.deleteEvent(eventId)
             _uiEvents.emit("Termin gelöscht")
         }
     }
 
     fun updateEvent(event: CalendarEvent) {
         viewModelScope.launch {
-            repository.updateEvent(event)
+            calendarRepository.updateEvent(event)
             _uiEvents.emit("Termin aktualisiert")
         }
     }

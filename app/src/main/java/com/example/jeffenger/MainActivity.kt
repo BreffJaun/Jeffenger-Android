@@ -72,24 +72,24 @@ class MainActivity : ComponentActivity() {
 
                 } else {
 
-                    when (loadingState) {
+//                    when (loadingState) {
+//
+//                        is LoadingState.Loading -> {
+//                            LoadingScreen(
+//                                message = (loadingState as LoadingState.Loading).message
+//                            )
+//                        }
+//
+//                        is LoadingState.Error -> {
+//                            ErrorScreen(
+//                                message = (loadingState as LoadingState.Error).message,
+//                                onRetry = {
+//                                    authViewModel.retryLastAction()
+//                                }
+//                            )
+//                        }
 
-                        is LoadingState.Loading -> {
-                            LoadingScreen(
-                                message = (loadingState as LoadingState.Loading).message
-                            )
-                        }
-
-                        is LoadingState.Error -> {
-                            ErrorScreen(
-                                message = (loadingState as LoadingState.Error).message,
-                                onRetry = {
-                                    authViewModel.retryLastAction()
-                                }
-                            )
-                        }
-
-                        else -> {
+//                        else -> {
                             if (authState != null) {
 
                                 NotificationPermissionCoordinator(
@@ -116,9 +116,9 @@ class MainActivity : ComponentActivity() {
                                     AuthScreen()
                                 }
                             }
-                        }
+//                        }
                     }
-                }
+//                }
             }
         }
     }
@@ -163,6 +163,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 
 @Preview(showBackground = true)

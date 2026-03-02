@@ -41,6 +41,7 @@ class ChatsViewModel(
     private val _uiEvents = MutableSharedFlow<String>()
     val uiEvents = _uiEvents.asSharedFlow()
 
+    // Holds the companyId of the first selected participant to restrict multi-company selections
     private val _lockedCompanyId = MutableStateFlow<String?>(null)
     val lockedCompanyId: StateFlow<String?> = _lockedCompanyId
 
@@ -92,7 +93,7 @@ class ChatsViewModel(
 
     // NAVIGATION
     // ...into a specific chat
-    private val _navigateToChat = MutableSharedFlow<Pair<String, String>>()
+    private val _navigateToChat = MutableSharedFlow<Pair<String, String>>() // (chatId to companyId)
     val navigateToChat = _navigateToChat.asSharedFlow()
 
     // RAW CHATS
@@ -127,15 +128,17 @@ class ChatsViewModel(
         )
 
     // ONLY FOR GLOBAL USER (JEFF)
+    // The global user can see members of all companies.
+    // Normal users are deliberately not given any data here.
     val groupedMembersUiState: StateFlow<Map<String, List<User>>> =
         combine(
             currentUserIsGlobalState,
             chatRepository.observeAllCompanyMembers()
         ) { isGlobal, allMembers ->
 
-            Log.d("GLOBAL_DEBUG", "isGlobal = $isGlobal")
-            Log.d("GLOBAL_DEBUG", "companies loaded = ${allMembers.keys}")
-            Log.d("GLOBAL_DEBUG", "company count = ${allMembers.size}")
+//            Log.d("GLOBAL_DEBUG", "isGlobal = $isGlobal")
+//            Log.d("GLOBAL_DEBUG", "companies loaded = ${allMembers.keys}")
+//            Log.d("GLOBAL_DEBUG", "company count = ${allMembers.size}")
 
             if (isGlobal) {
                 allMembers
@@ -148,6 +151,8 @@ class ChatsViewModel(
             emptyMap()
         )
 
+    // Filters grouped members based on the currently locked company during selection
+    // for Global User
     val visibleGroupedMembersUiState: StateFlow<Map<String, List<User>>> =
         combine(groupedMembersUiState, lockedCompanyId) { grouped, locked ->
 
@@ -188,7 +193,7 @@ class ChatsViewModel(
 
                     if (isGlobal) {
 
-                        // 🔥 Users pro Company auflösen
+                        // Users pro Company auflösen
                         val flows = chats
                             .mapNotNull { it.companyId }
                             .distinct()
@@ -233,7 +238,7 @@ class ChatsViewModel(
 
 
     // MAPPERS
-    // Wandelt ein Chat-Domain-Objekt in ein ChatListItemUiModel für die Anzeige um
+    // Converts a chat domain object into a ChatListItemUiModel for display
     private fun mapChatToUiModel(
         chat: Chat,
         currentUserId: String,
@@ -261,7 +266,7 @@ class ChatsViewModel(
         )
     }
 
-    // START CHAT LOGIK
+    // START CHAT LOGIC
     // Checks existing chats to prevent showing a sinnless button
     private fun buildStartChatUiState(
         chats: List<Chat>,
@@ -367,19 +372,19 @@ class ChatsViewModel(
         )
 
     // All company members + Jeff are available
-    val generalMembersUiState: StateFlow<List<User>> =
-        combine(companyMembersUiState, jeffUserIdState) { members, jeffId ->
-            if (jeffId == null) members
-            else members + User(
-                id = jeffId,
-                displayName = "Jeff",
-                global = true
-            )
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList()
-        )
+//    val generalMembersUiState: StateFlow<List<User>> =
+//        combine(companyMembersUiState, jeffUserIdState) { members, jeffId ->
+//            if (jeffId == null) members
+//            else members + User(
+//                id = jeffId,
+//                displayName = "Jeff",
+//                global = true
+//            )
+//        }.stateIn(
+//            viewModelScope,
+//            SharingStarted.WhileSubscribed(5_000),
+//            emptyList()
+//        )
 
     // ACTIONS
     // Create or find a direct chat with Jeff
