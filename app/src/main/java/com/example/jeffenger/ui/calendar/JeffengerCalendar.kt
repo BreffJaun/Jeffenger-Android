@@ -11,12 +11,14 @@ import com.example.jeffenger.data.remote.model.CalendarEvent
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.enums.EventStatus
 import com.example.jeffenger.utils.helper.buildMonthCells
+import com.example.jeffenger.utils.state.CalendarListItem
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneId
 
 @Composable
 fun JeffengerCalendar(
-//    hasEvent: (LocalDate) -> Boolean,
+    listItems: List<CalendarListItem>,
     getStatus: (LocalDate) -> EventStatus?,
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit
@@ -54,12 +56,16 @@ fun JeffengerCalendar(
                     if (cell.date == null) {
                         Spacer(Modifier.size(44.dp))
                     } else {
+
+                        val status = remember(listItems, cell.date) {
+                            getStatus(cell.date)
+                        }
+
                         DayCell(
                             date = cell.date,
                             isSelected = cell.date == selectedDate,
                             isToday = cell.date == today,
-//                            hasEvents = hasEvent(cell.date),
-                            status = getStatus(cell.date),
+                            status = status,
                             onClick = { onDateSelected(cell.date) }
                         )
                     }

@@ -15,6 +15,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.getValue
@@ -45,6 +47,7 @@ import com.example.jeffenger.ui.chats.ChatsScreen
 import com.example.jeffenger.ui.settings.SettingsScreen
 import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.ui.theme.UrbanistText
+import com.example.jeffenger.ui.viewmodels.AuthViewModel
 import com.example.jeffenger.ui.viewmodels.SettingsViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.debugging.LogStateMap
@@ -60,7 +63,8 @@ import kotlinx.coroutines.launch
 fun AppStart(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    settingsViewModel: SettingsViewModel = viewModel()
+//    settingsViewModel: SettingsViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     LogComposable("AppStart") {
         val scheme = MaterialTheme.colorScheme
@@ -72,6 +76,7 @@ fun AppStart(
 
         // UI STATE
 //        val selectedTab by rememberSaveable { mutableStateOf(TabItem.CHATS) }
+        val authState by authViewModel.authState.collectAsState()
 
         //
         val openNewChatSheet = remember { MutableSharedFlow<Unit>() }
@@ -92,6 +97,17 @@ fun AppStart(
 //            "AppStart",
 //            "selectedTab" to selectedTab
 //        )
+
+        LaunchedEffect(authState) {
+            if (authState == null) {
+                navController.navigate(ChatsRoute) {
+                    popUpTo(navController.graph.id) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            }
+        }
 
         Scaffold(
             modifier = modifier.fillMaxSize(),
@@ -167,11 +183,6 @@ fun AppStart(
                     ChatsScreen(
                         openNewChatSheetFlow = openNewChatSheet,
                         snackbarHostState = snackbarHostState,
-//                        onNavigateToDetail = { chatId ->
-//                            navController.navigate(
-//                                ChatRoute(id = chatId)
-//                            )
-//                        }
                         onNavigateToDetail = { chatId, companyId ->
                             navController.navigate(
                                 ChatRoute(
@@ -204,7 +215,16 @@ fun AppStart(
 
                 composable<SettingsRoute> {
                     SettingsScreen(
-                        onBack = { navController.popBackStack() }
+                        onBack = { navController.popBackStack() },
+                        onLogout = {
+                            navController.navigate(ChatsRoute) {
+                                popUpTo(navController.graph.id) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                            authViewModel.logout()
+                        }
                     )
                 }
             }
@@ -221,19 +241,3 @@ fun AppStart(
 }
 
 
-@Preview(
-    name = "Darkmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Preview(
-    name = "Lightmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-private fun AppStartPreview() {
-    AppTheme {
-//        AppStart()
-    }
-}

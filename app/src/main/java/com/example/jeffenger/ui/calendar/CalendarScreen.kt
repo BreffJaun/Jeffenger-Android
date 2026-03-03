@@ -107,7 +107,7 @@ fun CalendarScreen(
             Spacer(Modifier.height(12.dp))
 
             JeffengerCalendar(
-//                hasEvent = viewModel::hasBusyOrEvent,
+                listItems = listItems,
                 getStatus = viewModel::getStatusForDate,
                 selectedDate = selectedDate,
                 onDateSelected = { selectedDate = it }
@@ -166,31 +166,6 @@ fun CalendarScreen(
                                     }
                                 )
 
-//                                CalendarEventCard(
-//                                    event = item.event,
-//                                    currentUserId = userId!!,
-//                                    isHost = isHost,
-//                                    onStatusChange = { newStatus ->
-//                                        viewModel.updateStatus(item.event.id, newStatus)
-//                                    }
-//                                )
-
-//                                CalendarEventCard(
-//                                    event = item.event,
-//                                    isHost = isHost,
-//                                    onStatusChange = { newStatus ->
-//                                        viewModel.updateStatus(item.event.id, newStatus)
-//                                    }
-//                                )
-
-//                                CalendarEventCard(
-//                                    event = item.event,
-//                                    isHost = userId == hostUserId,
-//                                    onStatusChange = { newStatus ->
-//                                        viewModel.updateStatus(item.event.id, newStatus)
-//                                    }
-//                                )
-
                             is CalendarListItem.Busy ->
                                 BusySlotCard(slot = item.slot)
                         }
@@ -201,14 +176,27 @@ fun CalendarScreen(
 
         if (showCreateEvent && userId != null && companyId != null && hostUserId != null) {
 
-            CreateEventDialog(
+//            CreateEventDialog(
+//                selectedDate = selectedDate,
+//                userId = userId!!,
+//                companyId = companyId!!,
+//                hostUserId = hostUserId!!,
+//                viewModel = viewModel,
+//                onDismiss = onDismissCreateEvent,
+//                onCreate = { event ->
+//                    viewModel.createEvent(event)
+//                    onDismissCreateEvent()
+//                }
+//            )
+
+            EventBottomSheet(
                 selectedDate = selectedDate,
                 userId = userId!!,
                 companyId = companyId!!,
                 hostUserId = hostUserId!!,
                 viewModel = viewModel,
                 onDismiss = onDismissCreateEvent,
-                onCreate = { event ->
+                onSave = { event ->
                     viewModel.createEvent(event)
                     onDismissCreateEvent()
                 }
@@ -217,7 +205,7 @@ fun CalendarScreen(
 
         editingEvent?.let { event ->
 
-            CreateEventDialog(
+            EventBottomSheet(
                 selectedDate = event.startTime.toDate()
                     .toInstant()
                     .atZone(ZoneId.systemDefault())
@@ -227,12 +215,35 @@ fun CalendarScreen(
                 hostUserId = event.hostUserId,
                 viewModel = viewModel,
                 onDismiss = { editingEvent = null },
-                onCreate = { updatedEvent ->
-                    viewModel.updateEvent(updatedEvent)
+                onSave = { updatedEvent ->
+                    viewModel.updateEvent(
+                        updated = updatedEvent,
+                        original = event
+                    )
                     editingEvent = null
                 },
                 existingEvent = event,
             )
+
+//            CreateEventDialog(
+//                selectedDate = event.startTime.toDate()
+//                    .toInstant()
+//                    .atZone(ZoneId.systemDefault())
+//                    .toLocalDate(),
+//                userId = userId!!,
+//                companyId = event.companyId,
+//                hostUserId = event.hostUserId,
+//                viewModel = viewModel,
+//                onDismiss = { editingEvent = null },
+//                onCreate = { updatedEvent ->
+//                    viewModel.updateEvent(
+//                        updated = updatedEvent,
+//                        original = event
+//                    )
+//                    editingEvent = null
+//                },
+//                existingEvent = event,
+//            )
         }
 
         deleteEvent?.let { event ->

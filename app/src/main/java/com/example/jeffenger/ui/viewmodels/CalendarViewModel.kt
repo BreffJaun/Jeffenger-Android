@@ -12,6 +12,7 @@ import com.example.jeffenger.data.repository.interfaces.ChatRepositoryInterface
 import com.example.jeffenger.data.repository.interfaces.UserRepositoryInterface
 import com.example.jeffenger.utils.enums.EventStatus
 import com.example.jeffenger.utils.state.CalendarListItem
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -217,10 +218,70 @@ class CalendarViewModel(
         }
     }
 
-    fun updateEvent(event: CalendarEvent) {
+//    fun updateEvent(event: CalendarEvent) {
+//        viewModelScope.launch {
+//            calendarRepository.updateEvent(event)
+//            _uiEvents.emit("Termin aktualisiert")
+//        }
+//    }
+
+    fun updateEvent(
+        updated: CalendarEvent,
+        original: CalendarEvent
+    ) {
         viewModelScope.launch {
-            calendarRepository.updateEvent(event)
-            _uiEvents.emit("Termin aktualisiert")
+
+            val timeChanged =
+                updated.startTime != original.startTime ||
+                        updated.endTime != original.endTime
+
+            val finalEvent = if (timeChanged) {
+                updated.copy(
+                    status = EventStatus.PENDING,
+                    decisionAt = null
+                )
+            } else {
+                updated
+            }
+
+            calendarRepository.updateEvent(finalEvent)
+
+            _uiEvents.emit(
+                if (timeChanged)
+                    "Termin geändert – bitte erneut bestätigen"
+                else
+                    "Termin aktualisiert"
+            )
+        }
+    }
+
+    fun hasTimeCollision(
+        newStart: Timestamp,
+        newEnd: Timestamp,
+        ignoreEventId: String? = null
+    ): Boolean {
+
+        val existingItems = eventsForList.value
+
+        return existingItems.any { item ->
+
+            val existingStart: Timestamp
+            val existingEnd: Timestamp
+
+            when (item) {
+                is CalendarListItem.Event -> {
+                    if (item.event.id == ignoreEventId) return@any false
+                    existingStart = item.event.startTime
+                    existingEnd = item.event.endTime
+                }
+
+                is CalendarListItem.Busy -> {
+                    existingStart = item.slot.startTime
+                    existingEnd = item.slot.endTime
+                }
+            }
+
+            newStart < existingEnd && newEnd > existingStart
         }
     }
 }

@@ -125,6 +125,7 @@ fun AuthScreen(
         val hasSpecialChar by viewModel.hasSpecialChar.collectAsState(false)
 
         // Own scaffold only for AuthScreen
+        @Suppress("UnusedMaterial3ScaffoldPaddingParameter")
         Scaffold(
             containerColor = Color.Transparent,
             snackbarHost = {

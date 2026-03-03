@@ -149,7 +149,9 @@ class CalendarRepositoryFirebase(
                     "description" to event.description,
                     "startTime" to event.startTime,
                     "endTime" to event.endTime,
-                    "attendeeIds" to event.attendeeIds
+                    "attendeeIds" to event.attendeeIds,
+                    "status" to event.status,
+                    "decisionAt" to event.decisionAt
                 )
             )
 

@@ -22,10 +22,12 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AuthViewModel = koinViewModel()
 ) {
     LogComposable("SettingsScreen") {
+
         val scheme = MaterialTheme.colorScheme
 
         Column(
@@ -33,6 +35,7 @@ fun SettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
+
             Text(
                 "SETTINGS SCREEN",
                 color = scheme.onSurface
@@ -41,7 +44,10 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.logout() }
+                onClick = {
+                    onLogout()          // ← Navigation zuerst
+                    viewModel.logout()  // ← Danach Logout
+                }
             ) {
                 Text("Logout")
             }
@@ -49,20 +55,3 @@ fun SettingsScreen(
     }
 }
 
-
-@Preview(
-    name = "Darkmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Preview(
-    name = "Lightmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-private fun SettingsScreenPreview() {
-    AppTheme {
-//        SettingsScreen()
-    }
-}

@@ -1,5 +1,6 @@
 package com.example.jeffenger.ui.calendar
 
+import android.R.attr.end
 import android.R.attr.scheme
 import android.app.TimePickerDialog
 import androidx.compose.foundation.clickable
@@ -11,10 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.CalendarEvent
 import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.ui.core.RoundCheckbox
+import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.ui.viewmodels.CalendarViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.enums.EventStatus
@@ -42,9 +45,7 @@ fun CreateEventDialog(
     val zone = ZoneId.systemDefault()
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
-    // =========================
     // PRE-FILL STATES (EDIT MODE)
-    // =========================
 
     var title by remember(existingEvent) {
         mutableStateOf(existingEvent?.title ?: "")
@@ -76,6 +77,20 @@ fun CreateEventDialog(
         )
     }
 
+    var selectedDateState by remember {
+        mutableStateOf(selectedDate)
+    }
+
+    val dateFmt = remember { DateTimeFormatter.ofPattern("dd.MM.yyyy") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis =
+            selectedDateState
+                .atStartOfDay(zone)
+                .toInstant()
+                .toEpochMilli()
+    )
+
     var selectedParticipants by remember(existingEvent) {
         mutableStateOf(existingEvent?.attendeeIds?.toSet() ?: emptySet())
     }
@@ -89,10 +104,36 @@ fun CreateEventDialog(
     val groupedMembers by viewModel.groupedMembersForGlobal.collectAsState()
     val isHost by viewModel.currentUserIsHost.collectAsState()
 
-    // =========================
-    // TIME VALIDATION
-    // =========================
+//    LaunchedEffect(startTime, endTime, selectedDate) {
+    LaunchedEffect(startTime, endTime, selectedDateState) {
 
+        if (endTime <= startTime) {
+            timeError = "Ende muss nach dem Start liegen."
+            return@LaunchedEffect
+        }
+
+        val start = LocalDateTime.of(selectedDateState, startTime)
+        val end = LocalDateTime.of(selectedDateState, endTime)
+
+        val startTimestamp =
+            Timestamp(Date.from(start.atZone(zone).toInstant()))
+        val endTimestamp =
+            Timestamp(Date.from(end.atZone(zone).toInstant()))
+
+        val collision = viewModel.hasTimeCollision(
+            newStart = startTimestamp,
+            newEnd = endTimestamp,
+            ignoreEventId = existingEvent?.id
+        )
+
+        timeError = if (collision) {
+            "Zeitraum bereits belegt."
+        } else {
+            null
+        }
+    }
+
+    // TIME VALIDATION
     fun validateTimes(): Boolean {
         return if (endTime <= startTime) {
             timeError = "Ende muss nach dem Start liegen."
@@ -125,10 +166,7 @@ fun CreateEventDialog(
         true
     )
 
-    // =========================
     // DIALOG
-    // =========================
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -156,6 +194,17 @@ fun CreateEventDialog(
                         label = { Text("Beschreibung") },
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text("Datum")
+
+                    OutlinedButton(
+                        onClick = { showDatePicker = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(selectedDateState.format(dateFmt))
+                    }
 
                     Spacer(Modifier.height(8.dp))
 
@@ -187,8 +236,12 @@ fun CreateEventDialog(
                     if (timeError != null) {
                         Text(
                             text = timeError!!,
+                            textAlign = TextAlign.Center,
                             color = scheme.error,
-                            style = MaterialTheme.typography.bodySmall
+                            style = UrbanistText.Label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
                         )
                     }
 
@@ -233,23 +286,33 @@ fun CreateEventDialog(
         },
 
         confirmButton = {
-
             TextButton(
                 onClick = {
 
+                    // Grundlegende Zeitvalidierung
                     if (!validateTimes()) return@TextButton
 
-                    val start = LocalDateTime.of(selectedDate, startTime)
-                    val end = LocalDateTime.of(selectedDate, endTime)
+//                    val start = LocalDateTime.of(selectedDate, startTime)
+//                    val end = LocalDateTime.of(selectedDate, endTime)
+                    val start = LocalDateTime.of(selectedDateState, startTime)
+                    val end = LocalDateTime.of(selectedDateState, endTime)
 
+
+                    val startTimestamp =
+                        Timestamp(Date.from(start.atZone(zone).toInstant()))
+                    val endTimestamp =
+                        Timestamp(Date.from(end.atZone(zone).toInstant()))
+
+                    // Event erstellen oder updaten
                     val event = CalendarEvent(
                         id = existingEvent?.id ?: UUID.randomUUID().toString(),
                         companyId = companyId,
                         title = title.trim(),
                         description = description.trim(),
-                        startTime = Timestamp(Date.from(start.atZone(zone).toInstant())),
-                        endTime = Timestamp(Date.from(end.atZone(zone).toInstant())),
-                        requestedByUserId = existingEvent?.requestedByUserId ?: userId,
+                        startTime = startTimestamp,
+                        endTime = endTimestamp,
+                        requestedByUserId =
+                            existingEvent?.requestedByUserId ?: userId,
                         hostUserId = hostUserId,
                         attendeeIds = selectedParticipants.toList(),
                         participantEmails = emptyList(),
@@ -274,6 +337,37 @@ fun CreateEventDialog(
             }
         }
     )
+
+    if (showDatePicker) {
+
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            selectedDateState =
+                                Instant.ofEpochMilli(millis)
+                                    .atZone(zone)
+                                    .toLocalDate()
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDatePicker = false
+                }) {
+                    Text("Abbrechen")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }
 
 
