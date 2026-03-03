@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.CalendarEvent
+import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.ui.theme.warning
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.enums.EventStatus
@@ -59,12 +60,20 @@ fun CalendarEventCard(
                 .fillMaxWidth()
                 .combinedClickable(
                     onClick = {
-                        if (isRequester) onEdit()
+                        onEdit()
                     },
                     onLongClick = {
                         if (isHost) onDelete()
                     }
                 ),
+//                .combinedClickable(
+//                    onClick = {
+//                        if (isRequester) onEdit()
+//                    },
+//                    onLongClick = {
+//                        if (isHost) onDelete()
+//                    }
+//                ),
             shape = RoundedCornerShape(18.dp),
             color = scheme.surface,
             tonalElevation = 2.dp
@@ -106,6 +115,12 @@ fun CalendarEventCard(
                             color = scheme.onSurfaceVariant
                         )
                     }
+
+                    Text(
+                        text = event.company,
+                        style = UrbanistText.Label,
+                        color = scheme.secondary,
+                    )
 
                     Text(
                         text = event.title.ifBlank { "Termin" },

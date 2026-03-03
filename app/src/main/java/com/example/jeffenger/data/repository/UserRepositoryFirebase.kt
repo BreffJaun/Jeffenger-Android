@@ -4,6 +4,7 @@ import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.data.repository.interfaces.UserRepositoryInterface
 import com.example.jeffenger.utils.enums.CollectionNames
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.toObject
@@ -92,6 +93,33 @@ class UserRepositoryFirebase(
                 }
 
                 val users = snapshot?.toObjects(User::class.java) ?: emptyList()
+                trySend(users)
+            }
+
+        awaitClose { listener.remove() }
+    }
+
+    override fun observeUsersByIds(ids: List<String>): Flow<List<User>> = callbackFlow {
+
+        if (ids.isEmpty()) {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val listener = db.collection("users")
+            .whereIn(FieldPath.documentId(), ids)
+            .addSnapshotListener { snapshot, error ->
+
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val users = snapshot?.documents?.mapNotNull {
+                    it.toObject(User::class.java)
+                } ?: emptyList()
+
                 trySend(users)
             }
 

@@ -29,9 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.jeffenger.data.remote.model.CalendarEvent
 import com.example.jeffenger.ui.viewmodels.CalendarViewModel
+import com.example.jeffenger.utils.enums.EventSheetMode
 import com.example.jeffenger.utils.enums.EventsFilter
 import com.example.jeffenger.utils.state.CalendarListItem
 import java.time.*
+import java.time.temporal.TemporalQueries.zone
 
 
 @Composable
@@ -49,23 +51,25 @@ fun CalendarScreen(
         val snackbarHostState = remember { SnackbarHostState() }
 
         // USER + EVENTS
+        val zone = ZoneId.systemDefault()
         val userId by viewModel.currentUserId.collectAsState()
         val companyId by viewModel.companyId.collectAsState()
         val hostUserId by viewModel.hostUserId.collectAsState()
         val isHost by viewModel.currentUserIsHost.collectAsState()
         val listItems by viewModel.eventsForList.collectAsState()
 
-//        LaunchedEffect(userId, hostUserId, isHost) {
-//            android.util.Log.d(
-//                "HOST_DEBUG",
-//                "userId=$userId | hostUserId=$hostUserId | isHost=$isHost"
-//            )
-//        }
-
         var selectedDate by remember { mutableStateOf(LocalDate.now()) }
         var filter by rememberSaveable { mutableStateOf(EventsFilter.DAY) }
         var editingEvent by remember { mutableStateOf<CalendarEvent?>(null) }
         var deleteEvent by remember { mutableStateOf<CalendarEvent?>(null) }
+        var sheetMode by remember { mutableStateOf<EventSheetMode?>(null) }
+        var activeEvent by remember { mutableStateOf<CalendarEvent?>(null) }
+
+        LaunchedEffect(showCreateEvent) {
+            if (showCreateEvent) {
+                sheetMode = EventSheetMode.CREATE
+            }
+        }
 
         LaunchedEffect(Unit) {
             viewModel.uiEvents.collect { message ->
@@ -73,7 +77,12 @@ fun CalendarScreen(
             }
         }
 
-        val zone = ZoneId.systemDefault()
+        //        LaunchedEffect(userId, hostUserId, isHost) {
+//            android.util.Log.d(
+//                "HOST_DEBUG",
+//                "userId=$userId | hostUserId=$hostUserId | isHost=$isHost"
+//            )
+//        }
 
         val itemsByDate = remember(listItems) {
             listItems.groupBy { item ->
@@ -158,13 +167,33 @@ fun CalendarScreen(
                                         viewModel.updateStatus(item.event.id, newStatus)
                                     },
                                     onDelete = {
-                                        deleteEvent = item.event
-//                                        viewModel.deleteEvent(item.event.id)
+                                        viewModel.deleteEvent(item.event.id)
                                     },
                                     onEdit = {
-                                        editingEvent = item.event
+                                        activeEvent = item.event
+                                        sheetMode =
+                                            if (item.event.requestedByUserId == userId)
+                                                EventSheetMode.EDIT
+                                            else
+                                                EventSheetMode.VIEW
                                     }
                                 )
+
+//                                CalendarEventCard(
+//                                    event = item.event,
+//                                    currentUserId = userId!!,
+//                                    isHost = isHost,
+//                                    onStatusChange = { newStatus ->
+//                                        viewModel.updateStatus(item.event.id, newStatus)
+//                                    },
+//                                    onDelete = {
+//                                        deleteEvent = item.event
+////                                        viewModel.deleteEvent(item.event.id)
+//                                    },
+//                                    onEdit = {
+//                                        editingEvent = item.event
+//                                    }
+//                                )
 
                             is CalendarListItem.Busy ->
                                 BusySlotCard(slot = item.slot)
@@ -174,58 +203,49 @@ fun CalendarScreen(
             }
         }
 
-        if (showCreateEvent && userId != null && companyId != null && hostUserId != null) {
+        if (sheetMode != null && userId != null && companyId != null && hostUserId != null) {
 
-//            CreateEventDialog(
+            EventBottomSheet(
+                mode = sheetMode!!,
+                selectedDate = selectedDate,
+                userId = userId!!,
+                companyId = companyId!!,
+                hostUserId = hostUserId!!,
+                viewModel = viewModel,
+                existingEvent = activeEvent,
+                onDismiss = {
+                    sheetMode = null
+                    activeEvent = null
+                    onDismissCreateEvent()
+                },
+                onSave = { event ->
+                    if (sheetMode == EventSheetMode.CREATE)
+                        viewModel.createEvent(event)
+                    else
+                        viewModel.updateEvent(event, activeEvent!!)
+                }
+            )
+        }
+
+//        if (showCreateEvent && userId != null && companyId != null && hostUserId != null) {
+//
+//            EventBottomSheet(
 //                selectedDate = selectedDate,
 //                userId = userId!!,
 //                companyId = companyId!!,
 //                hostUserId = hostUserId!!,
 //                viewModel = viewModel,
 //                onDismiss = onDismissCreateEvent,
-//                onCreate = { event ->
+//                onSave = { event ->
 //                    viewModel.createEvent(event)
 //                    onDismissCreateEvent()
 //                }
 //            )
-
-            EventBottomSheet(
-                selectedDate = selectedDate,
-                userId = userId!!,
-                companyId = companyId!!,
-                hostUserId = hostUserId!!,
-                viewModel = viewModel,
-                onDismiss = onDismissCreateEvent,
-                onSave = { event ->
-                    viewModel.createEvent(event)
-                    onDismissCreateEvent()
-                }
-            )
-        }
-
-        editingEvent?.let { event ->
-
-            EventBottomSheet(
-                selectedDate = event.startTime.toDate()
-                    .toInstant()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate(),
-                userId = userId!!,
-                companyId = event.companyId,
-                hostUserId = event.hostUserId,
-                viewModel = viewModel,
-                onDismiss = { editingEvent = null },
-                onSave = { updatedEvent ->
-                    viewModel.updateEvent(
-                        updated = updatedEvent,
-                        original = event
-                    )
-                    editingEvent = null
-                },
-                existingEvent = event,
-            )
-
-//            CreateEventDialog(
+//        }
+//
+//        editingEvent?.let { event ->
+//
+//            EventBottomSheet(
 //                selectedDate = event.startTime.toDate()
 //                    .toInstant()
 //                    .atZone(ZoneId.systemDefault())
@@ -235,7 +255,7 @@ fun CalendarScreen(
 //                hostUserId = event.hostUserId,
 //                viewModel = viewModel,
 //                onDismiss = { editingEvent = null },
-//                onCreate = { updatedEvent ->
+//                onSave = { updatedEvent ->
 //                    viewModel.updateEvent(
 //                        updated = updatedEvent,
 //                        original = event
@@ -244,7 +264,7 @@ fun CalendarScreen(
 //                },
 //                existingEvent = event,
 //            )
-        }
+//        }
 
         deleteEvent?.let { event ->
 

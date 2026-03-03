@@ -11,4 +11,6 @@ interface UserRepositoryInterface {
 //    fun observeAppUser(): Flow<User?>
 
     fun observeGlobalUsers(): Flow<List<User>>
+
+    fun observeUsersByIds(ids: List<String>): Flow<List<User>>
 }

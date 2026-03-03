@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.CalendarEvent
 import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.ui.viewmodels.CalendarViewModel
+import com.example.jeffenger.utils.enums.EventSheetMode
 import com.example.jeffenger.utils.enums.EventStatus
 import com.google.firebase.Timestamp
 import java.time.Instant
@@ -55,6 +56,7 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventBottomSheet(
+    mode: EventSheetMode,
     selectedDate: LocalDate,
     userId: String,
     companyId: String,
@@ -69,6 +71,9 @@ fun EventBottomSheet(
     val context = LocalContext.current
     val zone = ZoneId.systemDefault()
 
+    val isEditable = mode != EventSheetMode.VIEW
+    val isCreate = mode == EventSheetMode.CREATE
+
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -78,10 +83,25 @@ fun EventBottomSheet(
 
     val isHost by viewModel.currentUserIsHost.collectAsState()
     val groupedMembers by viewModel.groupedMembersForGlobal.collectAsState()
+    val companyMembers by viewModel.companyMembers.collectAsState()
+//    val allParticipantIds = remember(existingEvent) {
+//        if (existingEvent == null) emptyList()
+//        else {
+//            buildSet {
+//                add(existingEvent.requestedByUserId)
+//                add(existingEvent.hostUserId)
+//                addAll(existingEvent.attendeeIds)
+//            }.toList()
+//        }
+//    }
+//    val allParticipants = companyMembers.filter {
+//        it.id in allParticipantIds
+//    }
+    val participants by viewModel
+        .observeParticipants(existingEvent!!)
+        .collectAsState(initial = emptyList())
 
-    var lockedCompanyId by remember { mutableStateOf<String?>(null) }
-
-    // PRE-FILL STATES (EDIT MODE)
+    // -------- STATE --------
 
     var title by remember(existingEvent) {
         mutableStateOf(existingEvent?.title ?: "")
@@ -89,6 +109,10 @@ fun EventBottomSheet(
 
     var description by remember(existingEvent) {
         mutableStateOf(existingEvent?.description ?: "")
+    }
+
+    var meetingLink by remember(existingEvent) {
+        mutableStateOf(existingEvent?.meetingLink ?: "")
     }
 
     var startTime by remember(existingEvent) {
@@ -122,6 +146,7 @@ fun EventBottomSheet(
     }
 
     var showDatePicker by remember { mutableStateOf(false) }
+    var timeError by remember { mutableStateOf<String?>(null) }
 
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis =
@@ -131,13 +156,11 @@ fun EventBottomSheet(
                 .toEpochMilli()
     )
 
-    var timeError by remember { mutableStateOf<String?>(null) }
-
-    val companyMembers by viewModel.companyMembers.collectAsState()
-
-    // COLLISION CHECK
+    // COLLISION CHECK (only at Edit/Create)
 
     LaunchedEffect(startTime, endTime, selectedDateState) {
+
+        if (!isEditable) return@LaunchedEffect
 
         if (endTime <= startTime) {
             timeError = "Ende muss nach dem Start liegen."
@@ -147,34 +170,25 @@ fun EventBottomSheet(
         val start = LocalDateTime.of(selectedDateState, startTime)
         val end = LocalDateTime.of(selectedDateState, endTime)
 
-        val startTimestamp =
-            Timestamp(Date.from(start.atZone(zone).toInstant()))
-        val endTimestamp =
-            Timestamp(Date.from(end.atZone(zone).toInstant()))
-
         val collision = viewModel.hasTimeCollision(
-            newStart = startTimestamp,
-            newEnd = endTimestamp,
-            ignoreEventId = existingEvent?.id
+            Timestamp(Date.from(start.atZone(zone).toInstant())),
+            Timestamp(Date.from(end.atZone(zone).toInstant())),
+            existingEvent?.id
         )
 
         timeError = if (collision) {
             "Zeitraum bereits belegt."
-        } else {
-            null
-        }
+        } else null
     }
 
     fun validateTimes(): Boolean {
-        return if (endTime <= startTime) {
+        if (!isEditable) return true
+        if (endTime <= startTime) {
             timeError = "Ende muss nach dem Start liegen."
-            false
-        } else {
-            true
+            return false
         }
+        return true
     }
-
-    // TIME PICKER
 
     val startPicker = TimePickerDialog(
         context,
@@ -198,7 +212,7 @@ fun EventBottomSheet(
         true
     )
 
-    // UI
+    // -------- UI --------
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -210,19 +224,18 @@ fun EventBottomSheet(
             modifier = Modifier.fillMaxHeight(0.95f)
         ) {
 
-            // HEADER
             Text(
-                text = if (existingEvent == null)
-                    "Neuer Termin"
-                else
-                    "Termin bearbeiten",
+                text = when (mode) {
+                    EventSheetMode.CREATE -> "Neuer Termin"
+                    EventSheetMode.EDIT -> "Termin bearbeiten"
+                    EventSheetMode.VIEW -> "Termin Details"
+                },
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(24.dp)
             )
 
             HorizontalDivider()
 
-            // CONTENT
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -232,44 +245,79 @@ fun EventBottomSheet(
 
                 item {
 
+                    // TITLE
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
                         label = { Text("Titel") },
+                        enabled = isEditable,
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    // DESCRIPTION
                     OutlinedTextField(
                         value = description,
                         onValueChange = { description = it },
                         label = { Text("Beschreibung") },
+                        enabled = isEditable,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp)
                     )
 
+                    // MEETING LINK
+                    if (isEditable) {
+
+                        OutlinedTextField(
+                            value = meetingLink,
+                            onValueChange = { meetingLink = it },
+                            label = { Text("Meeting Link") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                    } else {
+
+                        if (meetingLink.isNotBlank()) {
+
+                            val isUrl =
+                                android.util.Patterns.WEB_URL
+                                    .matcher(meetingLink)
+                                    .matches()
+
+                            Text(
+                                text = meetingLink,
+                                color = if (isUrl) scheme.primary else scheme.onSurface,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    // DATE
                     Text("Datum")
 
                     OutlinedButton(
-                        onClick = { showDatePicker = true },
+                        onClick = {
+                            if (isEditable) showDatePicker = true
+                        },
+                        enabled = isEditable,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(selectedDateState.format(dateFmt))
                     }
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 
                         OutlinedButton(
-                            onClick = { startPicker.show() },
+                            onClick = { if (isEditable) startPicker.show() },
+                            enabled = isEditable,
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(startTime.format(timeFmt))
                         }
 
                         OutlinedButton(
-                            onClick = { endPicker.show() },
+                            onClick = { if (isEditable) endPicker.show() },
+                            enabled = isEditable,
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(endTime.format(timeFmt))
@@ -279,12 +327,7 @@ fun EventBottomSheet(
                     if (timeError != null) {
                         Text(
                             text = timeError!!,
-                            textAlign = TextAlign.Center,
-                            color = scheme.error,
-                            style = UrbanistText.Label,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
+                            color = scheme.error
                         )
                     }
 
@@ -293,64 +336,21 @@ fun EventBottomSheet(
                     Text("Teilnehmer")
                 }
 
-                if (isHost) {
+                if (mode == EventSheetMode.VIEW) {
 
-                    val visibleGroups =
-                        if (lockedCompanyId == null) groupedMembers
-                        else groupedMembers.filterKeys { it == lockedCompanyId }
+                    items(participants, key = { it.id }) { user ->
 
-                    visibleGroups.forEach { (companyIdKey, usersInCompany) ->
-
-                        item {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = companyIdKey,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = scheme.primary
+                                text = user.displayName,
+                                style = MaterialTheme.typography.bodyMedium
                             )
-                        }
-
-                        items(usersInCompany, key = { it.id }) { user ->
-
-                            val isSelected = selectedParticipants.contains(user.id)
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-
-                                Checkbox(
-                                    checked = isSelected,
-                                    onCheckedChange = { checked ->
-
-                                        if (checked) {
-
-                                            if (lockedCompanyId == null) {
-                                                lockedCompanyId = user.companyId
-                                                selectedParticipants += user.id
-                                            } else if (lockedCompanyId == user.companyId) {
-                                                selectedParticipants += user.id
-                                            }
-
-                                        } else {
-                                            selectedParticipants -= user.id
-
-                                            if (selectedParticipants.isEmpty()) {
-                                                lockedCompanyId = null
-                                            }
-                                        }
-                                    }
-                                )
-
-                                Spacer(Modifier.width(8.dp))
-
-                                Text(user.displayName)
-                            }
                         }
                     }
 
                 } else {
-
-                    // Normaler User (wie bisher)
 
                     items(
                         companyMembers.filter {
@@ -360,13 +360,13 @@ fun EventBottomSheet(
                     ) { user ->
 
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-
                             Checkbox(
                                 checked = selectedParticipants.contains(user.id),
+                                enabled = isEditable,
                                 onCheckedChange = { checked ->
+                                    if (!isEditable) return@Checkbox
                                     selectedParticipants =
                                         if (checked)
                                             selectedParticipants + user.id
@@ -389,13 +389,13 @@ fun EventBottomSheet(
 //                ) { user ->
 //
 //                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
 //                        verticalAlignment = Alignment.CenterVertically
 //                    ) {
-//
 //                        Checkbox(
 //                            checked = selectedParticipants.contains(user.id),
+//                            enabled = isEditable,
 //                            onCheckedChange = { checked ->
+//                                if (!isEditable) return@Checkbox
 //                                selectedParticipants =
 //                                    if (checked)
 //                                        selectedParticipants + user.id
@@ -410,7 +410,6 @@ fun EventBottomSheet(
 //                }
             }
 
-            // FIXIERTE ACTION BAR
             HorizontalDivider()
 
             Row(
@@ -421,51 +420,64 @@ fun EventBottomSheet(
             ) {
 
                 TextButton(onClick = onDismiss) {
-                    Text("Abbrechen")
+                    Text("Schließen")
                 }
 
-                Button(
-                    onClick = {
+                if (isEditable) {
 
-                        if (!validateTimes()) return@Button
+                    Button(
+                        onClick = {
 
-                        val start = LocalDateTime.of(selectedDateState, startTime)
-                        val end = LocalDateTime.of(selectedDateState, endTime)
+                            if (!validateTimes()) return@Button
 
-                        val event = CalendarEvent(
-                            id = existingEvent?.id ?: UUID.randomUUID().toString(),
-                            companyId = companyId,
-                            title = title.trim(),
-                            description = description.trim(),
-                            startTime = Timestamp(Date.from(start.atZone(zone).toInstant())),
-                            endTime = Timestamp(Date.from(end.atZone(zone).toInstant())),
-                            requestedByUserId =
-                                existingEvent?.requestedByUserId ?: userId,
-                            hostUserId = hostUserId,
-                            attendeeIds = selectedParticipants.toList(),
-                            participantEmails = emptyList(),
-                            status = existingEvent?.status ?: EventStatus.PENDING,
-                            decisionAt = existingEvent?.decisionAt,
-                            createdAt = existingEvent?.createdAt ?: Timestamp.now()
+                            val start =
+                                LocalDateTime.of(selectedDateState, startTime)
+                            val end =
+                                LocalDateTime.of(selectedDateState, endTime)
+
+                            val event = CalendarEvent(
+                                id = existingEvent?.id
+                                    ?: UUID.randomUUID().toString(),
+                                companyId = companyId,
+                                title = title.trim(),
+                                description = description.trim(),
+                                meetingLink = meetingLink.trim(),
+                                startTime = Timestamp(
+                                    Date.from(start.atZone(zone).toInstant())
+                                ),
+                                endTime = Timestamp(
+                                    Date.from(end.atZone(zone).toInstant())
+                                ),
+                                requestedByUserId =
+                                    existingEvent?.requestedByUserId ?: userId,
+                                hostUserId = hostUserId,
+                                attendeeIds = selectedParticipants.toList(),
+                                participantEmails = emptyList(),
+                                status =
+                                    existingEvent?.status ?: EventStatus.PENDING,
+                                decisionAt = existingEvent?.decisionAt,
+                                createdAt =
+                                    existingEvent?.createdAt ?: Timestamp.now()
+                            )
+
+                            onSave(event)
+                            onDismiss()
+                        },
+                        enabled = title.isNotBlank() &&
+                                timeError == null &&
+                                endTime > startTime
+                    ) {
+                        Text(
+                            if (isCreate) "Erstellen"
+                            else "Speichern"
                         )
-
-                        onSave(event)
-                        onDismiss()
-                    },
-                    enabled = title.isNotBlank() &&
-                            timeError == null &&
-                            endTime > startTime
-                ) {
-                    Text(if (existingEvent == null) "Erstellen" else "Speichern")
+                    }
                 }
             }
         }
     }
 
-    // DATE PICKER
-
-    if (showDatePicker) {
-
+    if (showDatePicker && isEditable) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
@@ -479,14 +491,10 @@ fun EventBottomSheet(
                         }
                         showDatePicker = false
                     }
-                ) {
-                    Text("OK")
-                }
+                ) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    showDatePicker = false
-                }) {
+                TextButton(onClick = { showDatePicker = false }) {
                     Text("Abbrechen")
                 }
             }
@@ -495,3 +503,5 @@ fun EventBottomSheet(
         }
     }
 }
+
+

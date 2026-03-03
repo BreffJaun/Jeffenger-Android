@@ -11,9 +11,11 @@ data class CalendarEvent(
     val id: String = "",
 
     val companyId: String = "",
+    val company: String = "",
 
     val title: String = "",
     val description: String = "",
+    val meetingLink: String = "",
 
     val startTime: Timestamp = Timestamp.now(),
     val endTime: Timestamp = Timestamp.now(),

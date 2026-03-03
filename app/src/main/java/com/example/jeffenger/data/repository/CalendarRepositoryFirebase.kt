@@ -1,16 +1,19 @@
 package com.example.jeffenger.data.repository
 
+import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.data.remote.model.CalendarBusySlot
 import com.example.jeffenger.data.remote.model.CalendarEvent
 import com.example.jeffenger.data.repository.interfaces.CalendarRepositoryInterface
 import com.example.jeffenger.utils.enums.CollectionNames
 import com.example.jeffenger.utils.enums.EventStatus
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlin.jvm.java
 
 class CalendarRepositoryFirebase(
     private val db: FirebaseFirestore

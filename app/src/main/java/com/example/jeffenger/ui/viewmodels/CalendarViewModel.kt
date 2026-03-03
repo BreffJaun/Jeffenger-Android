@@ -41,6 +41,12 @@ class CalendarViewModel(
             .map { it?.companyId }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    // Company from Current User
+    val currentUserCompany: StateFlow<String?> =
+        userRepository.appUser
+            .map { it?.company }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     // Global Jeff ID
     val hostUserId: StateFlow<String?> =
         userRepository.observeGlobalUsers()
@@ -161,6 +167,17 @@ class CalendarViewModel(
         }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    fun observeParticipants(event: CalendarEvent): Flow<List<User>> {
+
+        val ids = buildSet {
+            add(event.requestedByUserId)
+            add(event.hostUserId)
+            addAll(event.attendeeIds)
+        }.toList()
+
+        return userRepository.observeUsersByIds(ids)
+    }
+
     // Grid Punkt Logik
     fun getStatusForDate(date: LocalDate): EventStatus? {
         val zone = ZoneId.systemDefault()
@@ -199,10 +216,25 @@ class CalendarViewModel(
     // Create Event
     fun createEvent(event: CalendarEvent) {
         viewModelScope.launch {
-            calendarRepository.createEvent(event)
+            val companyName = currentUserCompany
+                .filterNotNull()
+                .first()
+
+            val eventWithCompany = event.copy(
+                company = companyName
+            )
+
+            calendarRepository.createEvent(eventWithCompany)
+
             _uiEvents.emit("Termin wurde erstellt")
         }
     }
+//    fun createEvent(event: CalendarEvent) {
+//        viewModelScope.launch {
+//            calendarRepository.createEvent(event)
+//            _uiEvents.emit("Termin wurde erstellt")
+//        }
+//    }
 
     // Update Status (nur Host darf)
     fun updateStatus(eventId: String, newStatus: EventStatus) {
@@ -244,7 +276,13 @@ class CalendarViewModel(
                 updated
             }
 
-            calendarRepository.updateEvent(finalEvent)
+//            calendarRepository.updateEvent(finalEvent)
+
+            val finalWithOriginalCompany = finalEvent.copy(
+                company = original.company
+            )
+
+            calendarRepository.updateEvent(finalWithOriginalCompany)
 
             _uiEvents.emit(
                 if (timeChanged)

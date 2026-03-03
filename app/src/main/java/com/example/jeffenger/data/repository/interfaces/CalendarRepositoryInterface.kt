@@ -2,6 +2,7 @@ package com.example.jeffenger.data.repository.interfaces
 
 import com.example.jeffenger.data.remote.model.CalendarBusySlot
 import com.example.jeffenger.data.remote.model.CalendarEvent
+import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.utils.enums.EventStatus
 import kotlinx.coroutines.flow.Flow
 
@@ -25,5 +26,6 @@ interface CalendarRepositoryInterface {
 
     suspend fun deleteEvent(eventId: String)
     suspend fun updateEvent(event: CalendarEvent)
+
 }
 
