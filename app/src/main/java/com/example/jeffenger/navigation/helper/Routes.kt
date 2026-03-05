@@ -14,5 +14,10 @@ data class ChatRoute(
 @Serializable
 object CalendarRoute
 
+//@Serializable
+//data class CalendarRoute(
+//    val openEventId: String? = null
+//)
+
 @Serializable
 object SettingsRoute

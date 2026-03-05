@@ -64,4 +64,24 @@ class AppNotificationService(
 //            .notify(System.currentTimeMillis().toInt(), notification)
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    fun showEventNotification(
+        notificationId: Int,
+        title: String,
+        body: String,
+        contentIntent: android.app.PendingIntent
+    ) {
+        val notification = NotificationCompat.Builder(context, channelType.channelId)
+            .setSmallIcon(R.drawable.jeffenger_splash_icon)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setOnlyAlertOnce(true)
+            .setContentIntent(contentIntent)
+            .build()
+
+        NotificationManagerCompat.from(context).notify(notificationId, notification)
+    }
 }

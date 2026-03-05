@@ -42,13 +42,14 @@ fun CalendarScreen(
     modifier: Modifier = Modifier,
     showCreateEvent: Boolean,
     onDismissCreateEvent: () -> Unit,
+    openEventId: String? = null,
+    clearOpenEventId: () -> Unit,
+    calendarMessage: String? = null,
+    snackbarHostState: SnackbarHostState,
     viewModel: CalendarViewModel = koinViewModel(),
 ) {
     LogComposable("CalendarScreen") {
         val scheme = MaterialTheme.colorScheme
-
-        // SNACKBAR
-        val snackbarHostState = remember { SnackbarHostState() }
 
         // USER + EVENTS
         val zone = ZoneId.systemDefault()
@@ -65,6 +66,36 @@ fun CalendarScreen(
         var sheetMode by remember { mutableStateOf<EventSheetMode?>(null) }
         var activeEvent by remember { mutableStateOf<CalendarEvent?>(null) }
 
+        LaunchedEffect(openEventId, listItems) {
+
+            if (openEventId == null) return@LaunchedEffect
+
+            val event =
+                listItems
+                    .filterIsInstance<CalendarListItem.Event>()
+                    .firstOrNull { it.event.id == openEventId }
+                    ?.event
+                    ?: return@LaunchedEffect
+
+            val zone = ZoneId.systemDefault()
+
+            val eventDate =
+                event.startTime
+                    .toDate()
+                    .toInstant()
+                    .atZone(zone)
+                    .toLocalDate()
+
+            selectedDate = eventDate
+            filter = EventsFilter.DAY
+
+            activeEvent = event
+            sheetMode = EventSheetMode.VIEW
+
+            // jetzt erst konsumieren
+            clearOpenEventId()
+        }
+
         LaunchedEffect(showCreateEvent) {
             if (showCreateEvent) {
                 sheetMode = EventSheetMode.CREATE
@@ -74,6 +105,12 @@ fun CalendarScreen(
         LaunchedEffect(Unit) {
             viewModel.uiEvents.collect { message ->
                 snackbarHostState.showSnackbar(message)
+            }
+        }
+
+        LaunchedEffect(calendarMessage) {
+            if (calendarMessage != null) {
+                snackbarHostState.showSnackbar(calendarMessage)
             }
         }
 
@@ -167,8 +204,11 @@ fun CalendarScreen(
                                         viewModel.updateStatus(item.event.id, newStatus)
                                     },
                                     onDelete = {
-                                        viewModel.deleteEvent(item.event.id)
+                                        deleteEvent = item.event
                                     },
+//                                    onDelete = {
+//                                        viewModel.deleteEvent(item.event.id)
+//                                    },
                                     onEdit = {
                                         activeEvent = item.event
                                         sheetMode =
@@ -227,45 +267,6 @@ fun CalendarScreen(
             )
         }
 
-//        if (showCreateEvent && userId != null && companyId != null && hostUserId != null) {
-//
-//            EventBottomSheet(
-//                selectedDate = selectedDate,
-//                userId = userId!!,
-//                companyId = companyId!!,
-//                hostUserId = hostUserId!!,
-//                viewModel = viewModel,
-//                onDismiss = onDismissCreateEvent,
-//                onSave = { event ->
-//                    viewModel.createEvent(event)
-//                    onDismissCreateEvent()
-//                }
-//            )
-//        }
-//
-//        editingEvent?.let { event ->
-//
-//            EventBottomSheet(
-//                selectedDate = event.startTime.toDate()
-//                    .toInstant()
-//                    .atZone(ZoneId.systemDefault())
-//                    .toLocalDate(),
-//                userId = userId!!,
-//                companyId = event.companyId,
-//                hostUserId = event.hostUserId,
-//                viewModel = viewModel,
-//                onDismiss = { editingEvent = null },
-//                onSave = { updatedEvent ->
-//                    viewModel.updateEvent(
-//                        updated = updatedEvent,
-//                        original = event
-//                    )
-//                    editingEvent = null
-//                },
-//                existingEvent = event,
-//            )
-//        }
-
         deleteEvent?.let { event ->
 
             AlertDialog(
@@ -293,19 +294,3 @@ fun CalendarScreen(
 }
 
 
-@Preview(
-    name = "Darkmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Preview(
-    name = "Lightmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-private fun CalendarScreenPreview() {
-    AppTheme {
-//        CalendarScreen()
-    }
-}

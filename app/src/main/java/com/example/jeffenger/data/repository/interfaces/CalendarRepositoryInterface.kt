@@ -21,11 +21,12 @@ interface CalendarRepositoryInterface {
 
     suspend fun updateEventStatus(
         eventId: String,
-        newStatus: EventStatus
+        newStatus: EventStatus,
+        updatedByUserId: String
     )
 
-    suspend fun deleteEvent(eventId: String)
-    suspend fun updateEvent(event: CalendarEvent)
+    suspend fun deleteEvent(eventId: String, deletedByUserId: String)
+    suspend fun updateEvent(event: CalendarEvent, updatedByUserId: String)
 
 }
 

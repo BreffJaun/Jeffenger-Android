@@ -6,7 +6,6 @@ import com.google.firebase.firestore.DocumentId
 
 
 data class CalendarEvent(
-
     @DocumentId
     val id: String = "",
 
@@ -31,6 +30,7 @@ data class CalendarEvent(
     // Status
     val status: EventStatus = EventStatus.PENDING,
     val decisionAt: Timestamp? = null, // Wann Jeff entschieden hat
-
-    val createdAt: Timestamp = Timestamp.now()
+    val createdAt: Timestamp = Timestamp.now(),
+    val reminded24hUserIds: List<String> = emptyList(),
+    val reminded1hUserIds: List<String> = emptyList()
 )

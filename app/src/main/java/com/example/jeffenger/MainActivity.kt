@@ -23,6 +23,7 @@ import de.syntax_institut.jetpack.a04_05_online_shopper.utilities.BackgroundWrap
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import com.example.jeffenger.data.notifications.NotificationPermissionCoordinator
+import com.example.jeffenger.navigation.helper.CalendarRoute
 import com.example.jeffenger.navigation.helper.ChatRoute
 import com.example.jeffenger.ui.auth.AuthScreen
 import com.example.jeffenger.ui.screens.ErrorScreen
@@ -145,21 +146,73 @@ class MainActivity : ComponentActivity() {
         intent: Intent?,
         navController: NavHostController
     ) {
-        if (intent?.action != "OPEN_CHAT") return
 
-        val chatId = intent.getStringExtra("chatId") ?: return
-        val companyId = intent.getStringExtra("companyId") ?: return
+        when (intent?.action) {
 
-//        navController.navigate(ChatRoute(id = chatId)) {
-//            launchSingleTop = true // JUST PUSH 1x TIME ON THIS STACK
-//        }
-        navController.navigate(
-            ChatRoute(
-                id = chatId,
-                companyId = companyId
-            )
-        ) {
-            launchSingleTop = true // JUST PUSH 1x TIME ON THIS STACK
+            "OPEN_CHAT" -> {
+                val chatId = intent.getStringExtra("chatId") ?: return
+                val companyId = intent.getStringExtra("companyId") ?: return
+                navController.navigate(
+                    ChatRoute(
+                        id = chatId,
+                        companyId = companyId
+                    )
+                ) {
+
+                    popUpTo(navController.graph.startDestinationId) {
+                        saveState = true
+                    }
+
+                    launchSingleTop = true
+                }
+//                navController.navigate(
+//                    ChatRoute(
+//                        id = chatId,
+//                        companyId = companyId
+//                    )
+//                ) {
+//                    launchSingleTop = true
+//                }
+            }
+
+            "OPEN_CALENDAR_EVENT" -> {
+                val eventId = intent.getStringExtra("eventId") ?: return
+
+//                navController.navigate(CalendarRoute) {
+//                    launchSingleTop = true
+//                    restoreState = true
+//                }
+
+                navController.navigate(CalendarRoute) {
+
+                    popUpTo(navController.graph.startDestinationId) {
+                        saveState = true
+                    }
+
+                    launchSingleTop = true
+                    restoreState = true
+                }
+
+                val calendarEntry = navController.getBackStackEntry(CalendarRoute)
+                calendarEntry.savedStateHandle["openEventId"] = eventId
+            }
+
+
+            "OPEN_CALENDAR" -> {
+
+                val message = intent.getStringExtra("calendarMessage")
+
+                navController.navigate(CalendarRoute) {
+                    launchSingleTop = true
+                    restoreState = true
+                }
+
+                val calendarEntry = navController.getBackStackEntry(CalendarRoute)
+
+                if (message != null) {
+                    calendarEntry.savedStateHandle["calendarMessage"] = message
+                }
+            }
         }
     }
 }

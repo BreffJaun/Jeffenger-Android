@@ -81,8 +81,8 @@ fun EventBottomSheet(
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
     val dateFmt = remember { DateTimeFormatter.ofPattern("dd.MM.yyyy") }
 
-    val isHost by viewModel.currentUserIsHost.collectAsState()
-    val groupedMembers by viewModel.groupedMembersForGlobal.collectAsState()
+//    val isHost by viewModel.currentUserIsHost.collectAsState()
+//    val groupedMembers by viewModel.groupedMembersForGlobal.collectAsState()
     val companyMembers by viewModel.companyMembers.collectAsState()
 //    val allParticipantIds = remember(existingEvent) {
 //        if (existingEvent == null) emptyList()
@@ -97,9 +97,15 @@ fun EventBottomSheet(
 //    val allParticipants = companyMembers.filter {
 //        it.id in allParticipantIds
 //    }
-    val participants by viewModel
-        .observeParticipants(existingEvent!!)
-        .collectAsState(initial = emptyList())
+//    val participants by viewModel
+//        .observeParticipants(existingEvent!!)
+//        .collectAsState(initial = emptyList())
+    val participants by if (existingEvent != null) {
+        viewModel.observeParticipants(existingEvent)
+            .collectAsState(initial = emptyList())
+    } else {
+        remember { mutableStateOf(emptyList()) }
+    }
 
     // -------- STATE --------
 

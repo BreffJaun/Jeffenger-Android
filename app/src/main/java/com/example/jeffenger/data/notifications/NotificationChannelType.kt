@@ -7,5 +7,10 @@ enum class NotificationChannelType(
     CHAT_MESSAGES(
         channelId = "chat_messages_channel",
         channelName = "Chat Messages"
+    ),
+
+    CALENDAR_EVENTS(
+    channelId = "calendar_events_channel",
+    channelName = "Calendar Events"
     )
 }

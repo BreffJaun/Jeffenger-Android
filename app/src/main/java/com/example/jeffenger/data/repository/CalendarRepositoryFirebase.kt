@@ -102,7 +102,8 @@ class CalendarRepositoryFirebase(
     // 🔹 4️⃣ Status Update + Busy löschen wenn nötig
     override suspend fun updateEventStatus(
         eventId: String,
-        newStatus: EventStatus
+        newStatus: EventStatus,
+        updatedByUserId: String
     ) {
 
         val eventRef = eventsCol.document(eventId)
@@ -114,7 +115,8 @@ class CalendarRepositoryFirebase(
                 eventRef,
                 mapOf(
                     "status" to newStatus,
-                    "decisionAt" to Timestamp.now()
+                    "decisionAt" to Timestamp.now(),
+                    "updatedByUserId" to updatedByUserId
                 )
             )
 
@@ -127,18 +129,32 @@ class CalendarRepositoryFirebase(
         }.await()
     }
 
-    override suspend fun deleteEvent(eventId: String) {
+//    override suspend fun deleteEvent(eventId: String) {
+//
+//        val eventRef = eventsCol.document(eventId)
+//        val busyRef = busyCol.document(eventId)
+//
+//        db.runBatch { batch ->
+//            batch.delete(eventRef)
+//            batch.delete(busyRef)
+//        }.await()
+//    }
 
+    override suspend fun deleteEvent(eventId: String, deletedByUserId: String) {
         val eventRef = eventsCol.document(eventId)
         val busyRef = busyCol.document(eventId)
 
         db.runBatch { batch ->
+            batch.update(eventRef, mapOf("deletedByUserId" to deletedByUserId))
             batch.delete(eventRef)
             batch.delete(busyRef)
         }.await()
     }
 
-    override suspend fun updateEvent(event: CalendarEvent) {
+    override suspend fun updateEvent(
+        event: CalendarEvent,
+        updatedByUserId: String
+    ) {
 
         val eventRef = eventsCol.document(event.id)
         val busyRef = busyCol.document(event.id)
@@ -150,21 +166,35 @@ class CalendarRepositoryFirebase(
                 mapOf(
                     "title" to event.title,
                     "description" to event.description,
+                    "meetingLink" to event.meetingLink,
                     "startTime" to event.startTime,
                     "endTime" to event.endTime,
                     "attendeeIds" to event.attendeeIds,
                     "status" to event.status,
-                    "decisionAt" to event.decisionAt
+                    "decisionAt" to event.decisionAt,
+                    "updatedByUserId" to updatedByUserId,
                 )
             )
 
-            batch.update(
-                busyRef,
-                mapOf(
-                    "startTime" to event.startTime,
-                    "endTime" to event.endTime
-                )
+//            batch.update(
+//                busyRef,
+//                mapOf(
+//                    "startTime" to event.startTime,
+//                    "endTime" to event.endTime
+//                )
+//            )
+
+            val busy = CalendarBusySlot(
+                id = event.id,
+                companyId = event.companyId,
+                hostUserId = event.hostUserId,
+                startTime = event.startTime,
+                endTime = event.endTime,
+                eventId = event.id,
+                createdAt = Timestamp.now()
             )
+
+            batch.set(busyRef, busy)
         }.await()
     }
 }

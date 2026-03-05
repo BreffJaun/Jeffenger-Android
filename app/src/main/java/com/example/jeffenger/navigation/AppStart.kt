@@ -33,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.jeffenger.data.remote.model.ui_model.AvatarUiModel
 import com.example.jeffenger.navigation.components.TabItem
 import com.example.jeffenger.navigation.helper.CalendarRoute
@@ -163,7 +164,10 @@ fun AppStart(
                         currentRoute = currentRoute,
                         onTabSelected = { tab ->
                             navController.navigate(tab.route) {
-                                popUpTo(ChatsRoute) { saveState = true }
+//                                popUpTo(ChatsRoute) { saveState = true }
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -205,13 +209,64 @@ fun AppStart(
                     )
                 }
 
-                composable<CalendarRoute> {
+//                composable<CalendarRoute> { backStack ->
+//
+////                    val eventId = backStack.savedStateHandle
+////                        .get<String>("openEventId")
+//                    val eventId by backStack.savedStateHandle
+//                        .getStateFlow<String?>("openEventId", null)
+//                        .collectAsState()
+//
+//                    LaunchedEffect(eventId) {
+//                        if (eventId != null) {
+//                            backStack.savedStateHandle["openEventId"] = null
+//                        }
+//                    }
+//
+//                    CalendarScreen(
+//                        onBack = { navController.popBackStack() },
+//                        showCreateEvent = showCreateEvent,
+//                        onDismissCreateEvent = { showCreateEvent = false },
+//                        openEventId = eventId
+//                    )
+//                }
+
+                composable<CalendarRoute> { backStack ->
+
+                    val eventId by backStack.savedStateHandle
+                        .getStateFlow<String?>("openEventId", null)
+                        .collectAsState()
+
+                    val calendarMessage by backStack.savedStateHandle
+                        .getStateFlow<String?>("calendarMessage", null)
+                        .collectAsState()
+
                     CalendarScreen(
                         onBack = { navController.popBackStack() },
                         showCreateEvent = showCreateEvent,
-                        onDismissCreateEvent = { showCreateEvent = false }
+                        onDismissCreateEvent = { showCreateEvent = false },
+                        openEventId = eventId,
+                        calendarMessage = calendarMessage,
+                        snackbarHostState = snackbarHostState,
+                        clearOpenEventId = {
+                            backStack.savedStateHandle["openEventId"] = null
+                        }
                     )
+
+//                    // einmal konsumieren
+//                    LaunchedEffect(eventId) {
+//                        if (eventId != null) {
+//                            backStack.savedStateHandle["openEventId"] = null
+//                        }
+//                    }
+
+                    LaunchedEffect(calendarMessage) {
+                        if (calendarMessage != null) {
+                            backStack.savedStateHandle["calendarMessage"] = null
+                        }
+                    }
                 }
+
 
                 composable<SettingsRoute> {
                     SettingsScreen(

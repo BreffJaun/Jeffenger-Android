@@ -239,13 +239,28 @@ class CalendarViewModel(
     // Update Status (nur Host darf)
     fun updateStatus(eventId: String, newStatus: EventStatus) {
         viewModelScope.launch {
-            calendarRepository.updateEventStatus(eventId, newStatus)
+//            calendarRepository.updateEventStatus(eventId, newStatus)
+            val userId = currentUserId.value ?: return@launch
+
+            calendarRepository.updateEventStatus(
+                eventId,
+                newStatus,
+                userId
+            )
         }
     }
 
+//    fun deleteEvent(eventId: String) {
+//        viewModelScope.launch {
+//            calendarRepository.deleteEvent(eventId)
+//            _uiEvents.emit("Termin gelöscht")
+//        }
+//    }
+
     fun deleteEvent(eventId: String) {
         viewModelScope.launch {
-            calendarRepository.deleteEvent(eventId)
+            val userId = currentUserId.value ?: return@launch
+            calendarRepository.deleteEvent(eventId, userId)
             _uiEvents.emit("Termin gelöscht")
         }
     }
@@ -282,7 +297,12 @@ class CalendarViewModel(
                 company = original.company
             )
 
-            calendarRepository.updateEvent(finalWithOriginalCompany)
+            val userId = currentUserId.value ?: return@launch
+
+            calendarRepository.updateEvent(
+                finalWithOriginalCompany,
+                userId
+            )
 
             _uiEvents.emit(
                 if (timeChanged)
