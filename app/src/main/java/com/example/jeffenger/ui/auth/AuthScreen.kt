@@ -137,6 +137,12 @@ fun AuthScreen(
         val hasDigit by viewModel.hasDigit.collectAsState(false)
         val hasSpecialChar by viewModel.hasSpecialChar.collectAsState(false)
 
+        LaunchedEffect(Unit) {
+            viewModel.uiEvents.collect { message ->
+                snackbarHostState.showSnackbar(message)
+            }
+        }
+
         // Own scaffold only for AuthScreen
         @Suppress("UnusedMaterial3ScaffoldPaddingParameter")
         Scaffold(

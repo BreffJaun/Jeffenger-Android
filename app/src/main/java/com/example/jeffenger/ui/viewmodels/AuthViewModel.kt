@@ -9,10 +9,12 @@ import android.util.Patterns
 import androidx.lifecycle.viewModelScope
 import com.example.jeffenger.data.repository.AuthPreferencesRepository
 import com.example.jeffenger.utils.enums.AuthMode
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -31,6 +33,9 @@ class AuthViewModel(
     private val authRepository: AuthRepositoryInterface,
     private val authPreferencesRepository: AuthPreferencesRepository
 ) : ViewModel() {
+
+    private val _uiEvents = MutableSharedFlow<String>()
+    val uiEvents = _uiEvents.asSharedFlow()
 
     private val _authMode = MutableStateFlow(AuthMode.REGISTER)
     val authMode = _authMode.asStateFlow()
@@ -142,10 +147,14 @@ class AuthViewModel(
             company.value
         )
 
-        // SAFE IF IT WAS REGISTERED MINIMUM 1X TIME
         viewModelScope.launch {
-            authPreferencesRepository.setHasRegistered(true)
+            try {
+                authPreferencesRepository.setHasRegistered(true)
+            } catch (e: Exception) {
+                _uiEvents.emit("Einstellung konnte nicht gespeichert werden")
+            }
         }
+
         clearForm()
     }
 

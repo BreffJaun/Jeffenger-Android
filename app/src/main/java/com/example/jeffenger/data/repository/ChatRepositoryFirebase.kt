@@ -55,6 +55,7 @@ class ChatRepositoryFirebase(
 
             val ref = db.collectionGroup(CollectionNames.CHATS.path)
                 .whereArrayContains("participantIds", userId)
+                .orderBy("lastMessageTimestamp", Query.Direction.DESCENDING)
 
             val listener = ref.addSnapshotListener { snapshot, error ->
                 if (error != null) {

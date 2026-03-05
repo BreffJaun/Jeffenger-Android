@@ -7,9 +7,11 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jeffenger.dataStore
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -24,6 +26,10 @@ import kotlin.collections.get
 private val DARK_MODE_ENABLED = booleanPreferencesKey("dark_mode_enabled")
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val _uiEvents = MutableSharedFlow<String>()
+    val uiEvents = _uiEvents.asSharedFlow()
+
     // DATASTORE & DATABASE
     private val dataStore = application.dataStore
 //    private val database = TasksDatabase.getDatabase(application)
@@ -46,12 +52,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setDarkMode(value: Boolean?) {
         viewModelScope.launch {
-            dataStore.edit { prefs ->
-                if (value == null) {
-                    prefs.remove(DARK_MODE_ENABLED)
-                } else {
-                    prefs[DARK_MODE_ENABLED] = value
+            try {
+                dataStore.edit { prefs ->
+                    if (value == null) prefs.remove(DARK_MODE_ENABLED)
+                    else prefs[DARK_MODE_ENABLED] = value
                 }
+            } catch (e: Exception) {
+                _uiEvents.emit("Einstellung konnte nicht gespeichert werden")
             }
         }
     }

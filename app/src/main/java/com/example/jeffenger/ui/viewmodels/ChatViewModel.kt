@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -92,28 +93,51 @@ class ChatViewModel(
 //    }
 
     fun loadMoreMessages() {
-//        val cid = companyId.value ?: return
         val cid = companyId
         val oldest = oldestLoadedMessage ?: return
         if (isLoadingMore) return
 
         viewModelScope.launch {
-            isLoadingMore = true
+            try {
+                isLoadingMore = true
 
-            val olderMessages = chatRepository.loadMoreMessages(
-                cid,
-                chatId,
-                oldest
-            )
+                val olderMessages = chatRepository.loadMoreMessages(cid, chatId, oldest)
 
-            if (olderMessages.isNotEmpty()) {
-                _messages.value = olderMessages + _messages.value
-                oldestLoadedMessage = olderMessages.first()
+                if (olderMessages.isNotEmpty()) {
+                    _messages.value = olderMessages + _messages.value
+                    oldestLoadedMessage = olderMessages.first()
+                }
+            } catch (e: Exception) {
+                _uiEvents.emit("Weitere Nachrichten konnten nicht geladen werden")
+            } finally {
+                isLoadingMore = false
             }
-
-            isLoadingMore = false
         }
     }
+
+//    fun loadMoreMessages() {
+////        val cid = companyId.value ?: return
+//        val cid = companyId
+//        val oldest = oldestLoadedMessage ?: return
+//        if (isLoadingMore) return
+//
+//        viewModelScope.launch {
+//            isLoadingMore = true
+//
+//            val olderMessages = chatRepository.loadMoreMessages(
+//                cid,
+//                chatId,
+//                oldest
+//            )
+//
+//            if (olderMessages.isNotEmpty()) {
+//                _messages.value = olderMessages + _messages.value
+//                oldestLoadedMessage = olderMessages.first()
+//            }
+//
+//            isLoadingMore = false
+//        }
+//    }
 //    val messages: StateFlow<List<Message>> =
 //        companyId
 //            .flatMapLatest { cid ->
@@ -150,24 +174,35 @@ class ChatViewModel(
 
     init {
         viewModelScope.launch {
-//            companyId
-//                .filterNotNull()
-//                .distinctUntilChanged()
-//                .flatMapLatest { cid ->
-//                    chatRepository.observeLatestMessages(cid, chatId)
-//                }
             chatRepository.observeLatestMessages(companyId, chatId)
+                .catch { e ->
+                    _uiEvents.emit("Nachrichten konnten nicht geladen werden")
+                }
                 .collect { latestMessages ->
                     _messages.value = latestMessages
                     oldestLoadedMessage = latestMessages.firstOrNull()
 
-                    // When chat is open -> mark as read immediately
                     if (AppForegroundState.currentOpenChatId == chatId) {
                         markChatAsRead()
                     }
                 }
         }
     }
+
+//    init {
+//        viewModelScope.launch {
+//            chatRepository.observeLatestMessages(companyId, chatId)
+//                .collect { latestMessages ->
+//                    _messages.value = latestMessages
+//                    oldestLoadedMessage = latestMessages.firstOrNull()
+//
+//                    // When chat is open -> mark as read immediately
+//                    if (AppForegroundState.currentOpenChatId == chatId) {
+//                        markChatAsRead()
+//                    }
+//                }
+//        }
+//    }
 
     fun sendTextMessage(text: String) {
         val trimmed = text.trim()

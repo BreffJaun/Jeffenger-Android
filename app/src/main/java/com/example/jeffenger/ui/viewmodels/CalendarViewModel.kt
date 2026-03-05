@@ -94,11 +94,6 @@ class CalendarViewModel(
 //        }
 //    }
 
-    // Check for events
-//    val hasDateItems: (LocalDate) -> Boolean = { date ->
-//        hasBusyOrEvent(date)
-//    }
-
     // Provides the full list of calendar events owned by the host.
     // Visibility rules are handled later in eventsForList.
     private val eventsFlow: Flow<List<CalendarEvent>> =
@@ -216,22 +211,36 @@ class CalendarViewModel(
     // Create Event
     fun createEvent(event: CalendarEvent) {
         viewModelScope.launch {
-            val companyName = currentUserCompany
-                .filterNotNull()
-                .first()
+            try {
+                val companyName = currentUserCompany
+                    .filterNotNull()
+                    .first()
 
-            val eventWithCompany = event.copy(
-                company = companyName
-            )
+                val eventWithCompany = event.copy(
+                    company = companyName
+                )
 
-            calendarRepository.createEvent(eventWithCompany)
+                calendarRepository.createEvent(eventWithCompany)
 
-            _uiEvents.emit("Termin wurde erstellt")
+                _uiEvents.emit("Termin wurde erstellt")
+            } catch (e: Exception) {
+                _uiEvents.emit("Termin konnte nicht erstellt werden")
+            }
         }
     }
+
 //    fun createEvent(event: CalendarEvent) {
 //        viewModelScope.launch {
-//            calendarRepository.createEvent(event)
+//            val companyName = currentUserCompany
+//                .filterNotNull()
+//                .first()
+//
+//            val eventWithCompany = event.copy(
+//                company = companyName
+//            )
+//
+//            calendarRepository.createEvent(eventWithCompany)
+//
 //            _uiEvents.emit("Termin wurde erstellt")
 //        }
 //    }
@@ -239,79 +248,115 @@ class CalendarViewModel(
     // Update Status (nur Host darf)
     fun updateStatus(eventId: String, newStatus: EventStatus) {
         viewModelScope.launch {
-//            calendarRepository.updateEventStatus(eventId, newStatus)
-            val userId = currentUserId.value ?: return@launch
-
-            calendarRepository.updateEventStatus(
-                eventId,
-                newStatus,
-                userId
-            )
+            try {
+                val userId = currentUserId.value ?: return@launch
+                calendarRepository.updateEventStatus(eventId, newStatus, userId)
+            } catch (e: Exception) {
+                _uiEvents.emit("Status konnte nicht aktualisiert werden")
+            }
         }
     }
 
-//    fun deleteEvent(eventId: String) {
+//    fun updateStatus(eventId: String, newStatus: EventStatus) {
 //        viewModelScope.launch {
-//            calendarRepository.deleteEvent(eventId)
-//            _uiEvents.emit("Termin gelöscht")
+////            calendarRepository.updateEventStatus(eventId, newStatus)
+//            val userId = currentUserId.value ?: return@launch
+//
+//            calendarRepository.updateEventStatus(
+//                eventId,
+//                newStatus,
+//                userId
+//            )
 //        }
 //    }
 
     fun deleteEvent(eventId: String) {
         viewModelScope.launch {
-            val userId = currentUserId.value ?: return@launch
-            calendarRepository.deleteEvent(eventId, userId)
-            _uiEvents.emit("Termin gelöscht")
+            try {
+                val userId = currentUserId.value ?: return@launch
+                calendarRepository.deleteEvent(eventId, userId)
+                _uiEvents.emit("Termin gelöscht")
+            } catch (e: Exception) {
+                _uiEvents.emit("Termin konnte nicht gelöscht werden")
+            }
         }
     }
 
-//    fun updateEvent(event: CalendarEvent) {
+//    fun deleteEvent(eventId: String) {
 //        viewModelScope.launch {
-//            calendarRepository.updateEvent(event)
-//            _uiEvents.emit("Termin aktualisiert")
+//            val userId = currentUserId.value ?: return@launch
+//            calendarRepository.deleteEvent(eventId, userId)
+//            _uiEvents.emit("Termin gelöscht")
 //        }
 //    }
 
-    fun updateEvent(
-        updated: CalendarEvent,
-        original: CalendarEvent
-    ) {
+    fun updateEvent(updated: CalendarEvent, original: CalendarEvent) {
         viewModelScope.launch {
+            try {
+                val timeChanged =
+                    updated.startTime != original.startTime ||
+                            updated.endTime != original.endTime
 
-            val timeChanged =
-                updated.startTime != original.startTime ||
-                        updated.endTime != original.endTime
+                val finalEvent = if (timeChanged) {
+                    updated.copy(status = EventStatus.PENDING, decisionAt = null)
+                } else updated
 
-            val finalEvent = if (timeChanged) {
-                updated.copy(
-                    status = EventStatus.PENDING,
-                    decisionAt = null
+                val finalWithOriginalCompany = finalEvent.copy(company = original.company)
+
+                val userId = currentUserId.value ?: return@launch
+
+                calendarRepository.updateEvent(finalWithOriginalCompany, userId)
+
+                _uiEvents.emit(
+                    if (timeChanged) "Termin geändert – bitte erneut bestätigen"
+                    else "Termin aktualisiert"
                 )
-            } else {
-                updated
+            } catch (e: Exception) {
+                _uiEvents.emit("Termin konnte nicht aktualisiert werden")
             }
-
-//            calendarRepository.updateEvent(finalEvent)
-
-            val finalWithOriginalCompany = finalEvent.copy(
-                company = original.company
-            )
-
-            val userId = currentUserId.value ?: return@launch
-
-            calendarRepository.updateEvent(
-                finalWithOriginalCompany,
-                userId
-            )
-
-            _uiEvents.emit(
-                if (timeChanged)
-                    "Termin geändert – bitte erneut bestätigen"
-                else
-                    "Termin aktualisiert"
-            )
         }
     }
+
+//    fun updateEvent(
+//        updated: CalendarEvent,
+//        original: CalendarEvent
+//    ) {
+//        viewModelScope.launch {
+//
+//            val timeChanged =
+//                updated.startTime != original.startTime ||
+//                        updated.endTime != original.endTime
+//
+//            val finalEvent = if (timeChanged) {
+//                updated.copy(
+//                    status = EventStatus.PENDING,
+//                    decisionAt = null
+//                )
+//            } else {
+//                updated
+//            }
+//
+////            calendarRepository.updateEvent(finalEvent)
+//
+//            val finalWithOriginalCompany = finalEvent.copy(
+//                company = original.company
+//            )
+//
+//            val userId = currentUserId.value ?: return@launch
+//
+//            calendarRepository.updateEvent(
+//                finalWithOriginalCompany,
+//                userId
+//            )
+//
+//            _uiEvents.emit(
+//                if (timeChanged)
+//                    "Termin geändert – bitte erneut bestätigen"
+//                else
+//                    "Termin aktualisiert"
+//            )
+//        }
+//    }
 
     fun hasTimeCollision(
         newStart: Timestamp,

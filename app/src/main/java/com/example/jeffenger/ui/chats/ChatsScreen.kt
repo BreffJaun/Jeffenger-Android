@@ -52,8 +52,8 @@ fun ChatsScreen(
 
         var searchQuery by remember { mutableStateOf("") }
 
-        Log.d("DEBUG", "chatItems size = ${chatItems.size}")
-        Log.d("DEBUG", "StartState = $startState")
+//        Log.d("DEBUG", "chatItems size = ${chatItems.size}")
+//        Log.d("DEBUG", "StartState = $startState")
 
         LaunchedEffect(Unit) {
             viewModel.navigateToChat.collect { (chatId, companyId) ->
