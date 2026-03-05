@@ -36,9 +36,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -82,11 +86,15 @@ fun AuthScreen(
 
         val scheme = MaterialTheme.colorScheme
 
+        val authMode by viewModel.authMode.collectAsState()
         val loadingState by viewModel.loadingState.collectAsState()
         val scrollState = rememberScrollState()
 
         val snackbarHostState = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
+
+        val focusManager = LocalFocusManager.current
+        val passwordFocusRequester = remember { FocusRequester() }
 
         val catViewModel: CatViewModel = viewModel()
         val catUrl by catViewModel.catImageUrl.collectAsState()
@@ -97,6 +105,12 @@ fun AuthScreen(
                     ErrorMessageResolver.resolve(error)
                 catViewModel.loadRandomCat()
                 snackbarHostState.showSnackbar(friendlyMessage)
+            }
+        }
+
+        LaunchedEffect(authMode) {
+            if (authMode != null) {
+                catViewModel.clearCat()
             }
         }
 
@@ -116,7 +130,6 @@ fun AuthScreen(
         val isDisplayNameValid by viewModel.isDisplayNameValid.collectAsState(initial = false)
         val isCompanyValid by viewModel.isCompanyValid.collectAsState(initial = false)
         val isFormValid by viewModel.isFormValid.collectAsState(initial = false)
-        val authMode by viewModel.authMode.collectAsState()
 
         val hasMinLength by viewModel.hasMinLength.collectAsState(false)
         val hasUppercase by viewModel.hasUppercase.collectAsState(false)
@@ -235,7 +248,11 @@ fun AuthScreen(
                         onValueChange = viewModel::onEmailChange,
                         label = "E-Mail-Adresse",
                         placeholder = "max@firma.de",
-                        isValid = isEmailValid
+                        isValid = isEmailValid,
+                        imeAction = ImeAction.Next,
+                        onImeAction = {
+                            passwordFocusRequester.requestFocus()
+                        }
                     )
 
                     AuthTextField(
@@ -244,9 +261,14 @@ fun AuthScreen(
                         label = "Passwort",
                         placeholder = if (authMode == AuthMode.REGISTER)
                             "Sicheres Passwort"
-                        else "",
+                        else "Passwort eingeben",
                         isPassword = true,
-                        isValid = isPasswordValid
+                        isValid = if (authMode == AuthMode.REGISTER) isPasswordValid else null,
+                        imeAction = ImeAction.Done,
+                        focusRequester = passwordFocusRequester,
+                        onImeAction = {
+                            viewModel.submit()
+                        }
                     )
 
                     if (
@@ -321,7 +343,12 @@ fun AuthScreen(
                             disabledContainerColor = scheme.outline,
                             disabledContentColor = scheme.surface
                         ),
-                        modifier = Modifier.padding(bottom = 25.dp),
+                        modifier = Modifier
+                            .padding(bottom = 25.dp)
+                            .alpha(
+                                if (isFormValid && loadingState !is LoadingState.Loading) 1f else 0.6f
+                            )
+                        ,
                     ) {
                         if (loadingState is LoadingState.Loading) {
                             CircularProgressIndicator(

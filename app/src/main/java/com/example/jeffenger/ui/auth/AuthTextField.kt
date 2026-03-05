@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
@@ -29,8 +30,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -46,7 +50,10 @@ fun AuthTextField(
     label: String,
     placeholder: String,
     isPassword: Boolean = false,
-    isValid: Boolean? = null
+    isValid: Boolean? = null,
+    focusRequester: FocusRequester? = null,
+    imeAction: ImeAction = ImeAction.Next,
+    onImeAction: (() -> Unit)? = null
 ) {
     val scheme = MaterialTheme.colorScheme
     val interactionSource = remember { MutableInteractionSource() }
@@ -104,14 +111,28 @@ fun AuthTextField(
                     value = value,
                     onValueChange = onValueChange,
                     singleLine = true,
+//                    keyboardOptions = KeyboardOptions(
+//                        keyboardType = when {
+//                            isPassword -> KeyboardType.Password
+//                            label.contains("E-Mail", ignoreCase = true) -> KeyboardType.Email
+//                            else -> KeyboardType.Text
+//                        },
+//                        autoCorrect = false,
+//                        capitalization = KeyboardCapitalization.None
+//                    ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = when {
                             isPassword -> KeyboardType.Password
                             label.contains("E-Mail", ignoreCase = true) -> KeyboardType.Email
                             else -> KeyboardType.Text
                         },
+                        imeAction = imeAction,
                         autoCorrect = false,
                         capitalization = KeyboardCapitalization.None
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { onImeAction?.invoke() },
+                        onDone = { onImeAction?.invoke() }
                     ),
                     visualTransformation = when {
                         isPassword && !passwordVisible -> PasswordVisualTransformation()
@@ -122,7 +143,12 @@ fun AuthTextField(
                     ),
                     cursorBrush = SolidColor(scheme.onSurface),
                     interactionSource = interactionSource,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f).then(
+                            if (focusRequester != null)
+                                Modifier.focusRequester(focusRequester)
+                            else Modifier
+                        ),
                     decorationBox = { innerTextField ->
                         if (value.isEmpty()) {
                             Text(

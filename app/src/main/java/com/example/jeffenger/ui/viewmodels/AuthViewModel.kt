@@ -51,6 +51,8 @@ class AuthViewModel(
         Patterns.EMAIL_ADDRESS.matcher(input).matches()
     }
 
+    val isPasswordNotEmpty = password.map { it.isNotBlank() }
+
     val hasMinLength = password.map { it.length >= 6 }
     val hasUppercase = password.map { it.any { char -> char.isUpperCase() } }
     val hasLowercase = password.map { it.any { char -> char.isLowerCase() } }
@@ -76,43 +78,26 @@ class AuthViewModel(
     val isDisplayNameValid = displayName.map { it.isNotBlank() }
     val isCompanyValid = company.map { it.isNotBlank() }
 
-//    val isFormValid = combine(
-//        isEmailValid,
-//        isPasswordValid,
-//        isDisplayNameValid,
-//        isCompanyValid,
-//        authMode
-//    ) { email, password, name, company, mode ->
-//        when (mode) {
-//            AuthMode.REGISTER -> email && password && name && company
-//            AuthMode.LOGIN -> email && password
-//        }
-//    }.stateIn(
-//        scope = viewModelScope,
-//        started = SharingStarted.WhileSubscribed(5_000),
-//        initialValue = false
-//    )
-
     val isFormValid = combine(
         isEmailValid,
-        password,
+        isPasswordNotEmpty,
         isPasswordValid,
         isDisplayNameValid,
         isCompanyValid
-    ) { emailValid, passwordInput, passwordValid, nameValid, companyValid ->
+    ) { emailValid, passwordNotEmpty, passwordValid, nameValid, companyValid ->
 
         Triple(
             emailValid,
-            passwordInput,
+            passwordNotEmpty,
             passwordValid && nameValid && companyValid
         )
     }.combine(authMode) { base, mode ->
 
-        val (emailValid, passwordInput, registerValid) = base
+        val (emailValid, passwordNotEmpty, registerValid) = base
 
         when (mode) {
             AuthMode.REGISTER -> emailValid && registerValid
-            AuthMode.LOGIN -> emailValid && passwordInput.isNotBlank()
+            AuthMode.LOGIN -> emailValid && passwordNotEmpty
         }
 
     }.stateIn(
