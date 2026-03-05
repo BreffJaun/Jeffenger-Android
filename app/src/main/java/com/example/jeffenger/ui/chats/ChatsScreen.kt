@@ -9,11 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
@@ -45,12 +51,15 @@ fun ChatsScreen(
         val scheme = MaterialTheme.colorScheme
 
         val startState by viewModel.startChatUiState.collectAsState()
-        val chatItems by viewModel.chatListItems.collectAsState()
+//        val chatItems by viewModel.chatListItems.collectAsState()
+        val chatItems by viewModel.filteredChatListItems.collectAsState()
+        val allChats by viewModel.chatListItems.collectAsState()
 
         var sheetMode by remember { mutableStateOf<NewChatSheetMode?>(null) }
         val modalSheetState = rememberModalBottomSheetState()
 
-        var searchQuery by remember { mutableStateOf("") }
+//        var searchQuery by remember { mutableStateOf("") }
+        val searchQuery by viewModel.searchQuery.collectAsState()
 
 //        Log.d("DEBUG", "chatItems size = ${chatItems.size}")
 //        Log.d("DEBUG", "StartState = $startState")
@@ -74,7 +83,8 @@ fun ChatsScreen(
             }
         }
 
-        if (chatItems.isEmpty()) {
+//        if (chatItems.isEmpty()) {
+        if (allChats.isEmpty()) {
 
             Column(
                 verticalArrangement = Arrangement.Center,
@@ -110,26 +120,64 @@ fun ChatsScreen(
 
                 ChatSearchBar(
                     query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    modifier = Modifier
-                        .padding(bottom = 40.dp)
+                    onQueryChange = viewModel::setSearchQuery,
+                    modifier = Modifier.padding(bottom = 40.dp)
                 )
 
-                LazyColumn(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    items(
-                        chatItems,
-                        key = { it.chatId }
-                    ) { item ->
-                        ChatListItem(
-                            item = item,
-                            onClick = {
-                                item.companyId?.let { cid ->
-                                    onNavigateToDetail(item.chatId, cid)
-                                }
-                            }
+                if (chatItems.isEmpty()) {
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 25.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Outlined.SearchOff,
+                            contentDescription = null,
+                            tint = scheme.onSurfaceVariant,
+                            modifier = Modifier.size(42.dp)
                         )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "Keine Chats gefunden",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = scheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = "Versuche einen anderen Suchbegriff",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = scheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                } else {
+
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(
+                            chatItems,
+                            key = { it.chatId }
+                        ) { item ->
+                            ChatListItem(
+                                item = item,
+                                onClick = {
+                                    item.companyId?.let { cid ->
+                                        onNavigateToDetail(item.chatId, cid)
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
 
@@ -146,7 +194,6 @@ fun ChatsScreen(
                         onDirectJeffClick = { viewModel.startDirectJeffChat() },
 
                         onCompanyClick = {
-//                            viewModel.resetSelection()
                             viewModel.prepareCompanySelection()
                             sheetMode = NewChatSheetMode.COMPANY
                         },
@@ -161,6 +208,73 @@ fun ChatsScreen(
                 }
             }
         }
+//        else {
+//
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(horizontal = 25.dp)
+//            ) {
+//
+////                ChatSearchBar(
+////                    query = searchQuery,
+////                    onQueryChange = { searchQuery = it },
+////                    modifier = Modifier
+////                        .padding(bottom = 40.dp)
+////                )
+//
+//                ChatSearchBar(
+//                    query = searchQuery,
+//                    onQueryChange = viewModel::setSearchQuery,
+//                    modifier = Modifier.padding(bottom = 40.dp)
+//                )
+//
+//                LazyColumn(
+//                    modifier = Modifier.weight(1f)
+//                ) {
+//                    items(
+//                        chatItems,
+//                        key = { it.chatId }
+//                    ) { item ->
+//                        ChatListItem(
+//                            item = item,
+//                            onClick = {
+//                                item.companyId?.let { cid ->
+//                                    onNavigateToDetail(item.chatId, cid)
+//                                }
+//                            }
+//                        )
+//                    }
+//                }
+//
+//                Spacer(modifier = Modifier.height(24.dp))
+//
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 24.dp),
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    StartChatSection(
+//                        state = startState,
+//                        onDirectJeffClick = { viewModel.startDirectJeffChat() },
+//
+//                        onCompanyClick = {
+////                            viewModel.resetSelection()
+//                            viewModel.prepareCompanySelection()
+//                            sheetMode = NewChatSheetMode.COMPANY
+//                        },
+//
+//                        onCompanyWithJeffClick = {
+//                            viewModel.prepareCompanyWithJeffSelection()
+//                            sheetMode = NewChatSheetMode.COMPANY_WITH_JEFF
+//                        }
+//                    )
+//
+//                    Spacer(modifier = Modifier.height(32.dp))
+//                }
+//            }
+//        }
 
         if (sheetMode != null) {
             NewChatBottomSheet(

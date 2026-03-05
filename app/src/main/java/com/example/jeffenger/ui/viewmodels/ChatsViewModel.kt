@@ -46,6 +46,9 @@ class ChatsViewModel(
     private val _lockedCompanyId = MutableStateFlow<String?>(null)
     val lockedCompanyId: StateFlow<String?> = _lockedCompanyId
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
     // AUTH & USER STATE
     // Current loggedIn User (Firebase Auth)
     private val currentUserIdState = authRepository.authState
@@ -266,6 +269,25 @@ class ChatsViewModel(
 //            SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
+
+    val filteredChatListItems: StateFlow<List<ChatListItemUiModel>> =
+        combine(chatListItems, searchQuery) { chats, query ->
+
+            if (query.isBlank()) {
+                chats
+            } else {
+                val lower = query.lowercase()
+
+                chats.filter { chat ->
+                    chat.displayName.lowercase().contains(lower) ||
+                            (chat.lastMessageText?.lowercase()?.contains(lower) == true)
+                }
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            emptyList()
+        )
 
 
     // MAPPERS
@@ -546,6 +568,10 @@ class ChatsViewModel(
         resetSelection()
         _selectedParticipantIds.value = setOf(jeffId)
         _isGroupMode.value = true
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
     }
 
 
