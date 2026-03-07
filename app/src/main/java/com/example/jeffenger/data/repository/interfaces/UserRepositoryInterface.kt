@@ -13,4 +13,20 @@ interface UserRepositoryInterface {
     fun observeGlobalUsers(): Flow<List<User>>
 
     fun observeUsersByIds(ids: List<String>): Flow<List<User>>
+
+    suspend fun updateUserProfile(
+        userId: String,
+        displayName: String,
+        company: String
+    )
+
+    suspend fun updateAvatar(
+        userId: String,
+        avatarUrl: String
+    )
+
+    suspend fun updateEmail(
+        userId: String,
+        email: String
+    )
 }

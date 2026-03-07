@@ -80,22 +80,3 @@ fun AvatarCircle(
     }
 }
 
-
-//Text(
-//text = fallbackText
-//.trim()
-//.split(" ")
-//.take(2)
-//.joinToString("") { it.first().uppercase() },
-//
-//color = scheme.onSurface,
-//
-//// Figma-konform
-//style = TextStyle(
-//fontFamily = Archivo,
-//fontWeight = FontWeight.Normal, // Regular
-//fontSize = 27.sp,
-//lineHeight = 42.sp,
-//letterSpacing = 0.sp
-//)
-//)

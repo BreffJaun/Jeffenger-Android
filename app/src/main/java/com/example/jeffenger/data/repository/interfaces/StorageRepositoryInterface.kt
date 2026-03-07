@@ -7,4 +7,11 @@ interface StorageRepositoryInterface {
         uri: Uri,
         chatId: String
     ): String
+
+    suspend fun uploadUserAvatar(
+        uri: Uri,
+        userId: String
+    ): String
+
+    suspend fun deleteAvatar(userId: String)
 }

@@ -3,6 +3,7 @@ package com.example.jeffenger.data.repository
 import com.example.jeffenger.data.remote.model.User
 import com.example.jeffenger.data.repository.interfaces.UserRepositoryInterface
 import com.example.jeffenger.utils.enums.CollectionNames
+import com.example.jeffenger.utils.normalization.normalizeCompanyId
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 
 
 class UserRepositoryFirebase(
@@ -107,7 +109,7 @@ class UserRepositoryFirebase(
             return@callbackFlow
         }
 
-        val listener = db.collection("users")
+        val listener = db.collection(CollectionNames.USERS.path)
             .whereIn(FieldPath.documentId(), ids)
             .addSnapshotListener { snapshot, error ->
 
@@ -124,6 +126,120 @@ class UserRepositoryFirebase(
             }
 
         awaitClose { listener.remove() }
+    }
+
+    override suspend fun updateUserProfile(
+        userId: String,
+        displayName: String,
+        company: String
+    ) {
+
+        val user = appUser.value ?: return
+
+        val oldCompanyId = user.companyId
+        val newCompanyId = normalizeCompanyId(company)
+
+        val updates = mapOf(
+            "displayName" to displayName,
+            "company" to company,
+            "companyId" to newCompanyId
+        )
+
+        // Top-Level User updaten
+        val userRef = db.collection(CollectionNames.USERS.path)
+            .document(userId)
+
+        userRef.update(updates).await()
+
+        // FALL 1: Firma bleibt gleich
+        if (oldCompanyId == newCompanyId) {
+
+            val companyUserRef = db.collection(CollectionNames.COMPANIES.path)
+                .document(oldCompanyId)
+                .collection(CollectionNames.USERS.path)
+                .document(userId)
+
+            companyUserRef.update(updates).await()
+
+            return
+        }
+
+        // FALL 2: Firma wurde geändert
+        val oldRef = db.collection(CollectionNames.COMPANIES.path)
+            .document(oldCompanyId)
+            .collection(CollectionNames.USERS.path)
+            .document(userId)
+
+        val newRef = db.collection(CollectionNames.COMPANIES.path)
+            .document(newCompanyId)
+            .collection(CollectionNames.USERS.path)
+            .document(userId)
+
+        val snapshot = oldRef.get().await()
+
+        if (snapshot.exists()) {
+
+            val data = snapshot.data?.toMutableMap() ?: mutableMapOf()
+
+            data["displayName"] = displayName
+            data["company"] = company
+            data["companyId"] = newCompanyId
+
+            newRef.set(data).await()
+            oldRef.delete().await()
+        }
+    }
+
+    override suspend fun updateAvatar(
+        userId: String,
+        avatarUrl: String
+    ) {
+
+        val user = appUser.value ?: return
+
+        val updates = mapOf(
+            "avatarUrl" to avatarUrl
+        )
+
+        // Top Level
+        val userRef = db.collection(CollectionNames.USERS.path)
+            .document(userId)
+
+        userRef.update(updates).await()
+
+        // Company User
+        val companyRef = db.collection(CollectionNames.COMPANIES.path)
+            .document(user.companyId)
+            .collection(CollectionNames.USERS.path)
+            .document(userId)
+
+        companyRef.update(updates).await()
+    }
+
+    override suspend fun updateEmail(
+        userId: String,
+        email: String
+    ) {
+
+        val user = appUser.value ?: return
+
+        val updates = mapOf(
+            "email" to email
+        )
+
+        // Top Level
+        val userRef = db.collection(CollectionNames.USERS.path)
+            .document(userId)
+
+        userRef.update(updates).await()
+
+        // Company User
+        val companyRef = db.collection(CollectionNames.COMPANIES.path)
+            .document(user.companyId)
+            .collection(CollectionNames.USERS.path)
+            .document(userId)
+
+        companyRef.update(updates).await()
     }
 }
 

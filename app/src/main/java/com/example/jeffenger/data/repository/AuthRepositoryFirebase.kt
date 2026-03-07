@@ -8,6 +8,7 @@ import com.example.jeffenger.utils.error.ErrorMapper
 import com.example.jeffenger.utils.normalization.normalizeCompanyId
 import com.example.jeffenger.utils.state.LoadingState
 import com.google.android.gms.tasks.Tasks
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 
 /**
@@ -46,8 +48,6 @@ class AuthRepositoryFirebase(
     private val _authState = MutableStateFlow<FirebaseUser?>(null)
     override val authState: StateFlow<FirebaseUser?> = _authState.asStateFlow()
 
-    //    private val _errorMessage = MutableStateFlow<String?>(null)
-    //    override val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
     private val _errorEvents = MutableSharedFlow<AppError>()
     override val errorEvents: SharedFlow<AppError> = _errorEvents.asSharedFlow()
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
@@ -76,11 +76,6 @@ class AuthRepositoryFirebase(
 
                 _loadingState.value = LoadingState.Idle
             }
-//            .addOnFailureListener {
-//                _loadingState.value = LoadingState.Error(
-//                    it.message ?: "Login fehlgeschlagen"
-//                )
-//            }
     }
 
     override fun registerWithEmailAndPassword(
@@ -128,10 +123,6 @@ class AuthRepositoryFirebase(
                         }
                         _loadingState.value = LoadingState.Idle
                     }
-//                    .addOnFailureListener {
-//                        _loadingState.value =
-//                            LoadingState.Error(it.message ?: "Fehler beim Speichern")
-//                    }
             }
             .addOnFailureListener { throwable ->
                 repositoryScope.launch {
@@ -139,11 +130,6 @@ class AuthRepositoryFirebase(
                 }
                 _loadingState.value = LoadingState.Idle
             }
-//            .addOnFailureListener {
-//                _loadingState.value = LoadingState.Error(
-//                    it.message ?: "Registrierung fehlgeschlagen"
-//                )
-//            }
     }
 
     override fun logout() {
@@ -153,6 +139,72 @@ class AuthRepositoryFirebase(
     private fun addAuthListener() {
         auth.addAuthStateListener {
             _authState.value = it.currentUser
+        }
+    }
+
+    override suspend fun updateEmail(
+        currentPassword: String,
+        newEmail: String
+    ) {
+
+        val firebaseUser = auth.currentUser ?: return
+        val email = firebaseUser.email ?: return
+
+        try {
+
+            _loadingState.value = LoadingState.Loading()
+
+            val credential =
+                EmailAuthProvider.getCredential(email, currentPassword)
+
+            // Reauthenticate
+            firebaseUser.reauthenticate(credential).await()
+
+            // Email ändern
+            firebaseUser.verifyBeforeUpdateEmail(newEmail).await()
+
+            _loadingState.value = LoadingState.Success()
+
+        } catch (throwable: Exception) {
+
+            repositoryScope.launch {
+                _errorEvents.emit(ErrorMapper.map(throwable))
+            }
+
+            _loadingState.value = LoadingState.Idle
+        }
+    }
+
+    override suspend fun updatePassword(
+        currentPassword: String,
+        newPassword: String
+    ) {
+
+        val firebaseUser = auth.currentUser ?: return
+        val email = firebaseUser.email ?: return
+
+        try {
+
+            _loadingState.value = LoadingState.Loading()
+
+            val credential =
+                EmailAuthProvider.getCredential(email, currentPassword)
+
+            // Reauthentication
+            firebaseUser.reauthenticate(credential).await()
+
+            // Passwort ändern
+            firebaseUser.updatePassword(newPassword).await()
+
+            _loadingState.value = LoadingState.Success()
+
+        } catch (throwable: Exception) {
+
+            repositoryScope.launch {
+                _errorEvents.emit(ErrorMapper.map(throwable))
+            }
+
+            _loadingState.value = LoadingState.Idle
         }
     }
 }

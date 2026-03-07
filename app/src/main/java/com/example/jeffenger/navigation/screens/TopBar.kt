@@ -206,13 +206,13 @@ fun TopBar(
                                 )
                             }
 
-                            GlassIconButton(onClick = { /* More */ }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.MoreVert,
-                                    tint = scheme.outlineVariant,
-                                    contentDescription = "More"
-                                )
-                            }
+//                            GlassIconButton(onClick = { /* More */ }) {
+//                                Icon(
+//                                    imageVector = Icons.Outlined.MoreVert,
+//                                    tint = scheme.outlineVariant,
+//                                    contentDescription = "More"
+//                                )
+//                            }
                         }
                     }
 

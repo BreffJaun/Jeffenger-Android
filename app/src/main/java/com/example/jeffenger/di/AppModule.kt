@@ -19,6 +19,7 @@ import com.example.jeffenger.ui.viewmodels.AuthViewModel
 import com.example.jeffenger.ui.viewmodels.CalendarViewModel
 import com.example.jeffenger.ui.viewmodels.ChatViewModel
 import com.example.jeffenger.ui.viewmodels.ChatsViewModel
+import com.example.jeffenger.ui.viewmodels.SettingsViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import org.koin.core.module.dsl.viewModel
@@ -75,8 +76,11 @@ val appModule = module {
         CalendarRepositoryFirebase(get())
     }
 
+
     viewModelOf(::ChatsViewModel)   // Chat LIST
     viewModelOf(::ChatViewModel)    // Chat DETAIL
     viewModelOf(::AuthViewModel)
     viewModelOf(::CalendarViewModel)
+    viewModelOf(::SettingsViewModel)
 }
+

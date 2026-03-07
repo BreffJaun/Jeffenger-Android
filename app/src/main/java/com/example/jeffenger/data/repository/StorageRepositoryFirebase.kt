@@ -22,4 +22,27 @@ class StorageRepositoryFirebase(
 
         return ref.downloadUrl.await().toString()
     }
+
+    override suspend fun uploadUserAvatar(
+        uri: Uri,
+        userId: String
+    ): String {
+
+        val ref = storage
+            .reference
+            .child("user_avatars/$userId.jpg")
+
+        ref.putFile(uri).await()
+
+        return ref.downloadUrl.await().toString()
+    }
+
+    override suspend fun deleteAvatar(userId: String) {
+
+        val ref = storage
+            .reference
+            .child("user_avatars/$userId.jpg")
+
+        ref.delete().await()
+    }
 }

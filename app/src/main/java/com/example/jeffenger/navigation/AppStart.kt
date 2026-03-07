@@ -209,28 +209,6 @@ fun AppStart(
                     )
                 }
 
-//                composable<CalendarRoute> { backStack ->
-//
-////                    val eventId = backStack.savedStateHandle
-////                        .get<String>("openEventId")
-//                    val eventId by backStack.savedStateHandle
-//                        .getStateFlow<String?>("openEventId", null)
-//                        .collectAsState()
-//
-//                    LaunchedEffect(eventId) {
-//                        if (eventId != null) {
-//                            backStack.savedStateHandle["openEventId"] = null
-//                        }
-//                    }
-//
-//                    CalendarScreen(
-//                        onBack = { navController.popBackStack() },
-//                        showCreateEvent = showCreateEvent,
-//                        onDismissCreateEvent = { showCreateEvent = false },
-//                        openEventId = eventId
-//                    )
-//                }
-
                 composable<CalendarRoute> { backStack ->
 
                     val eventId by backStack.savedStateHandle
@@ -270,18 +248,32 @@ fun AppStart(
 
                 composable<SettingsRoute> {
                     SettingsScreen(
+                        snackbarHostState = snackbarHostState,
                         onBack = { navController.popBackStack() },
                         onLogout = {
                             navController.navigate(ChatsRoute) {
-                                popUpTo(navController.graph.id) {
-                                    inclusive = true
-                                }
+                                popUpTo(navController.graph.id) { inclusive = true }
                                 launchSingleTop = true
                             }
                             authViewModel.logout()
                         }
                     )
                 }
+
+//                composable<SettingsRoute> {
+//                    SettingsScreen(
+//                        onBack = { navController.popBackStack() },
+//                        onLogout = {
+//                            navController.navigate(ChatsRoute) {
+//                                popUpTo(navController.graph.id) {
+//                                    inclusive = true
+//                                }
+//                                launchSingleTop = true
+//                            }
+//                            authViewModel.logout()
+//                        }
+//                    )
+//                }
             }
         }
 

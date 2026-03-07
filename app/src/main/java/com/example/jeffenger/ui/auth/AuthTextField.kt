@@ -1,5 +1,6 @@
 package com.example.jeffenger.ui.auth
 
+import android.R.attr.bottom
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -53,7 +54,8 @@ fun AuthTextField(
     isValid: Boolean? = null,
     focusRequester: FocusRequester? = null,
     imeAction: ImeAction = ImeAction.Next,
-    onImeAction: (() -> Unit)? = null
+    onImeAction: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme
     val interactionSource = remember { MutableInteractionSource() }
@@ -62,6 +64,7 @@ fun AuthTextField(
 
     Column(
         modifier = Modifier.padding(bottom = 10.dp)
+//        modifier = modifier.padding(bottom = 10.dp)
     ) {
 
         // LABEL + Stern
@@ -111,15 +114,6 @@ fun AuthTextField(
                     value = value,
                     onValueChange = onValueChange,
                     singleLine = true,
-//                    keyboardOptions = KeyboardOptions(
-//                        keyboardType = when {
-//                            isPassword -> KeyboardType.Password
-//                            label.contains("E-Mail", ignoreCase = true) -> KeyboardType.Email
-//                            else -> KeyboardType.Text
-//                        },
-//                        autoCorrect = false,
-//                        capitalization = KeyboardCapitalization.None
-//                    ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = when {
                             isPassword -> KeyboardType.Password
@@ -144,10 +138,14 @@ fun AuthTextField(
                     cursorBrush = SolidColor(scheme.onSurface),
                     interactionSource = interactionSource,
                     modifier = Modifier
-                        .weight(1f).then(
+                        .weight(1f)
+                        .then(
                             if (focusRequester != null)
                                 Modifier.focusRequester(focusRequester)
                             else Modifier
+                        )
+                        .background(
+                            color = scheme.tertiaryContainer
                         ),
                     decorationBox = { innerTextField ->
                         if (value.isEmpty()) {

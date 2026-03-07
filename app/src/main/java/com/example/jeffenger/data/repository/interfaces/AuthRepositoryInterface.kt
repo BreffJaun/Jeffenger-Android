@@ -43,5 +43,15 @@ interface AuthRepositoryInterface {
     )
 
     fun logout()
+
+    suspend fun updateEmail(
+        currentPassword: String,
+        newEmail: String
+    )
+
+    suspend fun updatePassword(
+        currentPassword: String,
+        newPassword: String
+    )
 }
 
