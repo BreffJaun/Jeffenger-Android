@@ -107,7 +107,7 @@ fun TopBar(
                     modifier = Modifier.wrapContentWidth(),
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    if (isChatRoute || isCalendarRoute) {
+                    if (isChatRoute) {
                         GlassIconButton(onClick = onBackClick) {
                             Icon(
                                 imageVector = Icons.Rounded.ArrowBackIosNew,
@@ -221,13 +221,13 @@ fun TopBar(
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
-                        GlassIconButton(onClick = onChatCalendarClick) {
-                            Icon(
-                                imageVector = Icons.Outlined.CalendarToday,
-                                tint = scheme.onSurface,
-                                contentDescription = "Chat Calendar"
-                            )
-                        }
+//                        GlassIconButton(onClick = onChatCalendarClick) {
+//                            Icon(
+//                                imageVector = Icons.Outlined.CalendarToday,
+//                                tint = scheme.onSurface,
+//                                contentDescription = "Chat Calendar"
+//                            )
+//                        }
                     }
 
                     AnimatedVisibility(

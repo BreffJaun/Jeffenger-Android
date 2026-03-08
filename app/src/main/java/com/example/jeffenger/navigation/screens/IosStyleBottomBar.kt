@@ -90,14 +90,8 @@ fun IosStyleBottomBar(
                             .clip(RoundedCornerShape(999.dp))
                             .background(
                                 MaterialTheme.colorScheme.onSurface
-//                                    .copy(alpha = if (isDarkMode) 0.18f else 0.12f)
-                                    .copy(alpha = 0.18f )
-
+                                    .copy(alpha = 0.18f)
                             )
-//                        .background(
-//                            MaterialTheme.colorScheme.primary
-//                                .copy(alpha = if (isDarkMode) 0.18f else 0.12f)
-//                        )
                     )
 
                     // Tabs
@@ -129,23 +123,5 @@ fun IosStyleBottomBar(
                 }
             }
         }
-    }
-}
-
-
-@Preview(
-    name = "Darkmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Preview(
-    name = "Lightmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-private fun IosStyleBottomBarPreview() {
-    AppTheme {
-//        IosStyleBottomBar()
     }
 }

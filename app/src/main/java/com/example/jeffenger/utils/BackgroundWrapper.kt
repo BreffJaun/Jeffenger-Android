@@ -78,11 +78,3 @@ fun BackgroundWrapper(
 }
 
 
-@Preview(showSystemUi = true)
-@Composable
-private fun BackgroundWrapperPreview() {
-    BackgroundWrapper {
-        Text("Hallo Welt")
-    }
-}
-

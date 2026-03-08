@@ -51,7 +51,7 @@ fun ButtonContent(
             Text(
                 text = text,
                 color = tint,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
         }
     }

@@ -114,13 +114,6 @@ fun CalendarScreen(
             }
         }
 
-        //        LaunchedEffect(userId, hostUserId, isHost) {
-//            android.util.Log.d(
-//                "HOST_DEBUG",
-//                "userId=$userId | hostUserId=$hostUserId | isHost=$isHost"
-//            )
-//        }
-
         val itemsByDate = remember(listItems) {
             listItems.groupBy { item ->
                 when (item) {
@@ -144,12 +137,6 @@ fun CalendarScreen(
                 .fillMaxSize()
                 .padding(horizontal = 25.dp)
         ) {
-            Text(
-                text = "Kalender",
-                style = MaterialTheme.typography.titleLarge,
-                color = scheme.onSurface
-            )
-
             Spacer(Modifier.height(12.dp))
 
             JeffengerCalendar(
@@ -166,7 +153,7 @@ fun CalendarScreen(
                 onFilterChange = { filter = it }
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(16.dp))
 
             val visibleItems = remember(listItems, itemsByDate, selectedDate, filter) {
                 when (filter) {
@@ -177,7 +164,11 @@ fun CalendarScreen(
 
             if (visibleItems.isEmpty()) {
                 Text(
-                    "Keine Termine an diesem Tag.",
+                    if (filter == EventsFilter.DAY) {
+                        "Keine Termine an diesem Tag."
+                    } else {
+                        "Keine Termine"
+                    },
                     color = scheme.onSurfaceVariant
                 )
             } else {
@@ -206,9 +197,6 @@ fun CalendarScreen(
                                     onDelete = {
                                         deleteEvent = item.event
                                     },
-//                                    onDelete = {
-//                                        viewModel.deleteEvent(item.event.id)
-//                                    },
                                     onEdit = {
                                         activeEvent = item.event
                                         sheetMode =
@@ -218,22 +206,6 @@ fun CalendarScreen(
                                                 EventSheetMode.VIEW
                                     }
                                 )
-
-//                                CalendarEventCard(
-//                                    event = item.event,
-//                                    currentUserId = userId!!,
-//                                    isHost = isHost,
-//                                    onStatusChange = { newStatus ->
-//                                        viewModel.updateStatus(item.event.id, newStatus)
-//                                    },
-//                                    onDelete = {
-//                                        deleteEvent = item.event
-////                                        viewModel.deleteEvent(item.event.id)
-//                                    },
-//                                    onEdit = {
-//                                        editingEvent = item.event
-//                                    }
-//                                )
 
                             is CalendarListItem.Busy ->
                                 BusySlotCard(slot = item.slot)

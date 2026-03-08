@@ -51,12 +51,10 @@ class CalendarRepositoryFirebase(
 
     // 🔹 2️⃣ Busy Slots (firmenweit sichtbar)
     override fun observeBusySlots(
-        companyId: String,
         hostUserId: String
     ): Flow<List<CalendarBusySlot>> = callbackFlow {
 
         val listener = busyCol
-            .whereEqualTo("companyId", companyId)
             .whereEqualTo("hostUserId", hostUserId)
             .addSnapshotListener { snapshot, error ->
 
@@ -175,14 +173,6 @@ class CalendarRepositoryFirebase(
                     "updatedByUserId" to updatedByUserId,
                 )
             )
-
-//            batch.update(
-//                busyRef,
-//                mapOf(
-//                    "startTime" to event.startTime,
-//                    "endTime" to event.endTime
-//                )
-//            )
 
             val busy = CalendarBusySlot(
                 id = event.id,

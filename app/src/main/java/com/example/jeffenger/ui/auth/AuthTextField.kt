@@ -64,7 +64,6 @@ fun AuthTextField(
 
     Column(
         modifier = Modifier.padding(bottom = 10.dp)
-//        modifier = modifier.padding(bottom = 10.dp)
     ) {
 
         // LABEL + Stern
@@ -166,7 +165,6 @@ fun AuthTextField(
                         else
                             Icons.Outlined.VisibilityOff,
                         contentDescription = "Toggle Password Visibility",
-//                        tint = scheme.primary,
                         tint = if (passwordVisible) scheme.onSurface else scheme.outline,
                         modifier = Modifier
                             .size(25.dp)

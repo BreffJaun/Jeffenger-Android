@@ -21,6 +21,7 @@ import com.example.jeffenger.ui.theme.AppTheme
 import com.example.jeffenger.navigation.AppStart
 import de.syntax_institut.jetpack.a04_05_online_shopper.utilities.BackgroundWrapper
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import com.example.jeffenger.data.notifications.NotificationPermissionCoordinator
 import com.example.jeffenger.navigation.helper.CalendarRoute
@@ -35,6 +36,7 @@ import com.example.jeffenger.utils.state.LoadingState
 import org.koin.androidx.compose.koinViewModel
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "dataStore")
+
 
 class MainActivity : ComponentActivity() {
 

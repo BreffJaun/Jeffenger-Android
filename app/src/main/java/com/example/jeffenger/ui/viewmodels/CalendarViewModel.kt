@@ -29,6 +29,9 @@ class CalendarViewModel(
     private val _uiEvents = MutableSharedFlow<String>()
     val uiEvents = _uiEvents.asSharedFlow()
 
+    private val _lockedCompanyId = MutableStateFlow<String?>(null)
+    val lockedCompanyId: StateFlow<String?> = _lockedCompanyId
+
     // Current User
     val currentUserId: StateFlow<String?> =
         authRepository.authState
@@ -63,6 +66,7 @@ class CalendarViewModel(
             false
         )
 
+
     // Mitglieder der aktuellen Firma
     val companyMembers: StateFlow<List<User>> =
         companyId.flatMapLatest { companyId ->
@@ -86,13 +90,20 @@ class CalendarViewModel(
                 emptyMap()
             )
 
-//    init {
-//        viewModelScope.launch {
-//            currentUserIsHost.collect {
-//                Log.d("HOST_CHECK", "isHost = $it")
-//            }
-//        }
-//    }
+    val visibleGroupedMembersForGlobal: StateFlow<Map<String, List<User>>> =
+        combine(groupedMembersForGlobal, lockedCompanyId) { grouped, locked ->
+
+            if (locked == null) {
+                grouped
+            } else {
+                grouped.filterKeys { it == locked }
+            }
+
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyMap()
+        )
 
     // Provides the full list of calendar events owned by the host.
     // Visibility rules are handled later in eventsForList.
@@ -107,13 +118,11 @@ class CalendarViewModel(
 
     // Busy Slots
     private val busyFlow: Flow<List<CalendarBusySlot>> =
-        combine(companyId, hostUserId) { companyId, hostId ->
-            companyId to hostId
-        }.flatMapLatest { (companyId, hostId) ->
-            if (companyId == null || hostId == null) {
+        hostUserId.flatMapLatest { hostId ->
+            if (hostId == null) {
                 flowOf(emptyList())
             } else {
-                calendarRepository.observeBusySlots(companyId, hostId)
+                calendarRepository.observeBusySlots(hostId)
             }
         }
 
@@ -308,5 +317,35 @@ class CalendarViewModel(
 
             newStart < existingEnd && newEnd > existingStart
         }
+    }
+
+    fun toggleParticipantSelectionForEvent(
+        user: User,
+        current: Set<String>
+    ): Set<String> {
+
+        val newSet = current.toMutableSet()
+        val locked = _lockedCompanyId.value
+
+        if (newSet.contains(user.id)) {
+
+            newSet.remove(user.id)
+
+            if (newSet.isEmpty()) {
+                _lockedCompanyId.value = null
+            }
+
+        } else {
+
+            if (locked == null) {
+                _lockedCompanyId.value = user.companyId
+                newSet.add(user.id)
+
+            } else if (locked == user.companyId) {
+                newSet.add(user.id)
+            }
+        }
+
+        return newSet
     }
 }

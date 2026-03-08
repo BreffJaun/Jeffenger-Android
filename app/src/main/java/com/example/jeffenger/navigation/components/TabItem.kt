@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.jeffenger.navigation.helper.CalendarRoute
 import com.example.jeffenger.navigation.helper.ChatsRoute
@@ -33,6 +34,7 @@ enum class TabItem(
 
     ) {
     CHATS(ChatsRoute, "Chats", Icons.AutoMirrored.Outlined.Chat),
-    CALENDAR(CalendarRoute, "Calendar", Icons.Outlined.CalendarToday),
-    SETTINGS(SettingsRoute, "Settings", Icons.Outlined.Settings)
+    //    CALENDAR(CalendarRoute, "Calendar", Icons.Outlined.CalendarToday),
+    CALENDAR(CalendarRoute, "Termine", Icons.Outlined.CalendarToday),
+    SETTINGS(SettingsRoute, "Profil", Icons.Outlined.PersonOutline)
 }
