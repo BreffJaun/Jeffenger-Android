@@ -406,24 +406,43 @@ class ChatsViewModel(
     val companyMembersWithJeffUiState: StateFlow<List<User>> =
         combine(
             companyMembersUiState,
-            jeffUserIdState
-        ) { members, jeffId ->
+            userRepository.observeGlobalUsers()
+        ) { members, globals ->
 
-            if (jeffId == null) {
-                members
+            val jeff = globals.firstOrNull { it.global }
+
+            if (jeff != null && members.none { it.id == jeff.id }) {
+                members + jeff
             } else {
-                members + User(
-                    id = jeffId,
-                    displayName = "Jeff",
-                    global = true
-                )
+                members
             }
+
         }.stateIn(
             viewModelScope,
             SharingStarted.Eagerly,
-//            SharingStarted.WhileSubscribed(5_000),
             emptyList()
         )
+//    val companyMembersWithJeffUiState: StateFlow<List<User>> =
+//        combine(
+//            companyMembersUiState,
+//            jeffUserIdState
+//        ) { members, jeffId ->
+//
+//            if (jeffId == null) {
+//                members
+//            } else {
+//                members + User(
+//                    id = jeffId,
+//                    displayName = "Jeff",
+//                    global = true
+//                )
+//            }
+//        }.stateIn(
+//            viewModelScope,
+//            SharingStarted.Eagerly,
+////            SharingStarted.WhileSubscribed(5_000),
+//            emptyList()
+//        )
 
     // All company members + Jeff are available
 //    val generalMembersUiState: StateFlow<List<User>> =
@@ -469,26 +488,71 @@ class ChatsViewModel(
 
         val current = _selectedParticipantIds.value.toMutableSet()
         val locked = _lockedCompanyId.value
+        val isGlobalUser = currentUserIsGlobalState.value
 
         if (current.contains(user.id)) {
+
             current.remove(user.id)
 
             if (current.isEmpty()) {
                 _lockedCompanyId.value = null
             }
+
         } else {
 
-            if (locked == null) {
-                _lockedCompanyId.value = user.companyId
+            if (!isGlobalUser) {
+                // NORMALER USER → keine Company Locks nötig
                 current.add(user.id)
-            } else if (locked == user.companyId) {
-                current.add(user.id)
+
+            } else {
+                // GLOBAL USER (Jeff)
+
+                val userCompany = user.companyId
+
+                // Jeff selbst auswählen → kein Lock setzen
+                if (user.global) {
+                    current.add(user.id)
+
+                } else {
+
+                    if (locked == null) {
+                        _lockedCompanyId.value = userCompany
+                        current.add(user.id)
+
+                    } else if (locked == userCompany) {
+                        current.add(user.id)
+                    }
+                }
             }
-            // else: ignorieren (andere Company)
         }
 
         _selectedParticipantIds.value = current
     }
+
+//    fun toggleParticipantSelection(user: User) {
+//
+//        val current = _selectedParticipantIds.value.toMutableSet()
+//        val locked = _lockedCompanyId.value
+//
+//        if (current.contains(user.id)) {
+//            current.remove(user.id)
+//
+//            if (current.isEmpty()) {
+//                _lockedCompanyId.value = null
+//            }
+//        } else {
+//
+//            if (locked == null) {
+//                _lockedCompanyId.value = user.companyId
+//                current.add(user.id)
+//            } else if (locked == user.companyId) {
+//                current.add(user.id)
+//            }
+//            // else: ignorieren (andere Company)
+//        }
+//
+//        _selectedParticipantIds.value = current
+//    }
 
 
     // Creates chat based on current selection

@@ -279,7 +279,9 @@ fun EventBottomSheet(
                                 onValueChange = { title = it },
                                 placeholder = "Titel eingeben",
                                 label = "Titel",
-                                required = true
+                                required = true,
+                                enabled = isEditable,
+                                readOnly = !isEditable
                             )
 
                             // DESCRIPTION
@@ -289,7 +291,9 @@ fun EventBottomSheet(
                                 placeholder = "Beschreibung",
                                 label = "Details zum Termin eingeben",
                                 singleLine = false,
-                                minHeight = 140.dp
+                                minHeight = 140.dp,
+                                enabled = isEditable,
+                                readOnly = !isEditable
                             )
 
                             // MEETING LINK
@@ -304,19 +308,10 @@ fun EventBottomSheet(
 
                             } else {
 
-                                if (meetingLink.isNotBlank()) {
-
-                                    val isUrl =
-                                        android.util.Patterns.WEB_URL
-                                            .matcher(meetingLink)
-                                            .matches()
-
-                                    Text(
-                                        text = meetingLink,
-                                        color = if (isUrl) scheme.primary else scheme.onSurface,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
+                                EventLinkField(
+                                    link = meetingLink,
+                                    label = "Meeting Link"
+                                )
                             }
 
                             // DATE

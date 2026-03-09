@@ -41,6 +41,7 @@ fun EventTextInput(
     required: Boolean = false,
     singleLine: Boolean = true,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     leadingIcon: ImageVector? = null,
     minHeight: Dp = 44.dp
 ) {
@@ -92,7 +93,7 @@ fun EventTextInput(
                     )
                     .border(
                         width = 1.dp,
-                        color = if (isFocused) scheme.primary else Color.Transparent,
+                        color = if (isFocused && enabled && !readOnly) scheme.primary else Color.Transparent,
                         shape = RoundedCornerShape(10.dp)
                     )
                     .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -120,6 +121,7 @@ fun EventTextInput(
                         onValueChange = onValueChange,
                         singleLine = singleLine,
                         enabled = enabled,
+                        readOnly = readOnly,
                         textStyle = UrbanistText.BodyRegular.copy(
                             color = scheme.onSurface
                         ),
@@ -127,9 +129,7 @@ fun EventTextInput(
                         interactionSource = interactionSource,
                         modifier = Modifier.weight(1f),
                         decorationBox = { innerTextField ->
-
                             Box {
-
                                 if (value.isBlank()) {
                                     Text(
                                         text = placeholder,
@@ -137,7 +137,6 @@ fun EventTextInput(
                                         color = scheme.outline
                                     )
                                 }
-
                                 innerTextField()
                             }
                         }
