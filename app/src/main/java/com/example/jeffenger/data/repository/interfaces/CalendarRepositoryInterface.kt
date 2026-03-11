@@ -12,11 +12,6 @@ interface CalendarRepositoryInterface {
         hostUserId: String
     ): Flow<List<CalendarEvent>>
 
-//    fun observeBusySlots(
-//        companyId: String,
-//        hostUserId: String
-//    ): Flow<List<CalendarBusySlot>>
-
     fun observeBusySlots(hostUserId: String): Flow<List<CalendarBusySlot>>
 
     suspend fun createEvent(event: CalendarEvent)

@@ -43,7 +43,7 @@ fun ProfileAvatar(
 
         when {
 
-            // 1️⃣ Firebase Avatar
+            // Firebase Avatar
             !imageUrl.isNullOrBlank() -> {
                 AsyncImage(
                     model = imageUrl,
@@ -53,7 +53,7 @@ fun ProfileAvatar(
                 )
             }
 
-            // 2️⃣ Locale Avatar (snappy preview)
+            // Locale Avatar (snappy preview)
             imageUri != null -> {
                 AsyncImage(
                     model = imageUri,
@@ -63,7 +63,7 @@ fun ProfileAvatar(
                 )
             }
 
-            // 3️⃣ Initials
+            // Initials
             !displayName.isNullOrBlank() -> {
                 Text(
                     text = displayName.initials(),
@@ -72,7 +72,7 @@ fun ProfileAvatar(
                 )
             }
 
-            // 4️⃣ Default Icon
+            // Default Icon
             else -> {
                 Icon(
                     painter = painterResource(R.drawable.ic_person_outlined),
@@ -84,41 +84,3 @@ fun ProfileAvatar(
         }
     }
 }
-
-//@Composable
-//fun ProfileAvatar(
-//    displayName: String,
-//    modifier: Modifier = Modifier,
-//    size: Dp = 100.dp
-//) {
-//    val scheme = MaterialTheme.colorScheme
-//
-//    Box(
-//        modifier = modifier
-//            .size(size)
-//            .background(
-//                color = scheme.tertiaryContainer,
-//                shape = CircleShape
-//            ),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        when {
-//            displayName.isBlank() -> {
-//                Icon(
-//                    painter = painterResource(R.drawable.ic_person_outlined),
-//                    contentDescription = "Default Avatar",
-//                    tint = scheme.outline,
-//                    modifier = Modifier.size(size * 0.8f)
-//                )
-//            }
-//
-//            else -> {
-//                Text(
-//                    text = displayName.initials(),
-//                    style = MaterialTheme.typography.headlineMedium,
-//                    color = scheme.onTertiaryContainer
-//                )
-//            }
-//        }
-//    }
-//}

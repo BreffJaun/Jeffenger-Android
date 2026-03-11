@@ -7,8 +7,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import android.util.Patterns
 import androidx.lifecycle.viewModelScope
+import com.example.jeffenger.data.notifications.FcmTokenManager
 import com.example.jeffenger.data.repository.AuthPreferencesRepository
 import com.example.jeffenger.utils.enums.AuthMode
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.combine
@@ -158,10 +160,25 @@ class AuthViewModel(
         clearForm()
     }
 
+//    fun logout() {
+//        Log.d("AuthViewModel", "Logout called")
+//        authRepository.logout()
+//        clearForm()
+//    }
+
     fun logout() {
         Log.d("AuthViewModel", "Logout called")
-        authRepository.logout()
-        clearForm()
+
+        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+            // Delete Token from Firestore
+            FcmTokenManager.removeToken(token)
+
+            // Optional: delete local token → will be recreated at the next login
+            FirebaseMessaging.getInstance().deleteToken()
+
+            authRepository.logout()
+            clearForm()
+        }
     }
 
     fun onEmailChange(newEmail: String) {

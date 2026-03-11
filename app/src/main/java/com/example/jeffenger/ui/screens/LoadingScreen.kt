@@ -43,20 +43,3 @@ fun LoadingScreen(
         }
     }
 }
-
-@Preview(
-    name = "Darkmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Preview(
-    name = "Lightmode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-private fun LoadingScreenPreview() {
-    AppTheme {
-//        LoadingScreen()
-    }
-}

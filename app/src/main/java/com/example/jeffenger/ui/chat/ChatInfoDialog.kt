@@ -100,7 +100,7 @@ fun ChatInfoDialog(
 
                 Spacer(Modifier.height(20.dp))
 
-                // ===== MITGLIEDER =====
+                // MEMBERS
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center

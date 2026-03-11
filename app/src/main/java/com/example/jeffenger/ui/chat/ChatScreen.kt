@@ -110,15 +110,10 @@ fun ChatScreen(
         val extraKick = 8.dp
 
 
-        // TopBar State updaten (jedes Mal wenn sich Header-relevante Daten ändern)
+        // Update TopBar State (every time header-relevant data changes)
         LaunchedEffect(chat, participants, myId) {
             val c = chat
             val me = myId
-
-//            if (c == null || me == null) {
-//                onTopBarStateChange(null)
-//                return@LaunchedEffect
-//            }
 
             if (c == null || me == null) {
                 onTopBarStateChange(null, emptyList())
@@ -129,7 +124,7 @@ fun ChatScreen(
             val title = when {
                 isGroup -> c.title?.takeIf { it.isNotBlank() } ?: "Gruppe"
                 else -> {
-                    // Direktchat: Name des Gegenübers
+                    // Direct chat: Name of the other person
                     participants.firstOrNull { it.id != me }?.displayName?.takeIf { it.isNotBlank() }
                         ?: "Direktchat"
                 }
@@ -159,16 +154,6 @@ fun ChatScreen(
                 mapUserToAvatarUiModel(user) to user.displayName
             }
 
-//            onTopBarStateChange(
-//                ChatTopBarUiState(
-//                    chatId = c.id,
-//                    title = title,
-//                    subtitle = subtitle,
-//                    avatar = avatarUi,
-//                    isGroup = isGroup
-//                )
-//            )
-
             onTopBarStateChange(
                 ChatTopBarUiState(
                     chatId = c.id,
@@ -183,7 +168,6 @@ fun ChatScreen(
 
         LaunchedEffect(messages.size) {
             if (messages.isNotEmpty()) {
-//                listState.animateScrollToItem(messages.lastIndex)
                 listState.scrollToItem(messages.lastIndex)
                 viewModel.markChatAsRead()
             }
@@ -193,9 +177,8 @@ fun ChatScreen(
             viewModel.markChatAsRead()
         }
 
-        // Beim Verlassen: TopBar wieder zurücksetzen
+        // When leavng: Reset TopBar
         DisposableEffect(Unit) {
-//            onDispose { onTopBarStateChange(null) }
             onDispose { onTopBarStateChange(null, emptyList()) }
         }
 
@@ -238,7 +221,7 @@ fun ChatScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // Nur wenn Keyboard offen ist: genug Luft für Gesture/NavBar + ein paar Extra-Pixel
+                    // Only when keyboard is open: enough space for gesture/navigation bar + a few extra pixels
                     .padding(bottom = if (isKeyboardOpen) navBottomDp + extraKick else 0.dp)
             ) {
                 ChatInputBar(

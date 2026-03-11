@@ -8,6 +8,3 @@ object ApiEndpoints {
     const val IMAGES_SEARCH = "images/search"
 }
 
-object ApiPaths {
-    const val CATEGORY = "category"
-}

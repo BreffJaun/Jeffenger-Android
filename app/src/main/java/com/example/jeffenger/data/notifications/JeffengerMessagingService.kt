@@ -48,10 +48,7 @@ class JeffengerMessagingService : FirebaseMessagingService() {
         val data = message.data
         val type = data["type"] ?: "CHAT"
 
-        // ------------------------------
         // CALENDAR NOTIFICATION
-        // ------------------------------
-
         if (type.startsWith("CAL_")) {
 
             val eventId = data["eventId"] ?: return
@@ -114,10 +111,7 @@ class JeffengerMessagingService : FirebaseMessagingService() {
             return
         }
 
-        // ------------------------------
         // CHAT NOTIFICATION
-        // ------------------------------
-
         val chatId = data["chatId"] ?: return
         val companyId = data["companyId"] ?: return
 
@@ -143,8 +137,8 @@ class JeffengerMessagingService : FirebaseMessagingService() {
 
                 addFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                            Intent.FLAG_ACTIVITY_NEW_TASK
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK
                 )
             }
 

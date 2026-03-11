@@ -143,7 +143,7 @@ fun AuthScreen(
             }
         }
 
-        // Own scaffold only for AuthScreen
+        // EXCEPTION: Own scaffold only for AuthScreen
         @Suppress("UnusedMaterial3ScaffoldPaddingParameter")
         Scaffold(
             containerColor = Color.Transparent,

@@ -38,19 +38,11 @@ fun AppTextField(
             modifier = modifier
                 .fillMaxWidth()
                 .heightIn(min = 42.dp, max = 120.dp)
-//                .height(42.dp)
-//                .background(
-//                    color = scheme.tertiaryContainer,
-//                    shape = RoundedCornerShape(10.dp)
-//                )
-//                .padding(horizontal = 12.dp),
                 .background(
                     color = scheme.onSurface,
                     shape = RoundedCornerShape(25.dp)
-//                    shape = RoundedCornerShape(100.dp)
                 )
                 .padding(horizontal = 15.dp, vertical = 10.dp),
-//                .padding(horizontal = 15.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -73,9 +65,6 @@ fun AppTextField(
                     singleLine = singleLine,
                     maxLines = 5,
                     enabled = enabled,
-//                    textStyle = UrbanistText.Placeholder.copy(
-//                        color = scheme.onSurface
-//                    ),
                     textStyle = UrbanistText.BodyRegular.copy(
                         color = scheme.surface
                     ),

@@ -28,7 +28,7 @@ interface AuthRepositoryInterface {
     // LOGGED OUT -> FirebaseUser == null
     val authState: StateFlow<FirebaseUser?>
 
-    //    val errorMessage: StateFlow<String?>
+
     val errorEvents: SharedFlow<AppError>
 
     val loadingState: StateFlow<LoadingState>

@@ -37,7 +37,6 @@ fun StatusDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    // Modell B Logik
     val allowedStatuses = when {
         isHost -> EventStatus.values().toList()
         isRequester -> listOf(EventStatus.CANCELLED)
@@ -102,70 +101,5 @@ fun StatusDropdown(
         }
     }
 }
-
-//@Composable
-//fun StatusDropdown(
-//    current: EventStatus,
-//    onChange: (EventStatus) -> Unit
-//) {
-//    val scheme = MaterialTheme.colorScheme
-//    var expanded by remember { mutableStateOf(false) }
-//
-//    val (label, bg, fg) = when (current) {
-//        EventStatus.PENDING ->
-//            Triple("Ausstehend", Color(0x33FFC107), Color(0xFFFFC107))
-//
-//        EventStatus.ACCEPTED ->
-//            Triple("Bestätigt", Color(0x334CAF50), Color(0xFF4CAF50))
-//
-//        EventStatus.DECLINED ->
-//            Triple("Abgelehnt", Color(0x33F44336), Color(0xFFF44336))
-//
-//        EventStatus.CANCELLED ->
-//            Triple("Abgesagt", Color(0x339E9E9E), Color(0xFF9E9E9E))
-//    }
-//
-//    Box {
-//
-//        Row(
-//            modifier = Modifier
-//                .clip(RoundedCornerShape(999.dp))
-//                .background(bg)
-//                .clickable { expanded = true }
-//                .padding(horizontal = 10.dp, vertical = 6.dp),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            Text(
-//                text = current.label,
-//                style = MaterialTheme.typography.labelSmall,
-//                color = fg
-//            )
-//
-//            Spacer(Modifier.width(4.dp))
-//
-//            Icon(
-//                imageVector = Icons.Default.ArrowDropDown,
-//                contentDescription = null,
-//                tint = fg
-//            )
-//        }
-//
-//        DropdownMenu(
-//            expanded = expanded,
-//            onDismissRequest = { expanded = false }
-//        ) {
-//            EventStatus.values().forEach { status ->
-//
-//                DropdownMenuItem(
-//                    text = { Text(status.name) },
-//                    onClick = {
-//                        expanded = false
-//                        onChange(status)
-//                    }
-//                )
-//            }
-//        }
-//    }
-//}
 
 

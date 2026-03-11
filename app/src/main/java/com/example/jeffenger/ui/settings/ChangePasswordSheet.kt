@@ -82,8 +82,6 @@ fun ChangePasswordSheet(
                         .fillMaxWidth()
                         .padding(vertical = 24.dp)
                 ) {
-
-
                     // Drag Handle
                     Box(
                         modifier = Modifier

@@ -64,7 +64,6 @@ import kotlinx.coroutines.launch
 fun AppStart(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-//    settingsViewModel: SettingsViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
     LogComposable("AppStart") {
@@ -76,10 +75,8 @@ fun AppStart(
         val currentRoute = navBackStackEntry?.destination?.route
 
         // UI STATE
-//        val selectedTab by rememberSaveable { mutableStateOf(TabItem.CHATS) }
         val authState by authViewModel.authState.collectAsState()
 
-        //
         val openNewChatSheet = remember { MutableSharedFlow<Unit>() }
 
         var chatTopBarState by remember { mutableStateOf<ChatTopBarUiState?>(null) }
@@ -231,13 +228,6 @@ fun AppStart(
                         }
                     )
 
-//                    // einmal konsumieren
-//                    LaunchedEffect(eventId) {
-//                        if (eventId != null) {
-//                            backStack.savedStateHandle["openEventId"] = null
-//                        }
-//                    }
-
                     LaunchedEffect(calendarMessage) {
                         if (calendarMessage != null) {
                             backStack.savedStateHandle["calendarMessage"] = null
@@ -259,21 +249,6 @@ fun AppStart(
                         }
                     )
                 }
-
-//                composable<SettingsRoute> {
-//                    SettingsScreen(
-//                        onBack = { navController.popBackStack() },
-//                        onLogout = {
-//                            navController.navigate(ChatsRoute) {
-//                                popUpTo(navController.graph.id) {
-//                                    inclusive = true
-//                                }
-//                                launchSingleTop = true
-//                            }
-//                            authViewModel.logout()
-//                        }
-//                    )
-//                }
             }
         }
 

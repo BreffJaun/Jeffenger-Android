@@ -16,7 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.R
 import com.example.jeffenger.utils.enums.AuthMode
-import com.example.jeffenger.utils.model.ChatTopBarUiState
+
 
 @Composable
 fun AuthTopBar(

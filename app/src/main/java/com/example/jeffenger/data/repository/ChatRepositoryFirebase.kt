@@ -67,7 +67,7 @@ class ChatRepositoryFirebase(
 
                     val chat = doc.toObject(Chat::class.java)
 
-                    // 🔥 Company aus Pfad extrahieren
+                    // Extract company from path
                     val path = doc.reference.path
                     // companies/{companyId}/chats/{chatId}
                     val segments = path.split("/")
@@ -325,7 +325,7 @@ class ChatRepositoryFirebase(
 
         val clientNow = System.currentTimeMillis()
 
-        // 🔥 Message als Map speichern (für serverTimestamp)
+        // Save message as map (for serverTimestamp)
         val msgData = hashMapOf(
 //            "id" to msgRef.id,
             "chatId" to chatId,
@@ -337,16 +337,16 @@ class ChatRepositoryFirebase(
             "editedAt" to null
         )
 
-        // 1️⃣ Message speichern
+        // 1️⃣ Save Message
         msgRef.set(msgData).await()
 
-        // 2️⃣ Chat-Dokument holen
+        // 2️⃣ Get Chat-Document
         val snapshot = chatRef.get().await()
         val chat = snapshot.toObject(Chat::class.java) ?: return
 
         val currentUnread = chat.unreadCount.toMutableMap()
 
-        // Für alle außer Sender +1
+        // For everyone except Sender +1
         chat.participantIds.forEach { userId ->
             if (userId != message.senderId) {
                 val old = currentUnread[userId] ?: 0
@@ -359,12 +359,12 @@ class ChatRepositoryFirebase(
         val lastText = message.text
             ?: if (message.imageUrl != null) "📷 Bild" else "Nachricht"
 
-        // 3️⃣ Chat updaten
+        // 3️⃣ Update Chat
         chatRef.update(
             mapOf(
                 "lastMessageId" to msgRef.id,
                 "lastMessageText" to lastText,
-                // 🔥 Auch hier Serverzeit verwenden
+                // USE SERVER TIME ! ! !
                 "lastMessageTimestamp" to FieldValue.serverTimestamp(),
                 "unreadCount" to currentUnread
             )
@@ -535,7 +535,7 @@ class ChatRepositoryFirebase(
             .collection(CollectionNames.MESSAGES.path)
             .document(messageId)
 
-        // Message aktualisieren
+        // Update Message
         msgRef.update(
             mapOf(
                 "text" to newText,
@@ -543,11 +543,11 @@ class ChatRepositoryFirebase(
             )
         ).await()
 
-        // Chat holen
+        // Get Chat
         val chatSnap = chatRef.get().await()
         val chat = chatSnap.toObject(Chat::class.java) ?: return
 
-        // Nur wenn es die letzte Nachricht ist → Chat-Metadaten updaten
+        // Only if it is the last message → Update chat metadata
         if (chat.lastMessageId == messageId) {
             chatRef.update(
                 mapOf(
@@ -571,11 +571,11 @@ class ChatRepositoryFirebase(
             .collection(CollectionNames.MESSAGES.path)
             .document(messageId)
 
-        // 0 Message VORHER holen (für senderId + ggf. Safety)
+        // 0 Get message BEFORE (for senderId + safety if applicable)
         val msgSnap = msgRef.get().await()
         val msg = msgSnap.toObject(Message::class.java)
 
-        // 1 Chat holen (für lastMessageId + unreadCount + createdAt)
+        // 1 Get chat (for lastMessageId + unreadCount + createdAt)
         val chatSnap = chatRef.get().await()
         val chat = chatSnap.toObject(Chat::class.java) ?: run {
             msgRef.delete().await()
@@ -584,10 +584,10 @@ class ChatRepositoryFirebase(
 
         val wasLastMessage = chat.lastMessageId == messageId
 
-        // 2 Message löschen
+        // 2 Delete Message
         msgRef.delete().await()
 
-        // 3 unreadCount reduzieren (nur wenn wir senderId kennen)
+        // 3 reduce unreadCount (if we know the senderId)
         if (msg != null) {
             val updatedUnread = chat.unreadCount.toMutableMap()
             chat.participantIds.forEach { userId ->
@@ -599,10 +599,10 @@ class ChatRepositoryFirebase(
             chatRef.update("unreadCount", updatedUnread).await()
         }
 
-        // 4 Wenn NICHT die letzte Message -> fertig
+        // 4 If NOT the last message -> done
         if (!wasLastMessage) return
 
-        // 5 Neue letzte Message suchen
+        // 5 Search for new last message
         val newestSnap = chatRef.collection(CollectionNames.MESSAGES.path)
             .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .limit(1)

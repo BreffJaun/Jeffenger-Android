@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.ui.theme.UrbanistText
+import com.example.jeffenger.utils.debugging.LogComposable
 
 /** Small helper: row like Discord/Slack settings entry */
 @Composable
@@ -31,49 +32,51 @@ fun SettingsRow(
     subtitle: String,
     onClick: () -> Unit
 ) {
-    val scheme = MaterialTheme.colorScheme
+    LogComposable("SettingsRow") {
+        val scheme = MaterialTheme.colorScheme
 
-    Button(
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = scheme.surface,
-            contentColor = scheme.onSurface
-        ),
-        contentPadding = PaddingValues(0.dp),
-        shape = RectangleShape,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.CenterStart
+        Button(
+            onClick = onClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = scheme.surface,
+                contentColor = scheme.onSurface
+            ),
+            contentPadding = PaddingValues(0.dp),
+            shape = RectangleShape,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 2.dp)
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.CenterStart
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp)
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = scheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = scheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = title,
+                            style = UrbanistText.BodyRegular,
+                            color = scheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = title,
-                        style = UrbanistText.BodyRegular,
+                        text = subtitle,
+                        style = UrbanistText.Label,
                         color = scheme.onSurfaceVariant
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = subtitle,
-                    style = UrbanistText.Label,
-                    color = scheme.onSurfaceVariant
-                )
             }
         }
     }

@@ -159,28 +159,6 @@ class ChatsViewModel(
                 emptyMap()
             )
 
-//    val groupedMembersUiState: StateFlow<Map<String, List<User>>> =
-//        combine(
-//            currentUserIsGlobalState,
-//            chatRepository.observeAllCompanyMembers()
-//        ) { isGlobal, allMembers ->
-//
-////            Log.d("GLOBAL_DEBUG", "isGlobal = $isGlobal")
-////            Log.d("GLOBAL_DEBUG", "companies loaded = ${allMembers.keys}")
-////            Log.d("GLOBAL_DEBUG", "company count = ${allMembers.size}")
-//
-//            if (isGlobal) {
-//                allMembers
-//            } else {
-//                emptyMap()
-//            }
-//        }.stateIn(
-//            viewModelScope,
-//            SharingStarted.Eagerly,
-////            SharingStarted.WhileSubscribed(5_000),
-//            emptyMap()
-//        )
-
     // Filters grouped members based on the currently locked company during selection
     // for Global User
     val visibleGroupedMembersUiState: StateFlow<Map<String, List<User>>> =
@@ -422,42 +400,6 @@ class ChatsViewModel(
             SharingStarted.Eagerly,
             emptyList()
         )
-//    val companyMembersWithJeffUiState: StateFlow<List<User>> =
-//        combine(
-//            companyMembersUiState,
-//            jeffUserIdState
-//        ) { members, jeffId ->
-//
-//            if (jeffId == null) {
-//                members
-//            } else {
-//                members + User(
-//                    id = jeffId,
-//                    displayName = "Jeff",
-//                    global = true
-//                )
-//            }
-//        }.stateIn(
-//            viewModelScope,
-//            SharingStarted.Eagerly,
-////            SharingStarted.WhileSubscribed(5_000),
-//            emptyList()
-//        )
-
-    // All company members + Jeff are available
-//    val generalMembersUiState: StateFlow<List<User>> =
-//        combine(companyMembersUiState, jeffUserIdState) { members, jeffId ->
-//            if (jeffId == null) members
-//            else members + User(
-//                id = jeffId,
-//                displayName = "Jeff",
-//                global = true
-//            )
-//        }.stateIn(
-//            viewModelScope,
-//            SharingStarted.WhileSubscribed(5_000),
-//            emptyList()
-//        )
 
     // ACTIONS
     // Create or find a direct chat with Jeff
@@ -529,32 +471,6 @@ class ChatsViewModel(
         _selectedParticipantIds.value = current
     }
 
-//    fun toggleParticipantSelection(user: User) {
-//
-//        val current = _selectedParticipantIds.value.toMutableSet()
-//        val locked = _lockedCompanyId.value
-//
-//        if (current.contains(user.id)) {
-//            current.remove(user.id)
-//
-//            if (current.isEmpty()) {
-//                _lockedCompanyId.value = null
-//            }
-//        } else {
-//
-//            if (locked == null) {
-//                _lockedCompanyId.value = user.companyId
-//                current.add(user.id)
-//            } else if (locked == user.companyId) {
-//                current.add(user.id)
-//            }
-//            // else: ignorieren (andere Company)
-//        }
-//
-//        _selectedParticipantIds.value = current
-//    }
-
-
     // Creates chat based on current selection
     // Optionally uploads group image and updates chat afterwards
     fun createChatFromSelection() {
@@ -616,8 +532,6 @@ class ChatsViewModel(
         }
     }
 
-//
-
     fun resetSelection() {
         _selectedParticipantIds.value = emptySet()
     }
@@ -637,26 +551,5 @@ class ChatsViewModel(
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
-
-
-//    init {
-//        viewModelScope.launch {
-//            currentUserIsGlobalState.collect {
-//                Log.d("GLOBAL_CHECK", "currentUserIsGlobal = $it")
-//            }
-//        }
-//
-//        viewModelScope.launch {
-//            jeffUserIdState.collect {
-//                Log.d("GLOBAL_CHECK", "jeffUserId = $it")
-//            }
-//        }
-//
-//        viewModelScope.launch {
-//            currentUserIdState.collect {
-//                Log.d("GLOBAL_CHECK", "currentUserId = $it")
-//            }
-//        }
-//    }
 }
 

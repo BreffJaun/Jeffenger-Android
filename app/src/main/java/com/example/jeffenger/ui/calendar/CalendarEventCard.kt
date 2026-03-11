@@ -66,14 +66,6 @@ fun CalendarEventCard(
                         if (isHost) onDelete()
                     }
                 ),
-//                .combinedClickable(
-//                    onClick = {
-//                        if (isRequester) onEdit()
-//                    },
-//                    onLongClick = {
-//                        if (isHost) onDelete()
-//                    }
-//                ),
             shape = RoundedCornerShape(18.dp),
             color = scheme.surface,
             tonalElevation = 2.dp

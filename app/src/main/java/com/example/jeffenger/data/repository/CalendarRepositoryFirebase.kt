@@ -25,7 +25,7 @@ class CalendarRepositoryFirebase(
     private val busyCol =
         db.collection(CollectionNames.CALENDAR_BUSY.path)
 
-    // 🔹 1️⃣ Events für Host (Jeff)
+    // Events for Host (Jeff)
     override fun observeEventsForHost(
         hostUserId: String
     ): Flow<List<CalendarEvent>> = callbackFlow {
@@ -49,7 +49,7 @@ class CalendarRepositoryFirebase(
         awaitClose { listener.remove() }
     }
 
-    // 🔹 2️⃣ Busy Slots (firmenweit sichtbar)
+    // Busy Slots (visible company-wide)
     override fun observeBusySlots(
         hostUserId: String
     ): Flow<List<CalendarBusySlot>> = callbackFlow {
@@ -73,7 +73,7 @@ class CalendarRepositoryFirebase(
         awaitClose { listener.remove() }
     }
 
-    // 🔹 3️⃣ Event + Busy im Batch erstellen
+    // Event + Busy create in batch (one big wrting operation)
     override suspend fun createEvent(event: CalendarEvent) {
 
         val eventRef = eventsCol.document()
@@ -97,7 +97,7 @@ class CalendarRepositoryFirebase(
         }.await()
     }
 
-    // 🔹 4️⃣ Status Update + Busy löschen wenn nötig
+    // Status Update + delete Busy if necessary
     override suspend fun updateEventStatus(
         eventId: String,
         newStatus: EventStatus,
@@ -127,17 +127,6 @@ class CalendarRepositoryFirebase(
         }.await()
     }
 
-//    override suspend fun deleteEvent(eventId: String) {
-//
-//        val eventRef = eventsCol.document(eventId)
-//        val busyRef = busyCol.document(eventId)
-//
-//        db.runBatch { batch ->
-//            batch.delete(eventRef)
-//            batch.delete(busyRef)
-//        }.await()
-//    }
-
     override suspend fun deleteEvent(eventId: String, deletedByUserId: String) {
         val eventRef = eventsCol.document(eventId)
         val busyRef = busyCol.document(eventId)
@@ -158,7 +147,6 @@ class CalendarRepositoryFirebase(
         val busyRef = busyCol.document(event.id)
 
         db.runBatch { batch ->
-
             batch.update(
                 eventRef,
                 mapOf(

@@ -62,11 +62,11 @@ class UserRepositoryFirebase(
         val localRef = db.collection(CollectionNames.USERS.path).document(uid)
         val globalRef = db.collection(CollectionNames.GLOBAL_USERS.path).document(uid)
 
-        // 1 Erst prüfen, ob er in users existiert, sonst globalUsers
+        // 1 First check whether it exists in users, otherwise globalUsers
         localRef.get().addOnSuccessListener { snapshot ->
             val refToUse = if (snapshot.exists()) localRef else globalRef
 
-            // 2 Dann auf das richtige Dokument live hören
+            // 2 Then listen to the correct document live
             listenerRegistration = refToUse.addSnapshotListener { snap, error ->
                 if (error != null) {
                     _appUser.value = null
@@ -75,7 +75,7 @@ class UserRepositoryFirebase(
                 _appUser.value = snap?.toObject<User>()
             }
         }.addOnFailureListener {
-            // falls get() fehlschlägt (Netz/Permission)
+            // if get() fails (network/permission)
             _appUser.value = null
         }
     }
@@ -151,7 +151,7 @@ class UserRepositoryFirebase(
 
         userRef.update(updates).await()
 
-        // FALL 1: Firma bleibt gleich
+        // CASE 1: Company remains the same
         if (oldCompanyId == newCompanyId) {
 
             val companyUserRef = db.collection(CollectionNames.COMPANIES.path)
@@ -164,7 +164,7 @@ class UserRepositoryFirebase(
             return
         }
 
-        // FALL 2: Firma wurde geändert
+        // CASE 2: Company was changed
         val oldRef = db.collection(CollectionNames.COMPANIES.path)
             .document(oldCompanyId)
             .collection(CollectionNames.USERS.path)

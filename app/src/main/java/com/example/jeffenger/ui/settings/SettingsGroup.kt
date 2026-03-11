@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.jeffenger.utils.debugging.LogComposable
 
 /** Small helper: group card-ish section */
 @Composable
@@ -15,17 +16,19 @@ fun SettingsGroup(
     title: String,
     content: @Composable () -> Unit
 ) {
-    val scheme = MaterialTheme.colorScheme
+    LogComposable("SettingsGroup") {
+        val scheme = MaterialTheme.colorScheme
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
+        Column(
+            modifier = Modifier.fillMaxWidth(),
 //        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = scheme.onSurfaceVariant
-        )
-        content()
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                color = scheme.onSurfaceVariant
+            )
+            content()
+        }
     }
 }

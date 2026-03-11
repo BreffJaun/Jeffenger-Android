@@ -1,9 +1,6 @@
 package com.example.jeffenger.ui.calendar
 
-import android.R.attr.end
-import android.R.attr.scheme
 import android.app.TimePickerDialog
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,11 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.jeffenger.data.remote.model.CalendarEvent
-import com.example.jeffenger.data.remote.model.User
-import com.example.jeffenger.ui.core.RoundCheckbox
 import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.ui.viewmodels.CalendarViewModel
-import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.enums.EventStatus
 import com.google.firebase.Timestamp
 import java.time.*
@@ -46,7 +40,6 @@ fun CreateEventDialog(
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
     // PRE-FILL STATES (EDIT MODE)
-
     var title by remember(existingEvent) {
         mutableStateOf(existingEvent?.title ?: "")
     }
@@ -104,7 +97,6 @@ fun CreateEventDialog(
     val groupedMembers by viewModel.groupedMembersForGlobal.collectAsState()
     val isHost by viewModel.currentUserIsHost.collectAsState()
 
-//    LaunchedEffect(startTime, endTime, selectedDate) {
     LaunchedEffect(startTime, endTime, selectedDateState) {
 
         if (endTime <= startTime) {
@@ -252,7 +244,7 @@ fun CreateEventDialog(
                     Text("Teilnehmer", style = MaterialTheme.typography.labelMedium)
                 }
 
-                // Teilnehmer-Liste (dein Original-Code bleibt hier unverändert)
+                // Participant list
                 items(
                     companyMembers.filter {
                         it.id != userId && it.id != hostUserId
@@ -289,11 +281,9 @@ fun CreateEventDialog(
             TextButton(
                 onClick = {
 
-                    // Grundlegende Zeitvalidierung
+                    // Time validation
                     if (!validateTimes()) return@TextButton
 
-//                    val start = LocalDateTime.of(selectedDate, startTime)
-//                    val end = LocalDateTime.of(selectedDate, endTime)
                     val start = LocalDateTime.of(selectedDateState, startTime)
                     val end = LocalDateTime.of(selectedDateState, endTime)
 
@@ -303,7 +293,7 @@ fun CreateEventDialog(
                     val endTimestamp =
                         Timestamp(Date.from(end.atZone(zone).toInstant()))
 
-                    // Event erstellen oder updaten
+                    // Create or update event
                     val event = CalendarEvent(
                         id = existingEvent?.id ?: UUID.randomUUID().toString(),
                         companyId = companyId,

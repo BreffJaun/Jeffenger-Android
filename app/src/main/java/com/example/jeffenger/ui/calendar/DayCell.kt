@@ -82,24 +82,6 @@ fun DayCell(
                         .background(dotColor)
                 )
             }
-
-
-//        if (hasEvents) {
-//            Box(
-//                modifier = Modifier
-//                    .align(Alignment.BottomCenter)
-//                    .padding(bottom = 6.dp)
-//                    .size(6.dp)
-//                    .clip(CircleShape)
-//                    .background(
-//                        when {
-//                            isSelected -> scheme.onPrimary
-//                            isToday -> scheme.onSecondary
-//                            else -> scheme.primary
-//                        }
-//                    )
-//            )
-//        }
         }
     }
 }

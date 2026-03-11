@@ -182,7 +182,7 @@ class CalendarViewModel(
         return userRepository.observeUsersByIds(ids)
     }
 
-    // Grid Punkt Logik
+    // Grid Point Logic
     fun getStatusForDate(date: LocalDate): EventStatus? {
         val zone = ZoneId.systemDefault()
 
@@ -208,7 +208,7 @@ class CalendarViewModel(
             return if (itemsForDate.isNotEmpty()) EventStatus.ACCEPTED else null
         }
 
-        // Priorität (damit nicht random)
+        // Priority (so that it is not random)
         return when {
             events.any { it.event.status == EventStatus.PENDING } -> EventStatus.PENDING
             events.any { it.event.status == EventStatus.DECLINED } -> EventStatus.DECLINED
@@ -294,27 +294,21 @@ class CalendarViewModel(
         newEnd: Timestamp,
         ignoreEventId: String? = null
     ): Boolean {
-
         val existingItems = eventsForList.value
-
         return existingItems.any { item ->
-
             val existingStart: Timestamp
             val existingEnd: Timestamp
-
             when (item) {
                 is CalendarListItem.Event -> {
                     if (item.event.id == ignoreEventId) return@any false
                     existingStart = item.event.startTime
                     existingEnd = item.event.endTime
                 }
-
                 is CalendarListItem.Busy -> {
                     existingStart = item.slot.startTime
                     existingEnd = item.slot.endTime
                 }
             }
-
             newStart < existingEnd && newEnd > existingStart
         }
     }

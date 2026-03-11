@@ -30,68 +30,69 @@ fun SettingsPasswordField(
     label: String,
     onClick: () -> Unit
 ) {
+    LogComposable("SettingsPasswordField") {
+        val scheme = MaterialTheme.colorScheme
 
-    val scheme = MaterialTheme.colorScheme
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 10.dp)
-    ) {
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 6.dp)
-        ) {
-            Text(
-                text = label,
-                style = UrbanistText.Label,
-                color = scheme.onSurfaceVariant
-            )
-
-            Text(
-                text = "*",
-                style = UrbanistText.Label,
-                color = scheme.primary
-            )
-        }
-
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp)
-                .background(
-                    color = scheme.tertiaryContainer,
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .border(
-                    width = 1.dp,
-                    color = Color.Transparent,
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .clickable { onClick() }
-                .padding(horizontal = 12.dp),
-            contentAlignment = Alignment.CenterStart
+                .padding(bottom = 10.dp)
         ) {
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 6.dp)
             ) {
+                Text(
+                    text = label,
+                    style = UrbanistText.Label,
+                    color = scheme.onSurfaceVariant
+                )
 
                 Text(
-                    text = "********",
-                    style = UrbanistText.BodyRegular,
-                    color = scheme.onSurface,
-                    modifier = Modifier.weight(1f)
+                    text = "*",
+                    style = UrbanistText.Label,
+                    color = scheme.primary
                 )
+            }
 
-                Icon(
-                    imageVector = Icons.Outlined.Lock,
-                    contentDescription = null,
-                    tint = scheme.outline,
-                    modifier = Modifier.size(20.dp)
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp)
+                    .background(
+                        color = scheme.tertiaryContainer,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .clickable { onClick() }
+                    .padding(horizontal = 12.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Text(
+                        text = "********",
+                        style = UrbanistText.BodyRegular,
+                        color = scheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Icon(
+                        imageVector = Icons.Outlined.Lock,
+                        contentDescription = null,
+                        tint = scheme.outline,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

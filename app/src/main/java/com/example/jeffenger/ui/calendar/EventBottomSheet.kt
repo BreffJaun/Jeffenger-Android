@@ -107,8 +107,7 @@ fun EventBottomSheet(
             remember { mutableStateOf(emptyList()) }
         }
 
-        // -------- STATE --------
-
+        // STATE
         var title by remember(existingEvent) {
             mutableStateOf(existingEvent?.title ?: "")
         }
@@ -261,8 +260,6 @@ fun EventBottomSheet(
                             .fillMaxWidth()
                             .padding(bottom = 6.dp)
                     )
-
-
 
                     LazyColumn(
                         modifier = Modifier
@@ -543,69 +540,6 @@ fun EventBottomSheet(
                             onDismiss()
                         }
                     )
-
-//                    Row(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(16.dp),
-//                        horizontalArrangement = Arrangement.SpaceBetween
-//                    ) {
-//
-//                        TextButton(onClick = onDismiss) {
-//                            Text("Schließen")
-//                        }
-//
-//                        if (isEditable) {
-//
-//                            Button(
-//                                onClick = {
-//
-//                                    if (!validateTimes()) return@Button
-//
-//                                    val start =
-//                                        LocalDateTime.of(selectedDateState, startTime)
-//                                    val end =
-//                                        LocalDateTime.of(selectedDateState, endTime)
-//
-//                                    val event = CalendarEvent(
-//                                        id = existingEvent?.id
-//                                            ?: UUID.randomUUID().toString(),
-//                                        companyId = companyId,
-//                                        title = title.trim(),
-//                                        description = description.trim(),
-//                                        meetingLink = meetingLink.trim(),
-//                                        startTime = Timestamp(
-//                                            Date.from(start.atZone(zone).toInstant())
-//                                        ),
-//                                        endTime = Timestamp(
-//                                            Date.from(end.atZone(zone).toInstant())
-//                                        ),
-//                                        requestedByUserId =
-//                                            existingEvent?.requestedByUserId ?: userId,
-//                                        hostUserId = hostUserId,
-//                                        attendeeIds = selectedParticipants.toList(),
-//                                        participantEmails = emptyList(),
-//                                        status =
-//                                            existingEvent?.status ?: EventStatus.PENDING,
-//                                        decisionAt = existingEvent?.decisionAt,
-//                                        createdAt =
-//                                            existingEvent?.createdAt ?: Timestamp.now()
-//                                    )
-//
-//                                    onSave(event)
-//                                    onDismiss()
-//                                },
-//                                enabled = title.isNotBlank() &&
-//                                        timeError == null &&
-//                                        endTime > startTime
-//                            ) {
-//                                Text(
-//                                    if (isCreate) "Erstellen"
-//                                    else "Speichern"
-//                                )
-//                            }
-//                        }
-//                    }
                 }
             }
         }

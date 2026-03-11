@@ -160,7 +160,7 @@ class AuthRepositoryFirebase(
             // Reauthenticate
             firebaseUser.reauthenticate(credential).await()
 
-            // Email ändern
+            // Change Email
             firebaseUser.verifyBeforeUpdateEmail(newEmail).await()
 
             _loadingState.value = LoadingState.Success()
@@ -193,7 +193,7 @@ class AuthRepositoryFirebase(
             // Reauthentication
             firebaseUser.reauthenticate(credential).await()
 
-            // Passwort ändern
+            // Change Password
             firebaseUser.updatePassword(newPassword).await()
 
             _loadingState.value = LoadingState.Success()

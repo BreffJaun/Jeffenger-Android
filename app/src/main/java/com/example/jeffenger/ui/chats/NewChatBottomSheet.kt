@@ -178,8 +178,8 @@ fun NewChatBottomSheet(
                             }
 
                         } else {
-                            // NORMAL USER
 
+                            // NORMAL USER
                             items(members, key = { it.id }) { user ->
 
                                 val isSelected = selectedIds.contains(user.id)
@@ -218,7 +218,6 @@ fun NewChatBottomSheet(
                     Spacer(Modifier.height(20.dp))
 
                     // GROUP SECTION
-
                     AnimatedVisibility(visible = showGroupSection) {
 
                         Column {

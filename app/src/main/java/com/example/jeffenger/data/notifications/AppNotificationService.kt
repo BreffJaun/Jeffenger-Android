@@ -50,7 +50,6 @@ class AppNotificationService(
             channelType.channelId
         )
             .setSmallIcon(R.drawable.jeffenger_splash_icon)
-//            .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
             .setContentTitle(title)
             .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -60,8 +59,6 @@ class AppNotificationService(
             .setContentIntent(contentIntent)
             .build()
 
-//        NotificationManagerCompat.from(context)
-//            .notify(System.currentTimeMillis().toInt(), notification)
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 

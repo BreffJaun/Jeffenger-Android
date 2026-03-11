@@ -146,7 +146,6 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
 
-//                    val hasAvatar = user?.avatarUrl != null
                     val hasAvatar = !user?.avatarUrl.isNullOrBlank()
 
                     ChatStartButton(
