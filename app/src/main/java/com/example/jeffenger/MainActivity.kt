@@ -37,7 +37,6 @@ import org.koin.androidx.compose.koinViewModel
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "dataStore")
 
-
 class MainActivity : ComponentActivity() {
 
     // Holds the latest launch intent for cold/warm start deep links; cleared after handling to avoid reprocessing on recomposition.
@@ -75,53 +74,33 @@ class MainActivity : ComponentActivity() {
 
                 } else {
 
-//                    when (loadingState) {
-//
-//                        is LoadingState.Loading -> {
-//                            LoadingScreen(
-//                                message = (loadingState as LoadingState.Loading).message
-//                            )
-//                        }
-//
-//                        is LoadingState.Error -> {
-//                            ErrorScreen(
-//                                message = (loadingState as LoadingState.Error).message,
-//                                onRetry = {
-//                                    authViewModel.retryLastAction()
-//                                }
-//                            )
-//                        }
+                    if (authState != null) {
 
-//                        else -> {
-                            if (authState != null) {
+                        NotificationPermissionCoordinator(
+                            context = context,
+                            db = db
+                        )
 
-                                NotificationPermissionCoordinator(
-                                    context = context,
-                                    db = db
-                                )
+                        BackgroundWrapper {
+                            AppStart(navController = navController)
+                        }
 
-                                BackgroundWrapper {
-                                    AppStart(navController = navController)
-                                }
+                        // Handles deep link intents (e.g., notification tap). Runs once
+                        // per new intent and clears state to prevent duplicate navigation.
+                        // -> Runs during cold start AND every time during warm start
+                        LaunchedEffect(currentIntent) {
+                            handleIntentIfNeeded(currentIntent, navController)
 
-                                // Handles deep link intents (e.g., notification tap). Runs once
-                                // per new intent and clears state to prevent duplicate navigation.
-                                // -> Runs during cold start AND every time during warm start
-                                LaunchedEffect(currentIntent) {
-                                    handleIntentIfNeeded(currentIntent, navController)
-
-                                    // Optional but useful:
-                                    // prevents the SAME intent from firing again
-                                    intentState.value = null
-                                }
-                            } else {
-                                BackgroundWrapper {
-                                    AuthScreen()
-                                }
-                            }
-//                        }
+                            // Optional but useful:
+                            // prevents the SAME intent from firing again
+                            intentState.value = null
+                        }
+                    } else {
+                        BackgroundWrapper {
+                            AuthScreen()
+                        }
                     }
-//                }
+                }
             }
         }
     }
@@ -167,23 +146,10 @@ class MainActivity : ComponentActivity() {
 
                     launchSingleTop = true
                 }
-//                navController.navigate(
-//                    ChatRoute(
-//                        id = chatId,
-//                        companyId = companyId
-//                    )
-//                ) {
-//                    launchSingleTop = true
-//                }
             }
 
             "OPEN_CALENDAR_EVENT" -> {
                 val eventId = intent.getStringExtra("eventId") ?: return
-
-//                navController.navigate(CalendarRoute) {
-//                    launchSingleTop = true
-//                    restoreState = true
-//                }
 
                 navController.navigate(CalendarRoute) {
 
@@ -216,15 +182,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AppTheme {
-//        AppStart()
     }
 }
