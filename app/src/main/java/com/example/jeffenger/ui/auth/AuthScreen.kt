@@ -1,6 +1,5 @@
 package com.example.jeffenger.ui.auth
 
-import android.R.attr.top
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -32,7 +30,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,39 +41,42 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jeffenger.R
-import com.example.jeffenger.ui.catApi.CatSection
-import com.example.jeffenger.ui.catApi.CatViewModel
 import com.example.jeffenger.ui.core.avatar.ProfileAvatar
 import com.example.jeffenger.ui.theme.UrbanistText
 import com.example.jeffenger.ui.viewmodels.AuthViewModel
 import com.example.jeffenger.utils.debugging.LogComposable
 import com.example.jeffenger.utils.enums.AuthMode
-import com.example.jeffenger.utils.error.ErrorMapper
 import com.example.jeffenger.utils.error.ErrorMessageResolver
 import com.example.jeffenger.utils.state.LoadingState
-import de.syntax_institut.projektwoche1.ui.component.TopBar
 import org.koin.androidx.compose.koinViewModel
 
 /**
- * Authentication screen composable.
+ * Main authentication screen for login and registration.
  *
  * Displays:
- * - Registration form
- * - Login form
- * - Password validation feedback
+ * - login mode
+ * - registration mode
+ * - input validation feedback
+ * - password rule hints during registration
+ * - snackbar messages for UI events and error events
  *
  * Observes:
- * - Form state from AuthViewModel
- * - Loading state
- * - Validation flows
+ * - authentication mode
+ * - form input state from [AuthViewModel]
+ * - loading state
+ * - validation state flows
+ * - one-time UI and error events
  *
- * Pure UI layer — contains no business logic.
+ * Also handles:
+ * - switching between login and registration
+ * - focus navigation between input fields
+ * - clearing focus on submit to dismiss the keyboard
+ *
+ * This composable is responsible for rendering the authentication UI
+ * and reacting to state exposed by the [AuthViewModel].
  */
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AuthScreen(
@@ -91,28 +91,17 @@ fun AuthScreen(
         val scrollState = rememberScrollState()
 
         val snackbarHostState = remember { SnackbarHostState() }
-        val scope = rememberCoroutineScope()
 
         val focusManager = LocalFocusManager.current
         val passwordFocusRequester = remember { FocusRequester() }
 
-        val catViewModel: CatViewModel = viewModel()
-        val catUrl by catViewModel.catImageUrl.collectAsState()
-
         LaunchedEffect(Unit) {
             viewModel.errorEvents.collect { error ->
-                val friendlyMessage =
-                    ErrorMessageResolver.resolve(error)
-                catViewModel.loadRandomCat()
+                val friendlyMessage = ErrorMessageResolver.resolve(error)
                 snackbarHostState.showSnackbar(friendlyMessage)
             }
         }
 
-        LaunchedEffect(authMode) {
-            if (authMode != null) {
-                catViewModel.clearCat()
-            }
-        }
 
         val email by viewModel.email.collectAsState()
         val password by viewModel.password.collectAsState()
@@ -213,20 +202,6 @@ fun AuthScreen(
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
-
-                        if (catUrl != null) {
-                            CatSection(
-                                modifier = Modifier.padding(bottom = 4.dp),
-                                catViewModel = catViewModel
-                            )
-                            Text(
-                                text = "Passwort falsch? Hier ist eine Katze zur moralischen Unterstützung 🐱",
-                                style = UrbanistText.Label,
-                                color = scheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
@@ -273,6 +248,7 @@ fun AuthScreen(
                         imeAction = ImeAction.Done,
                         focusRequester = passwordFocusRequester,
                         onImeAction = {
+                            focusManager.clearFocus()
                             viewModel.submit()
                         }
                     )
@@ -336,8 +312,10 @@ fun AuthScreen(
                     Spacer(modifier = Modifier.weight(1f))
 
                     Button(
-                        onClick = { viewModel.submit() },
-//                        enabled = isFormValid && loadingState !is LoadingState.Loading,
+                        onClick = {
+                            focusManager.clearFocus()
+                            viewModel.submit()
+                        },
                         enabled =
                             isFormValid && loadingState !is LoadingState.Loading && (
                                 authMode == AuthMode.LOGIN ||

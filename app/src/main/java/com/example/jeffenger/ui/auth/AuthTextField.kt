@@ -1,6 +1,5 @@
 package com.example.jeffenger.ui.auth
 
-import android.R.attr.bottom
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,6 +43,33 @@ import androidx.compose.ui.unit.dp
 import com.example.jeffenger.ui.theme.UrbanistText
 
 
+/**
+ * Reusable text input field for the authentication flow.
+ *
+ * Supports:
+ * - normal text input
+ * - email input
+ * - password input with visibility toggle
+ * - optional validation indicator
+ * - IME actions such as Next and Done
+ * - optional focus control via [FocusRequester]
+ *
+ * The field adapts its keyboard type automatically based on the given
+ * configuration and forwards IME actions through [onImeAction].
+ *
+ * @param value Current text value.
+ * @param onValueChange Called when the input text changes.
+ * @param label Label shown above the text field.
+ * @param placeholder Placeholder shown when the field is empty.
+ * @param isPassword Whether the field should behave like a password field.
+ * Enables password masking and visibility toggle.
+ * @param isValid Optional validation state. If `true`, a check icon is shown.
+ * If `false` or `null`, no validation icon is displayed.
+ * @param focusRequester Optional [FocusRequester] to request focus programmatically.
+ * @param imeAction IME action shown on the keyboard, e.g. Next or Done.
+ * @param onImeAction Optional callback triggered when the selected IME action is pressed.
+ * @param modifier Optional [Modifier] for styling and layout customization.
+ */
 @Composable
 fun AuthTextField(
     value: String,
@@ -69,7 +95,7 @@ fun AuthTextField(
         // LABEL + Stern
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 6.dp)
+            modifier = modifier.padding(bottom = 6.dp)
         ) {
             Text(
                 text = label,

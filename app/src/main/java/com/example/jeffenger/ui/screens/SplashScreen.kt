@@ -51,7 +51,7 @@ fun SplashScreen(
 
                 // BOTTOM CONTENT
                 Image(
-                    painter = painterResource(R.drawable.app_by),
+                    painter = painterResource(R.drawable.app_by_2),
                     contentDescription = "App by",
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
