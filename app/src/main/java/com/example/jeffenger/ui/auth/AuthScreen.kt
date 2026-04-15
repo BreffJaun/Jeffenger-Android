@@ -1,6 +1,7 @@
 package com.example.jeffenger.ui.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,7 +38,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -93,6 +96,7 @@ fun AuthScreen(
         val snackbarHostState = remember { SnackbarHostState() }
 
         val focusManager = LocalFocusManager.current
+        val keyboardController = LocalSoftwareKeyboardController.current
         val passwordFocusRequester = remember { FocusRequester() }
 
         LaunchedEffect(Unit) {
@@ -142,10 +146,23 @@ fun AuthScreen(
             topBar = { AuthTopBar(authMode = authMode) }
         ) {
 
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(horizontal = 25.dp)
+//            ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 25.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                            }
+                        )
+                    }
             ) {
 
                 Column(

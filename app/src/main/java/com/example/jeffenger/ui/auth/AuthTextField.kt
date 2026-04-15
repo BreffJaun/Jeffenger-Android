@@ -89,13 +89,13 @@ fun AuthTextField(
     var passwordVisible by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.padding(bottom = 10.dp)
+        modifier = modifier.padding(bottom = 10.dp)
     ) {
 
         // LABEL + Stern
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier.padding(bottom = 6.dp)
+            modifier = Modifier.padding(bottom = 6.dp)
         ) {
             Text(
                 text = label,
